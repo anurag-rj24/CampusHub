@@ -1,5 +1,24 @@
 from database.connection import create_connection
 from utils.password import hash_password
+from contextlib import contextmanager
+
+
+@contextmanager
+def db_cursor(dictionary=True, commit=False):
+    """Context manager to handle DB connections and boilerplate."""
+    connection = create_connection()
+    cursor = connection.cursor(dictionary=dictionary)
+    try:
+        yield cursor
+        if commit:
+            connection.commit()
+    except Exception as error:
+        if commit:
+            connection.rollback()
+        print(f"\nDatabase Error: {error}")
+    finally:
+        cursor.close()
+        connection.close()
 
 
 class AdminService:
@@ -55,113 +74,52 @@ class AdminService:
                 print("\nInvalid choice. Please try again.")
 
     def view_profile(self, user):
-
-        connection = create_connection()
-        cursor = connection.cursor(dictionary=True)
-
         query = """
-            SELECT
-                u.user_id,
-                u.first_name,
-                u.middle_name,
-                u.last_name,
-                u.email,
-                u.phone,
-                u.role,
-                u.status,
-
-                a.admin_id,
-                a.department_id,
-                a.designation,
-                a.date_of_birth,
-                a.gender,
-                a.blood_group,
-                a.father_name,
-                a.mother_name,
-                a.address,
-                a.city,
-                a.state,
-                a.pincode,
-                a.qualification,
-                a.joining_date,
-                a.salary,
-                a.employment_type,
-                a.emergency_contact,
-                a.status AS admin_status,
-
-                d.department_name,
-                d.department_code
-
+            SELECT u.user_id, u.first_name, u.middle_name, u.last_name, u.email, u.phone, u.role, u.status,
+                   a.admin_id, a.department_id, a.designation, a.date_of_birth, a.gender, a.blood_group,
+                   a.father_name, a.mother_name, a.address, a.city, a.state, a.pincode, a.qualification,
+                   a.joining_date, a.salary, a.employment_type, a.emergency_contact, a.status AS admin_status,
+                   d.department_name, d.department_code
             FROM users u
-
-            INNER JOIN admin a
-                ON u.user_id = a.user_id
-
-            LEFT JOIN department d
-                ON a.department_id = d.department_id
-
+            INNER JOIN admin a ON u.user_id = a.user_id
+            LEFT JOIN department d ON a.department_id = d.department_id
             WHERE u.user_id = %s
         """
 
-        cursor.execute(query, (user.user_id,))
+        with db_cursor() as cursor:
+            cursor.execute(query, (user.user_id,))
+            admin_data = cursor.fetchone()
 
-        admin_data = cursor.fetchone()
-
-        if admin_data is None:
+        if not admin_data:
             print("\nAdmin profile not found.")
-
-            cursor.close()
-            connection.close()
             return
 
         print("\n================================")
         print("          ADMIN PROFILE")
         print("================================")
 
+        full_name = " ".join([admin_data["first_name"], admin_data["middle_name"] or "", admin_data["last_name"]]).split()
+
         print("\n--- Account Information ---")
-        print("User ID:", admin_data["user_id"])
-
-        full_name = (
-            admin_data["first_name"]
-            + " "
-            + (admin_data["middle_name"] or "")
-            + " "
-            + admin_data["last_name"]
-        )
-
-        print("Name:", " ".join(full_name.split()))
-        print("Email:", admin_data["email"])
-        print("Phone:", admin_data["phone"])
-        print("Role:", admin_data["role"])
-        print("Account Status:", admin_data["status"])
+        print(f"User ID: {admin_data['user_id']}")
+        print(f"Name: {' '.join(full_name)}")
+        print(f"Email: {admin_data['email']}")
+        print(f"Phone: {admin_data['phone']}")
+        print(f"Role: {admin_data['role']} | Status: {admin_data['status']}")
 
         print("\n--- Administrative Information ---")
-        print("Admin ID:", admin_data["admin_id"])
-        print("Designation:", admin_data["designation"])
-        print("Department:", admin_data["department_name"])
-        print("Department Code:", admin_data["department_code"])
-        print("Qualification:", admin_data["qualification"])
-        print("Joining Date:", admin_data["joining_date"])
-        print("Employment Type:", admin_data["employment_type"])
-        print("Salary:", admin_data["salary"])
-        print("Admin Status:", admin_data["admin_status"])
+        print(f"Admin ID: {admin_data['admin_id']} | Designation: {admin_data['designation']}")
+        print(f"Department: {admin_data['department_name']} ({admin_data['department_code']})")
+        print(f"Qualification: {admin_data['qualification']} | Joining Date: {admin_data['joining_date']}")
+        print(f"Employment Type: {admin_data['employment_type']} | Salary: {admin_data['salary']}")
 
         print("\n--- Personal Information ---")
-        print("Date of Birth:", admin_data["date_of_birth"])
-        print("Gender:", admin_data["gender"])
-        print("Blood Group:", admin_data["blood_group"])
-        print("Father Name:", admin_data["father_name"])
-        print("Mother Name:", admin_data["mother_name"])
+        print(f"DOB: {admin_data['date_of_birth']} | Gender: {admin_data['gender']} | Blood Group: {admin_data['blood_group']}")
+        print(f"Parents: {admin_data['father_name']} (Father), {admin_data['mother_name']} (Mother)")
 
         print("\n--- Address Information ---")
-        print("Address:", admin_data["address"])
-        print("City:", admin_data["city"])
-        print("State:", admin_data["state"])
-        print("Pincode:", admin_data["pincode"])
-        print("Emergency Contact:", admin_data["emergency_contact"])
-
-        cursor.close()
-        connection.close()
+        print(f"Address: {admin_data['address']}, {admin_data['city']}, {admin_data['state']} - {admin_data['pincode']}")
+        print(f"Emergency Contact: {admin_data['emergency_contact']}")
 
     def manage_students(self, user):
 
@@ -203,41 +161,21 @@ class AdminService:
 
 
     def view_all_students(self):
-
-        connection = create_connection()
-        cursor = connection.cursor(dictionary=True)
-
         query = """
-            SELECT
-                s.student_id,
-                u.user_id,
-                u.first_name,
-                u.middle_name,
-                u.last_name,
-                u.email,
-                u.phone,
-                d.department_name,
-                d.department_code,
-                s.admission_date,
-                s.student_status
+            SELECT s.student_id, u.user_id, u.first_name, u.middle_name, u.last_name, u.email, u.phone,
+                   d.department_name, d.department_code, s.admission_date, s.student_status
             FROM student s
-            INNER JOIN users u
-                ON s.user_id = u.user_id
-            INNER JOIN department d
-                ON s.department_id = d.department_id
+            INNER JOIN users u ON s.user_id = u.user_id
+            INNER JOIN department d ON s.department_id = d.department_id
             ORDER BY s.student_id
         """
 
-        cursor.execute(query)
-
-        students = cursor.fetchall()
+        with db_cursor() as cursor:
+            cursor.execute(query)
+            students = cursor.fetchall()
 
         if not students:
             print("\nNo students found.")
-
-            cursor.close()
-            connection.close()
-
             return
 
         print("\n================================")
@@ -245,28 +183,13 @@ class AdminService:
         print("================================")
 
         for student in students:
-
-            full_name = (
-                student["first_name"]
-                + " "
-                + (student["middle_name"] or "")
-                + " "
-                + student["last_name"]
-            )
-
+            full_name = " ".join([student["first_name"], student["middle_name"] or "", student["last_name"]]).split()
             print("\n--------------------------------")
-            print("Student ID:", student["student_id"])
-            print("User ID:", student["user_id"])
-            print("Name:", " ".join(full_name.split()))
-            print("Email:", student["email"])
-            print("Phone:", student["phone"])
-            print("Department:", student["department_name"])
-            print("Department Code:", student["department_code"])
-            print("Admission Date:", student["admission_date"])
-            print("Status:", student["student_status"])
-
-        cursor.close()
-        connection.close()
+            print(f"Student ID: {student['student_id']} | User ID: {student['user_id']}")
+            print(f"Name: {' '.join(full_name)}")
+            print(f"Contact: {student['email']} | {student['phone']}")
+            print(f"Department: {student['department_name']} ({student['department_code']})")
+            print(f"Admission Date: {student['admission_date']} | Status: {student['student_status']}")
 
 
     def view_student_details(self):
@@ -379,84 +302,54 @@ class AdminService:
         connection.close()
 
     def add_student(self):
-
         print("\n================================")
         print("           ADD STUDENT")
         print("================================")
-
+        
         print("\n--- Account Information ---")
-
         first_name = input("First Name: ").strip()
         middle_name = input("Middle Name (optional): ").strip()
         last_name = input("Last Name: ").strip()
         email = input("Email: ").strip()
         phone = input("Phone: ").strip()
         password = input("Password: ")
-
+        
         print("\n--- Personal Information ---")
-
         date_of_birth = input("Date of Birth (YYYY-MM-DD): ").strip()
         gender = input("Gender (MALE/FEMALE/OTHER): ").strip().upper()
-        blood_group = input(
-            "Blood Group (A+/A-/B+/B-/AB+/AB-/O+/O-): "
-        ).strip().upper()
-
+        blood_group = input("Blood Group (A+/A-/B+/B-/AB+/AB-/O+/O-): ").strip().upper()
         father_name = input("Father Name: ").strip()
         mother_name = input("Mother Name: ").strip()
-
+        
         print("\n--- Academic Information ---")
-
-        previous_qualification = input(
-            "Previous Qualification: "
-        ).strip()
-
-        previous_percentage = input(
-            "Previous Percentage (optional): "
-        ).strip()
-
-        admission_date = input(
-            "Admission Date (YYYY-MM-DD): "
-        ).strip()
-
+        previous_qualification = input("Previous Qualification: ").strip()
+        previous_percentage = input("Previous Percentage (optional): ").strip()
+        admission_date = input("Admission Date (YYYY-MM-DD): ").strip()
         department_id = input("Department ID: ").strip()
-
+        
         print("\n--- Address Information ---")
-
         address = input("Address: ").strip()
         city = input("City: ").strip()
         state = input("State: ").strip()
         pincode = input("Pincode: ").strip()
-        emergency_contact = input(
-            "Emergency Contact: "
-        ).strip()
-
-        if not first_name or not last_name:
-            print("\nFirst name and last name are required.")
+        emergency_contact = input("Emergency Contact: ").strip()
+        
+        if not first_name or not last_name or not email or not phone or not password:
+            print("\nFirst name, last name, email, phone and password are required.")
             return
-
-        if not email or not phone or not password:
-            print("\nEmail, phone and password are required.")
-            return
-
+            
         if gender not in ("MALE", "FEMALE", "OTHER"):
             print("\nInvalid gender.")
             return
-
-        valid_blood_groups = (
-            "A+", "A-",
-            "B+", "B-",
-            "AB+", "AB-",
-            "O+", "O-"
-        )
-
-        if blood_group and blood_group not in valid_blood_groups:
+            
+        if blood_group and blood_group not in ("A+", "A-", "B+", "B-", "AB+", "AB-", "O+", "O-"):
             print("\nInvalid blood group.")
             return
-
+            
         if not department_id.isdigit():
             print("\nInvalid department ID.")
             return
-
+            
         if previous_percentage:
             try:
                 previous_percentage = float(previous_percentage)
@@ -466,305 +359,85 @@ class AdminService:
         else:
             previous_percentage = None
 
-        connection = create_connection()
-        cursor = connection.cursor()
-
-        try:
-
-            check_query = """
-                SELECT user_id
-                FROM users
-                WHERE email = %s
-            """
-
-            cursor.execute(check_query, (email,))
-
-            existing_user = cursor.fetchone()
-
-            if existing_user is not None:
+        with db_cursor(dictionary=False, commit=True) as cursor:
+            cursor.execute("SELECT user_id FROM users WHERE email = %s", (email,))
+            if cursor.fetchone():
                 print("\nEmail already exists.")
-
-                connection.rollback()
                 return
 
             password_hash = hash_password(password)
-
-            user_query = """
-                INSERT INTO users (
-                    first_name,
-                    middle_name,
-                    last_name,
-                    email,
-                    phone,
-                    password_hash,
-                    role,
-                    status
-                )
-                VALUES (
-                    %s, %s, %s, %s, %s, %s, 'STUDENT', 'ACTIVE'
-                )
-            """
-
+            
             cursor.execute(
-                user_query,
-                (
-                    first_name,
-                    middle_name if middle_name else None,
-                    last_name,
-                    email,
-                    phone,
-                    password_hash
-                )
+                "INSERT INTO users (first_name, middle_name, last_name, email, phone, password_hash, role, status) "
+                "VALUES (%s, %s, %s, %s, %s, %s, 'STUDENT', 'ACTIVE')",
+                (first_name, middle_name or None, last_name, email, phone, password_hash)
             )
-
             user_id = cursor.lastrowid
-
-            student_query = """
-                INSERT INTO student (
-                    user_id,
-                    date_of_birth,
-                    gender,
-                    blood_group,
-                    father_name,
-                    mother_name,
-                    previous_qualification,
-                    previous_percentage,
-                    admission_date,
-                    department_id,
-                    address,
-                    city,
-                    state,
-                    pincode,
-                    emergency_contact,
-                    student_status
-                )
-                VALUES (
-                    %s, %s, %s, %s, %s, %s, %s, %s,
-                    %s, %s, %s, %s, %s, %s, %s, 'ACTIVE'
-                )
-            """
-
+            
             cursor.execute(
-                student_query,
-                (
-                    user_id,
-                    date_of_birth,
-                    gender,
-                    blood_group if blood_group else None,
-                    father_name,
-                    mother_name,
-                    previous_qualification,
-                    previous_percentage,
-                    admission_date,
-                    int(department_id),
-                    address,
-                    city,
-                    state,
-                    pincode,
-                    emergency_contact
-                )
+                "INSERT INTO student (user_id, date_of_birth, gender, blood_group, father_name, mother_name, "
+                "previous_qualification, previous_percentage, admission_date, department_id, address, city, state, "
+                "pincode, emergency_contact, student_status) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, 'ACTIVE')",
+                (user_id, date_of_birth, gender, blood_group or None, father_name, mother_name, previous_qualification,
+                 previous_percentage, admission_date, int(department_id), address, city, state, pincode, emergency_contact)
             )
-
             student_id = cursor.lastrowid
 
-            connection.commit()
-
             print("\nStudent added successfully.")
-            print("User ID:", user_id)
-            print("Student ID:", student_id)
-
-        except Exception as error:
-
-            connection.rollback()
-
-            print("\nFailed to add student.")
-            print("Error:", error)
-
-        finally:
-
-            cursor.close()
-            connection.close()
+            print(f"User ID: {user_id} | Student ID: {student_id}")
 
     def update_student(self):
-
         print("\n================================")
         print("         UPDATE STUDENT")
         print("================================")
 
         student_id = input("Enter Student ID: ").strip()
-
         if not student_id.isdigit():
             print("\nInvalid Student ID.")
             return
 
-        connection = create_connection()
-        cursor = connection.cursor(dictionary=True)
-
-        try:
-
+        with db_cursor(dictionary=True, commit=True) as cursor:
             query = """
-                SELECT
-                    s.student_id,
-                    u.user_id,
-                    u.first_name,
-                    u.middle_name,
-                    u.last_name,
-                    u.email,
-                    u.phone,
-                    s.date_of_birth,
-                    s.gender,
-                    s.blood_group,
-                    s.father_name,
-                    s.mother_name,
-                    s.previous_qualification,
-                    s.previous_percentage,
-                    s.admission_date,
-                    s.department_id,
-                    s.address,
-                    s.city,
-                    s.state,
-                    s.pincode,
-                    s.emergency_contact
+                SELECT s.student_id, u.user_id, u.first_name, u.middle_name, u.last_name, u.email, u.phone,
+                       s.department_id, s.city, s.state, s.pincode, s.emergency_contact
                 FROM student s
-                INNER JOIN users u
-                    ON s.user_id = u.user_id
+                INNER JOIN users u ON s.user_id = u.user_id
                 WHERE s.student_id = %s
             """
-
             cursor.execute(query, (int(student_id),))
-
             student = cursor.fetchone()
 
-            if student is None:
+            if not student:
                 print("\nStudent not found.")
                 return
 
             print("\nCurrent Student Information")
             print("---------------------------")
-            print(
-                "Name:",
-                student["first_name"],
-                student["middle_name"] or "",
-                student["last_name"]
-            )
-            print("Email:", student["email"])
-            print("Phone:", student["phone"])
-            print("Department ID:", student["department_id"])
-            print("City:", student["city"])
+            print(f"Name: {student['first_name']} {student['middle_name'] or ''} {student['last_name']}")
+            print(f"Email: {student['email']} | Phone: {student['phone']}")
+            print(f"Department ID: {student['department_id']} | City: {student['city']}")
 
-            print("\nEnter new values.")
-            print("Press ENTER to keep the current value.")
+            print("\nEnter new values. Press ENTER to keep the current value.")
+            first_name = input(f"First Name [{student['first_name']}]: ").strip() or student['first_name']
+            last_name = input(f"Last Name [{student['last_name']}]: ").strip() or student['last_name']
+            phone = input(f"Phone [{student['phone']}]: ").strip() or student['phone']
+            city = input(f"City [{student['city'] or ''}]: ").strip() or student['city']
+            state = input(f"State [{student['state'] or ''}]: ").strip() or student['state']
+            pincode = input(f"Pincode [{student['pincode'] or ''}]: ").strip() or student['pincode']
+            emergency_contact = input(f"Emergency Contact [{student['emergency_contact'] or ''}]: ").strip() or student['emergency_contact']
+            department_id = input(f"Department ID [{student['department_id']}]: ").strip() or student['department_id']
 
-            first_name = input(
-                f"First Name [{student['first_name']}]: "
-            ).strip()
+            if str(department_id) and not str(department_id).isdigit():
+                print("\nInvalid department ID.")
+                return
 
-            last_name = input(
-                f"Last Name [{student['last_name']}]: "
-            ).strip()
-
-            phone = input(
-                f"Phone [{student['phone']}]: "
-            ).strip()
-
-            city = input(
-                f"City [{student['city'] or ''}]: "
-            ).strip()
-
-            state = input(
-                f"State [{student['state'] or ''}]: "
-            ).strip()
-
-            pincode = input(
-                f"Pincode [{student['pincode'] or ''}]: "
-            ).strip()
-
-            emergency_contact = input(
-                f"Emergency Contact "
-                f"[{student['emergency_contact'] or ''}]: "
-            ).strip()
-
-            department_id = input(
-                f"Department ID [{student['department_id']}]: "
-            ).strip()
-
-            first_name = first_name or student["first_name"]
-            last_name = last_name or student["last_name"]
-            phone = phone or student["phone"]
-            city = city or student["city"]
-            state = state or student["state"]
-            pincode = pincode or student["pincode"]
-            emergency_contact = (
-                emergency_contact
-                or student["emergency_contact"]
-            )
-
-            if department_id:
-                if not department_id.isdigit():
-                    print("\nInvalid department ID.")
-                    return
-
-                department_id = int(department_id)
-            else:
-                department_id = student["department_id"]
-
-            update_user_query = """
-                UPDATE users
-                SET
-                    first_name = %s,
-                    last_name = %s,
-                    phone = %s
-                WHERE user_id = %s
-            """
-
-            cursor.execute(
-                update_user_query,
-                (
-                    first_name,
-                    last_name,
-                    phone,
-                    student["user_id"]
-                )
-            )
-
-            update_student_query = """
-                UPDATE student
-                SET
-                    department_id = %s,
-                    city = %s,
-                    state = %s,
-                    pincode = %s,
-                    emergency_contact = %s
-                WHERE student_id = %s
-            """
-
-            cursor.execute(
-                update_student_query,
-                (
-                    department_id,
-                    city,
-                    state,
-                    pincode,
-                    emergency_contact,
-                    int(student_id)
-                )
-            )
-
-            connection.commit()
+            cursor.execute("UPDATE users SET first_name=%s, last_name=%s, phone=%s WHERE user_id=%s",
+                           (first_name, last_name, phone, student["user_id"]))
+                           
+            cursor.execute("UPDATE student SET department_id=%s, city=%s, state=%s, pincode=%s, emergency_contact=%s WHERE student_id=%s",
+                           (department_id, city, state, pincode, emergency_contact, int(student_id)))
 
             print("\nStudent updated successfully.")
-
-        except Exception as error:
-
-            connection.rollback()
-
-            print("\nFailed to update student.")
-            print("Error:", error)
-
-        finally:
-
-            cursor.close()
-            connection.close()
 
 
     def deactivate_student(self):
