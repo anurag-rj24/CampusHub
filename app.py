@@ -30,22 +30,22 @@ def inject_global_data():
         'now': datetime.datetime.now()
     }
 
-# Authentication Decorator
+# Authentication Decorator with Strict Role Enforcement
 def login_required(roles=None):
     def decorator(f):
         def wrapper(*args, **kwargs):
             if 'user' not in session:
                 flash("Please log in to access this portal.", "danger")
-                return redirect(url_for('login'))
+                return redirect(url_for('select_role'))
             if roles and session['user']['role'] not in roles:
-                flash("Access denied: You do not have permission for this portal.", "danger")
+                flash(f"Access Denied: You do not have permissions for the {session['user']['role']} portal.", "danger")
                 role_dashboards = {
                     'STUDENT': 'student_dashboard',
                     'FACULTY': 'faculty_dashboard',
                     'ADMIN': 'admin_dashboard',
                     'SUPER_HEAD': 'super_head_dashboard'
                 }
-                return redirect(url_for(role_dashboards.get(session['user']['role'], 'login')))
+                return redirect(url_for(role_dashboards.get(session['user']['role'], 'select_role')))
             return f(*args, **kwargs)
         wrapper.__name__ = f.__name__
         return wrapper
@@ -78,18 +78,9 @@ def select_role():
 
 @app.route('/login', methods=['GET', 'POST'])
 def login():
-    role_email_map = {
-        'STUDENT': 'test@campushub.com',
-        'FACULTY': 'faculty@campushub.com',
-        'ADMIN': 'admin@campushub.com',
-        'SUPER_HEAD': 'director@campushub.com'
-    }
-
     selected_role = request.args.get('role', '').upper()
     if not selected_role and request.method == 'POST':
         selected_role = request.form.get('role', '').upper()
-
-    default_email = role_email_map.get(selected_role, '')
 
     if request.method == 'POST':
         email = request.form.get('email', '').strip()
@@ -97,7 +88,7 @@ def login():
 
         if not email or not password:
             flash("Please enter both email and password.", "danger")
-            return render_template('login.html', selected_role=selected_role, default_email=default_email)
+            return render_template('login.html', selected_role=selected_role)
 
         conn = get_db()
         cursor = conn.cursor(dictionary=True)
@@ -112,9 +103,23 @@ def login():
             cursor.close()
             conn.close()
             flash("Invalid email or password, or account is inactive.", "danger")
-            return render_template('login.html', selected_role=selected_role, default_email=default_email)
+            return render_template('login.html', selected_role=selected_role)
 
-        # Update last login
+        # Strict Role Matching: If user selected a specific portal (e.g. Student), they must match that role
+        if selected_role and user_data['role'] != selected_role:
+            cursor.close()
+            conn.close()
+            role_name_map = {
+                'STUDENT': 'Student',
+                'FACULTY': 'Faculty',
+                'ADMIN': 'Administrator',
+                'SUPER_HEAD': 'Super Head'
+            }
+            actual_role_title = role_name_map.get(user_data['role'], user_data['role'])
+            flash(f"Access Denied: This account is registered as '{actual_role_title}'. Please log in through the {actual_role_title} portal.", "danger")
+            return render_template('login.html', selected_role=selected_role)
+
+        # Update last login timestamp
         cursor.execute("UPDATE users SET last_login = CURRENT_TIMESTAMP WHERE user_id = %s", (user_data["user_id"],))
         conn.commit()
         cursor.close()
@@ -132,9 +137,10 @@ def login():
             'role': user_data['role']
         }
 
-        log_audit(user_data['user_id'], 'LOGIN', 'users', user_data['user_id'], f"User logged in via GUI as {user_data['role']}")
+        log_audit(user_data['user_id'], 'LOGIN', 'users', user_data['user_id'], f"User logged in as {user_data['role']}")
         flash(f"Welcome back, {full_name}!", "success")
 
+        # Route strictly to the user's specific dashboard
         if user_data['role'] == 'STUDENT':
             return redirect(url_for('student_dashboard'))
         elif user_data['role'] == 'FACULTY':
@@ -144,58 +150,7 @@ def login():
         elif user_data['role'] == 'SUPER_HEAD':
             return redirect(url_for('super_head_dashboard'))
 
-    return render_template('login.html', selected_role=selected_role, default_email=default_email)
-
-
-@app.route('/quick-login/<role>')
-def quick_login(role):
-    """Dev / Demo quick login switch for easy evaluation."""
-    role_email_map = {
-        'STUDENT': 'test@campushub.com',
-        'FACULTY': 'faculty@campushub.com',
-        'ADMIN': 'admin@campushub.com',
-        'SUPER_HEAD': 'director@campushub.com'
-    }
-
-    email = role_email_map.get(role.upper())
-    if not email:
-        flash("Invalid demo role specified.", "danger")
-        return redirect(url_for('login'))
-
-    conn = get_db()
-    cursor = conn.cursor(dictionary=True)
-    cursor.execute("SELECT user_id, first_name, middle_name, last_name, email, phone, role FROM users WHERE email = %s AND status = 'ACTIVE'", (email,))
-    user_data = cursor.fetchone()
-    cursor.close()
-    conn.close()
-
-    if not user_data:
-        flash(f"Demo user for {role} not found in database.", "danger")
-        return redirect(url_for('login'))
-
-    full_name = " ".join([p for p in [user_data["first_name"], user_data["middle_name"], user_data["last_name"]] if p])
-    session['user'] = {
-        'user_id': user_data['user_id'],
-        'first_name': user_data['first_name'],
-        'last_name': user_data['last_name'],
-        'full_name': full_name,
-        'email': user_data['email'],
-        'phone': user_data['phone'],
-        'role': user_data['role']
-    }
-
-    log_audit(user_data['user_id'], 'LOGIN', 'users', user_data['user_id'], f"Demo switch login as {user_data['role']}")
-    flash(f"Switched role to {user_data['role']} ({full_name})", "info")
-
-    if user_data['role'] == 'STUDENT':
-        return redirect(url_for('student_dashboard'))
-    elif user_data['role'] == 'FACULTY':
-        return redirect(url_for('faculty_dashboard'))
-    elif user_data['role'] == 'ADMIN':
-        return redirect(url_for('admin_dashboard'))
-    elif user_data['role'] == 'SUPER_HEAD':
-        return redirect(url_for('super_head_dashboard'))
-    return redirect(url_for('login'))
+    return render_template('login.html', selected_role=selected_role)
 
 
 @app.route('/logout')
@@ -204,7 +159,7 @@ def logout():
         log_audit(session['user']['user_id'], 'LOGOUT', 'users', session['user']['user_id'], "User logged out")
         session.clear()
         flash("You have been logged out securely.", "info")
-    return redirect(url_for('login'))
+    return redirect(url_for('select_role'))
 
 
 # ----------------------------------------------------

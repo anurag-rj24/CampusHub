@@ -12,53 +12,33 @@
                 <div class="brand-icon" style="width: 50px; height: 50px; font-size: 1.6rem;">🎓</div>
                 <div>
                     <h1 style="font-size: 1.8rem; font-weight: 800; letter-spacing: -0.5px;">CampusHub</h1>
-                    <span style="color: var(--secondary); font-weight: 700; font-size: 0.8rem; letter-spacing: 1.5px; text-transform: uppercase;">Next-Gen Enterprise ERP</span>
+                    <span style="color: var(--secondary); font-weight: 700; font-size: 0.8rem; letter-spacing: 1.5px; text-transform: uppercase;">Enterprise University ERP</span>
                 </div>
             </div>
 
             <p style="color: var(--text-secondary); line-height: 1.6; margin-bottom: 28px; font-size: 0.95rem;">
-                A centralized, unified institutional operating system powering student lifecycles, faculty teaching workflows, automated attendance analytics, academic assessments, and executive governance.
+                A centralized, role-based university portal engineered for secure access, real-time academic records, attendance automation, and governance.
             </p>
 
             <div style="display: flex; flex-direction: column; gap: 14px; margin-bottom: 30px;">
                 <div style="display: flex; align-items: center; gap: 12px; font-size: 0.9rem; color: var(--text-primary);">
                     <span style="color: var(--success); font-weight: 700;">✓</span>
-                    <span>Role-Based Access Control (Student, Faculty, Admin, Super Head)</span>
+                    <span>Strict Role-Based Access Control</span>
                 </div>
                 <div style="display: flex; align-items: center; gap: 12px; font-size: 0.9rem; color: var(--text-primary);">
                     <span style="color: var(--success); font-weight: 700;">✓</span>
-                    <span>AI Attendance Safety Shield & GPA Analytics</span>
+                    <span>Encrypted Cryptographic Authentication</span>
                 </div>
                 <div style="display: flex; align-items: center; gap: 12px; font-size: 0.9rem; color: var(--text-primary);">
                     <span style="color: var(--success); font-weight: 700;">✓</span>
-                    <span>Cryptographic Bcrypt Hashing & Real-time Audit Trail</span>
+                    <span>Immutable Audit Activity Tracking</span>
                 </div>
             </div>
 
-            <!-- Demo Fast Switch Pills -->
             <div style="border-top: 1px solid var(--border-color); padding-top: 20px;">
-                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
-                    <div style="font-size: 0.75rem; text-transform: uppercase; letter-spacing: 1px; color: var(--text-muted); font-weight: 700;">
-                        ⚡ Choose Another Portal
-                    </div>
-                    <a href="{{ url_for('select_role') }}" style="font-size: 0.8rem; color: var(--secondary); text-decoration: none; font-weight: 600;">
-                        ← View All Roles
-                    </a>
-                </div>
-                <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px;">
-                    <a href="{{ url_for('login', role='STUDENT') }}" class="btn btn-secondary btn-sm {% if selected_role == 'STUDENT' %}btn-primary{% endif %}" style="justify-content: flex-start;">
-                        <span>🎓 Student</span>
-                    </a>
-                    <a href="{{ url_for('login', role='FACULTY') }}" class="btn btn-secondary btn-sm {% if selected_role == 'FACULTY' %}btn-primary{% endif %}" style="justify-content: flex-start;">
-                        <span>👨‍🏫 Faculty</span>
-                    </a>
-                    <a href="{{ url_for('login', role='ADMIN') }}" class="btn btn-secondary btn-sm {% if selected_role == 'ADMIN' %}btn-primary{% endif %}" style="justify-content: flex-start;">
-                        <span>🛡️ Admin</span>
-                    </a>
-                    <a href="{{ url_for('login', role='SUPER_HEAD') }}" class="btn btn-secondary btn-sm {% if selected_role == 'SUPER_HEAD' %}btn-primary{% endif %}" style="justify-content: flex-start;">
-                        <span>👑 Super Head</span>
-                    </a>
-                </div>
+                <a href="{{ url_for('select_role') }}" class="btn btn-secondary btn-sm" style="width: 100%;">
+                    <span>← Switch Role (Back to Main Screen)</span>
+                </a>
             </div>
         </div>
 
@@ -67,7 +47,7 @@
             <div style="margin-bottom: 28px;">
                 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
                     <a href="{{ url_for('select_role') }}" style="font-size: 0.82rem; color: var(--text-muted); text-decoration: none;">
-                        ← Change Role
+                        ← Choose Role
                     </a>
                     {% if selected_role %}
                     <span class="badge badge-primary">{{ selected_role.replace('_', ' ') }} PORTAL</span>
@@ -80,7 +60,7 @@
                     {% elif selected_role == 'SUPER_HEAD' %}👑 Super Head Sign In
                     {% else %}Sign In to Portal{% endif %}
                 </h2>
-                <p style="color: var(--text-muted); font-size: 0.88rem;">Enter your university credentials to continue</p>
+                <p style="color: var(--text-muted); font-size: 0.88rem;">Enter your institutional credentials to continue</p>
             </div>
 
             <form method="POST" action="{{ url_for('login') }}">
@@ -88,30 +68,23 @@
 
                 <div class="form-group">
                     <label class="form-label" for="email">Institutional Email</label>
-                    <input type="email" id="email" name="email" class="form-control" value="{{ default_email or '' }}" placeholder="e.g. user@campushub.com" required autocomplete="email">
+                    <input type="email" id="email" name="email" class="form-control" placeholder="Enter your email address" required autocomplete="email">
                 </div>
 
                 <div class="form-group">
                     <label class="form-label" for="password">Password</label>
-                    <input type="password" id="password" name="password" class="form-control" value="test123" placeholder="••••••••" required autocomplete="current-password">
+                    <input type="password" id="password" name="password" class="form-control" placeholder="Enter your password" required autocomplete="current-password">
                 </div>
 
                 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px; font-size: 0.82rem;">
                     <label style="display: flex; align-items: center; gap: 6px; cursor: pointer; color: var(--text-secondary);">
                         <input type="checkbox" checked style="accent-color: var(--primary);"> Remember session
                     </label>
-                    <span style="color: var(--text-muted);">Default: <code>test123</code></span>
                 </div>
 
-                <button type="submit" class="btn btn-primary" style="width: 100%; padding: 12px; font-size: 1rem; margin-bottom: 14px;">
+                <button type="submit" class="btn btn-primary" style="width: 100%; padding: 12px; font-size: 1rem;">
                     <span>Sign In Securely →</span>
                 </button>
-
-                {% if selected_role %}
-                <a href="{{ url_for('quick_login', role=selected_role) }}" class="btn btn-secondary btn-sm" style="width: 100%; font-size: 0.82rem;">
-                    <span>⚡ Instant 1-Click Demo Login as {{ selected_role.replace('_', ' ') }}</span>
-                </a>
-                {% endif %}
             </form>
         </div>
 

@@ -1,6 +1,6 @@
 {% extends 'base.html' %}
 
-{% block title %}Select Role | CampusHub ERP Portal{% endblock %}
+{% block title %}Welcome to CampusHub | University ERP Portal{% endblock %}
 
 {% block content %}
 <div style="min-height: 85vh; display: flex; flex-direction: column; justify-content: center; align-items: center; width: 100%; padding: 20px 0;">
@@ -14,48 +14,45 @@
             Welcome to CampusHub
         </h1>
         <p style="color: var(--text-secondary); font-size: 1.05rem; line-height: 1.6;">
-            Select your institutional role below to proceed to your dedicated portal and authentication gateway.
+            Please select your institutional role to access your dedicated login portal.
         </p>
     </div>
 
-    <!-- 4 Role Selection Cards Grid -->
+    <!-- 4 Role Options Grid -->
     <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 24px; width: 100%; max-width: 1200px;">
         
         <!-- 1. Student Card -->
-        <div class="glass-card role-card" style="display: flex; flex-direction: column; justify-content: space-between; padding: 32px 24px; transition: var(--transition); border-top: 4px solid #10b981;">
+        <div class="glass-card role-card" style="display: flex; flex-direction: column; justify-content: space-between; padding: 32px 24px; border-top: 4px solid #10b981;">
             <div>
                 <div style="width: 56px; height: 56px; border-radius: var(--radius-md); background: rgba(16, 185, 129, 0.15); color: #10b981; display: flex; align-items: center; justify-content: center; font-size: 1.8rem; margin-bottom: 20px;">
                     🎓
                 </div>
-                <h2 style="font-size: 1.35rem; font-weight: 700; margin-bottom: 8px;">Student Portal</h2>
+                <h2 style="font-size: 1.35rem; font-weight: 700; margin-bottom: 8px;">Student</h2>
                 <p style="color: var(--text-secondary); font-size: 0.88rem; line-height: 1.5; margin-bottom: 20px;">
-                    Access course enrollments, real-time attendance analytics, AI safety shield, grade cards, placement drives, and leave requests.
+                    Access your course enrollments, attendance analytics, AI safety shield, academic report cards, placement drives, and leave requests.
                 </p>
                 <div style="display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 24px;">
                     <span class="badge badge-success">Attendance & Safety</span>
                     <span class="badge badge-primary">Transcripts</span>
-                    <span class="badge badge-secondary">Placement Hub</span>
+                    <span class="badge badge-secondary">Placements</span>
                 </div>
             </div>
-            <div style="display: flex; flex-direction: column; gap: 10px;">
+            <div>
                 <a href="{{ url_for('login', role='STUDENT') }}" class="btn btn-primary" style="width: 100%;">
                     <span>Student Login →</span>
-                </a>
-                <a href="{{ url_for('quick_login', role='STUDENT') }}" class="btn btn-secondary btn-sm" style="width: 100%; font-size: 0.8rem;">
-                    <span>⚡ 1-Click Demo Access</span>
                 </a>
             </div>
         </div>
 
         <!-- 2. Faculty Card -->
-        <div class="glass-card role-card" style="display: flex; flex-direction: column; justify-content: space-between; padding: 32px 24px; transition: var(--transition); border-top: 4px solid #4f46e5;">
+        <div class="glass-card role-card" style="display: flex; flex-direction: column; justify-content: space-between; padding: 32px 24px; border-top: 4px solid #4f46e5;">
             <div>
                 <div style="width: 56px; height: 56px; border-radius: var(--radius-md); background: rgba(79, 70, 229, 0.15); color: #818cf8; display: flex; align-items: center; justify-content: center; font-size: 1.8rem; margin-bottom: 20px;">
                     👨‍🏫
                 </div>
-                <h2 style="font-size: 1.35rem; font-weight: 700; margin-bottom: 8px;">Faculty Portal</h2>
+                <h2 style="font-size: 1.35rem; font-weight: 700; margin-bottom: 8px;">Faculty</h2>
                 <p style="color: var(--text-secondary); font-size: 0.88rem; line-height: 1.5; margin-bottom: 20px;">
-                    Manage teaching schedules, roll-call attendance sheets with 1-click batch actions, student grading console, and leave reviews.
+                    Manage assigned subjects, record class attendance roll calls, evaluate continuous assessment marks, and process student leaves.
                 </p>
                 <div style="display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 24px;">
                     <span class="badge badge-primary">Roll Call Sheet</span>
@@ -63,51 +60,45 @@
                     <span class="badge badge-warning">Leave Approvals</span>
                 </div>
             </div>
-            <div style="display: flex; flex-direction: column; gap: 10px;">
+            <div>
                 <a href="{{ url_for('login', role='FACULTY') }}" class="btn btn-primary" style="width: 100%;">
                     <span>Faculty Login →</span>
-                </a>
-                <a href="{{ url_for('quick_login', role='FACULTY') }}" class="btn btn-secondary btn-sm" style="width: 100%; font-size: 0.8rem;">
-                    <span>⚡ 1-Click Demo Access</span>
                 </a>
             </div>
         </div>
 
         <!-- 3. Administrator Card -->
-        <div class="glass-card role-card" style="display: flex; flex-direction: column; justify-content: space-between; padding: 32px 24px; transition: var(--transition); border-top: 4px solid #06b6d4;">
+        <div class="glass-card role-card" style="display: flex; flex-direction: column; justify-content: space-between; padding: 32px 24px; border-top: 4px solid #06b6d4;">
             <div>
                 <div style="width: 56px; height: 56px; border-radius: var(--radius-md); background: rgba(6, 182, 212, 0.15); color: #06b6d4; display: flex; align-items: center; justify-content: center; font-size: 1.8rem; margin-bottom: 20px;">
                     🛡️
                 </div>
                 <h2 style="font-size: 1.35rem; font-weight: 700; margin-bottom: 8px;">Administrator</h2>
                 <p style="color: var(--text-secondary); font-size: 0.88rem; line-height: 1.5; margin-bottom: 20px;">
-                    Control center for provisioning users, curriculum courses, placement drive coordination, circular broadcasts, and operational stats.
+                    Manage student and faculty user accounts, curriculum subjects, company placement drives, announcements, and operational reports.
                 </p>
                 <div style="display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 24px;">
-                    <span class="badge badge-secondary">User Provisioning</span>
+                    <span class="badge badge-secondary">User Accounts</span>
                     <span class="badge badge-primary">Curriculum</span>
                     <span class="badge badge-success">Drives & Notices</span>
                 </div>
             </div>
-            <div style="display: flex; flex-direction: column; gap: 10px;">
+            <div>
                 <a href="{{ url_for('login', role='ADMIN') }}" class="btn btn-primary" style="width: 100%;">
                     <span>Admin Login →</span>
-                </a>
-                <a href="{{ url_for('quick_login', role='ADMIN') }}" class="btn btn-secondary btn-sm" style="width: 100%; font-size: 0.8rem;">
-                    <span>⚡ 1-Click Demo Access</span>
                 </a>
             </div>
         </div>
 
         <!-- 4. Super Head Card -->
-        <div class="glass-card role-card" style="display: flex; flex-direction: column; justify-content: space-between; padding: 32px 24px; transition: var(--transition); border-top: 4px solid #8b5cf6;">
+        <div class="glass-card role-card" style="display: flex; flex-direction: column; justify-content: space-between; padding: 32px 24px; border-top: 4px solid #8b5cf6;">
             <div>
                 <div style="width: 56px; height: 56px; border-radius: var(--radius-md); background: rgba(139, 92, 246, 0.15); color: #a78bfa; display: flex; align-items: center; justify-content: center; font-size: 1.8rem; margin-bottom: 20px;">
                     👑
                 </div>
                 <h2 style="font-size: 1.35rem; font-weight: 700; margin-bottom: 8px;">Super Head</h2>
                 <p style="color: var(--text-secondary); font-size: 0.88rem; line-height: 1.5; margin-bottom: 20px;">
-                    Executive leadership cockpit with macro KPIs, department governance, admin oversight, immutable audit trail, and DB health tools.
+                    Executive leadership oversight with campus macro KPIs, department governance, administrator controls, and real-time audit logs.
                 </p>
                 <div style="display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 24px;">
                     <span class="badge badge-primary">Executive KPIs</span>
@@ -115,12 +106,9 @@
                     <span class="badge badge-secondary">Diagnostics</span>
                 </div>
             </div>
-            <div style="display: flex; flex-direction: column; gap: 10px;">
+            <div>
                 <a href="{{ url_for('login', role='SUPER_HEAD') }}" class="btn btn-primary" style="width: 100%;">
                     <span>Super Head Login →</span>
-                </a>
-                <a href="{{ url_for('quick_login', role='SUPER_HEAD') }}" class="btn btn-secondary btn-sm" style="width: 100%; font-size: 0.8rem;">
-                    <span>⚡ 1-Click Demo Access</span>
                 </a>
             </div>
         </div>

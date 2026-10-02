@@ -15,28 +15,6 @@
 <body>
     <div class="ambient-glow"></div>
 
-    <!-- Quick Role Switcher Bar (For Evaluation & Demos) -->
-    <div class="demo-role-bar">
-        <div style="display: flex; align-items: center; gap: 8px;">
-            <span style="font-weight: 700; font-size: 0.75rem; color: #38bdf8;">✨ DEMO QUICK-SWITCH:</span>
-            <span style="font-size: 0.75rem; color: #94a3b8;">Explore roles with 1-click:</span>
-        </div>
-        <div class="role-pill-group">
-            <a href="{{ url_for('quick_login', role='STUDENT') }}" class="role-pill {% if current_user and current_user.role == 'STUDENT' %}active{% endif %}">
-                <span>🎓</span> Student
-            </a>
-            <a href="{{ url_for('quick_login', role='FACULTY') }}" class="role-pill {% if current_user and current_user.role == 'FACULTY' %}active{% endif %}">
-                <span>👨‍🏫</span> Faculty
-            </a>
-            <a href="{{ url_for('quick_login', role='ADMIN') }}" class="role-pill {% if current_user and current_user.role == 'ADMIN' %}active{% endif %}">
-                <span>🛡️</span> Admin
-            </a>
-            <a href="{{ url_for('quick_login', role='SUPER_HEAD') }}" class="role-pill {% if current_user and current_user.role == 'SUPER_HEAD' %}active{% endif %}">
-                <span>👑</span> Super Head
-            </a>
-        </div>
-    </div>
-
     <div class="app-container">
         {% if current_user %}
         <!-- Sidebar Navigation -->
