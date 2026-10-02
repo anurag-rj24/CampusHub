@@ -1,0 +1,98 @@
+{% extends 'base.html' %}
+
+{% block title %}Faculty Profile | CampusHub{% endblock %}
+{% block page_title %}👤 Faculty Official Profile{% endblock %}
+
+{% block content %}
+<div class="glass-card" style="margin-bottom: 24px;">
+    <div style="display: flex; align-items: center; gap: 24px; flex-wrap: wrap;">
+        <div class="avatar" style="width: 80px; height: 80px; font-size: 2rem; background: linear-gradient(135deg, #4f46e5, #06b6d4);">
+            {{ profile.first_name[0] if profile else 'F' }}
+        </div>
+        <div style="flex-grow: 1;">
+            <h2 style="font-size: 1.6rem; font-weight: 800; margin-bottom: 4px;">
+                {{ profile.first_name }} {{ profile.middle_name or '' }} {{ profile.last_name }}
+            </h2>
+            <div style="display: flex; gap: 12px; align-items: center; flex-wrap: wrap; font-size: 0.88rem; color: var(--text-secondary);">
+                <span>Designation: <strong style="color: var(--text-primary);">{{ profile.designation or 'Assistant Professor' }}</strong></span>
+                <span>•</span>
+                <span>Dept: <strong style="color: var(--secondary);">{{ profile.department_name }} ({{ profile.department_code }})</strong></span>
+                <span>•</span>
+                <span class="badge badge-success">{{ profile.status }}</span>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="grid-2">
+    <!-- Academic & Employment -->
+    <div class="glass-card">
+        <div class="card-header">
+            <h3 class="card-title">💼 Employment & Academic Credentials</h3>
+        </div>
+        <table class="data-table">
+            <tbody>
+                <tr>
+                    <td style="width: 40%; color: var(--text-muted); font-weight: 600;">Faculty ID</td>
+                    <td>#{{ profile.faculty_id }}</td>
+                </tr>
+                <tr>
+                    <td style="color: var(--text-muted); font-weight: 600;">Highest Qualification</td>
+                    <td>{{ profile.qualification or 'M.Tech / Ph.D.' }}</td>
+                </tr>
+                <tr>
+                    <td style="color: var(--text-muted); font-weight: 600;">Specialization</td>
+                    <td>{{ profile.specialization or 'Machine Learning & Systems' }}</td>
+                </tr>
+                <tr>
+                    <td style="color: var(--text-muted); font-weight: 600;">Employment Type</td>
+                    <td><span class="badge badge-primary">{{ profile.employment_type or 'FULL_TIME' }}</span></td>
+                </tr>
+                <tr>
+                    <td style="color: var(--text-muted); font-weight: 600;">Date of Joining</td>
+                    <td>{{ profile.joining_date or '2020-08-01' }}</td>
+                </tr>
+                <tr>
+                    <td style="color: var(--text-muted); font-weight: 600;">Monthly Compensation</td>
+                    <td>₹ {{ "{:,.2f}".format(profile.salary) if profile.salary else '75,000.00' }}</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <!-- Personal Info -->
+    <div class="glass-card">
+        <div class="card-header">
+            <h3 class="card-title">📋 Personal & Contact Record</h3>
+        </div>
+        <table class="data-table">
+            <tbody>
+                <tr>
+                    <td style="width: 40%; color: var(--text-muted); font-weight: 600;">Email Address</td>
+                    <td>{{ profile.email }}</td>
+                </tr>
+                <tr>
+                    <td style="color: var(--text-muted); font-weight: 600;">Contact Phone</td>
+                    <td>{{ profile.phone or '+91 9876543210' }}</td>
+                </tr>
+                <tr>
+                    <td style="color: var(--text-muted); font-weight: 600;">Date of Birth / Gender</td>
+                    <td>{{ profile.date_of_birth or '1985-06-20' }} ({{ profile.gender or 'MALE' }})</td>
+                </tr>
+                <tr>
+                    <td style="color: var(--text-muted); font-weight: 600;">Blood Group</td>
+                    <td><span class="badge badge-primary">{{ profile.blood_group or 'B+' }}</span></td>
+                </tr>
+                <tr>
+                    <td style="color: var(--text-muted); font-weight: 600;">Address</td>
+                    <td>{{ profile.address or 'Faculty Quarters' }}, {{ profile.city or 'Campus City' }}, {{ profile.state or 'State' }} - {{ profile.pincode or '110001' }}</td>
+                </tr>
+                <tr>
+                    <td style="color: var(--text-muted); font-weight: 600;">Emergency Contact</td>
+                    <td><strong style="color: var(--danger);">{{ profile.emergency_contact or '+91 9888877777' }}</strong></td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

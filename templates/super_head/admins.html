@@ -1,0 +1,104 @@
+{% extends 'base.html' %}
+
+{% block title %}Manage Administrators | CampusHub{% endblock %}
+{% block page_title %}🛡️ Administrator Governance & Appointments{% endblock %}
+
+{% block content %}
+<!-- Add Admin Form -->
+<div class="glass-card" style="margin-bottom: 24px;">
+    <div class="card-header">
+        <h3 class="card-title">➕ Appoint System Administrator</h3>
+    </div>
+
+    <form method="POST" action="{{ url_for('super_head_admins') }}">
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px;">
+            <div class="form-group">
+                <label class="form-label" for="first_name">First Name</label>
+                <input type="text" id="first_name" name="first_name" class="form-control" placeholder="e.g. Vikram" required>
+            </div>
+            <div class="form-group">
+                <label class="form-label" for="last_name">Last Name</label>
+                <input type="text" id="last_name" name="last_name" class="form-control" placeholder="e.g. Mehra" required>
+            </div>
+            <div class="form-group">
+                <label class="form-label" for="email">Institutional Email</label>
+                <input type="email" id="email" name="email" class="form-control" placeholder="e.g. vikram.admin@campushub.com" required>
+            </div>
+            <div class="form-group">
+                <label class="form-label" for="phone">Phone</label>
+                <input type="text" id="phone" name="phone" class="form-control" placeholder="+91 9876543210" required>
+            </div>
+            <div class="form-group">
+                <label class="form-label" for="designation">Designation</label>
+                <input type="text" id="designation" name="designation" class="form-control" placeholder="e.g. Dean of Academics / Chief Admin" required>
+            </div>
+            <div class="form-group">
+                <label class="form-label" for="department_id">Department (Optional)</label>
+                <select id="department_id" name="department_id" class="form-control">
+                    <option value="">General University Administration</option>
+                    {% for d in departments %}
+                    <option value="{{ d.department_id }}">{{ d.department_name }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="form-group">
+                <label class="form-label" for="password">Password</label>
+                <input type="password" id="password" name="password" class="form-control" value="test123" required>
+            </div>
+        </div>
+
+        <div style="display: flex; justify-content: flex-end;">
+            <button type="submit" class="btn btn-primary">
+                <span>🛡️ Provision Administrator Account</span>
+            </button>
+        </div>
+    </form>
+</div>
+
+<!-- Administrators List -->
+<div class="glass-card">
+    <div class="card-header">
+        <h3 class="card-title">👥 Appointed Administrators</h3>
+    </div>
+
+    <div class="table-responsive">
+        <table class="data-table">
+            <thead>
+                <tr>
+                    <th>Admin ID</th>
+                    <th>Name</th>
+                    <th>Designation</th>
+                    <th>Email & Contact</th>
+                    <th>Department</th>
+                    <th>Status</th>
+                    <th>Last Active</th>
+                    <th>Action</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for a in admins %}
+                <tr>
+                    <td>#{{ a.admin_id }}</td>
+                    <td><strong>{{ a.first_name }} {{ a.last_name }}</strong></td>
+                    <td>{{ a.designation }}</td>
+                    <td>
+                        {{ a.email }}<br>
+                        <span style="color: var(--text-muted); font-size: 0.75rem;">{{ a.phone }}</span>
+                    </td>
+                    <td>{{ a.department_name or 'Central Administration' }}</td>
+                    <td><span class="badge {% if a.status == 'ACTIVE' %}badge-success{% else %}badge-danger{% endif %}">{{ a.status }}</span></td>
+                    <td style="color: var(--text-muted); font-size: 0.8rem;">{{ a.last_login or 'Never' }}</td>
+                    <td>
+                        <form method="POST" action="{{ url_for('toggle_user_status', uid=a.user_id) }}">
+                            <button type="submit" class="btn btn-sm {% if a.status == 'ACTIVE' %}btn-danger{% else %}btn-success{% endif %}">
+                                {% if a.status == 'ACTIVE' %}Deactivate{% else %}Activate{% endif %}
+                            </button>
+                        </form>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,141 @@
+{% extends 'base.html' %}
+
+{% block title %}Mark Class Attendance | CampusHub{% endblock %}
+{% block page_title %}✅ Interactive Class Roll Call & Attendance Sheet{% endblock %}
+
+{% block content %}
+<div class="glass-card" style="margin-bottom: 24px;">
+    <!-- Subject Selector -->
+    <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 16px;">
+        <div>
+            <label style="font-size: 0.85rem; font-weight: 600; color: var(--text-muted); margin-bottom: 6px; display: block;">Select Teaching Subject:</label>
+            <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+                {% for s in subjects %}
+                <a href="{{ url_for('faculty_attendance', subject_id=s.subject_id) }}" class="btn {% if selected_subject_id == s.subject_id %}btn-primary{% else %}btn-secondary{% endif %} btn-sm">
+                    {{ s.subject_code }} - {{ s.subject_name }}
+                </a>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+</div>
+
+{% if selected_subject_id %}
+<form method="POST" action="{{ url_for('faculty_attendance') }}">
+    <input type="hidden" name="subject_id" value="{{ selected_subject_id }}">
+
+    <!-- Session Details Card -->
+    <div class="glass-card" style="margin-bottom: 24px;">
+        <div class="card-header">
+            <h3 class="card-title">📅 Class Session Information</h3>
+        </div>
+
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 16px;">
+            <div class="form-group">
+                <label class="form-label" for="session_date">Session Date</label>
+                <input type="date" id="session_date" name="session_date" class="form-control" value="{{ now.strftime('%Y-%m-%d') }}" required>
+            </div>
+            <div class="form-group">
+                <label class="form-label" for="start_time">Start Time</label>
+                <input type="time" id="start_time" name="start_time" class="form-control" value="09:00" required>
+            </div>
+            <div class="form-group">
+                <label class="form-label" for="end_time">End Time</label>
+                <input type="time" id="end_time" name="end_time" class="form-control" value="10:00" required>
+            </div>
+            <div class="form-group">
+                <label class="form-label" for="room_no">Classroom / Lab</label>
+                <input type="text" id="room_no" name="room_no" class="form-control" value="Hall A-204" required>
+            </div>
+            <div class="form-group">
+                <label class="form-label" for="session_type">Session Type</label>
+                <select id="session_type" name="session_type" class="form-control">
+                    <option value="LECTURE">LECTURE</option>
+                    <option value="LAB">LAB / PRACTICAL</option>
+                    <option value="TUTORIAL">TUTORIAL</option>
+                </select>
+            </div>
+        </div>
+    </div>
+
+    <!-- Student Attendance Grid -->
+    <div class="glass-card">
+        <div class="card-header">
+            <h3 class="card-title">👥 Student Roll Call Roster ({{ students|length }} Enrolled)</h3>
+            <div style="display: flex; gap: 8px;">
+                <button type="button" class="btn btn-secondary btn-sm" onclick="markAll('PRESENT')">✓ All Present</button>
+                <button type="button" class="btn btn-secondary btn-sm" onclick="markAll('ABSENT')">✗ All Absent</button>
+            </div>
+        </div>
+
+        <div class="table-responsive">
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th>Roll / ID</th>
+                        <th>Student Name</th>
+                        <th>Institutional Email</th>
+                        <th>Attendance Status</th>
+                        <th>Remarks / Notes</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for st in students %}
+                    <tr>
+                        <td><strong>#{{ st.student_id }}</strong></td>
+                        <td>{{ st.first_name }} {{ st.last_name }}</td>
+                        <td style="color: var(--text-secondary);">{{ st.email }}</td>
+                        <td>
+                            <div style="display: flex; gap: 12px; align-items: center;">
+                                <label style="display: flex; align-items: center; gap: 5px; cursor: pointer; color: #10b981; font-weight: 600;">
+                                    <input type="radio" name="status_{{ st.student_id }}" value="PRESENT" class="att-radio-present" checked style="accent-color: #10b981;">
+                                    Present
+                                </label>
+                                <label style="display: flex; align-items: center; gap: 5px; cursor: pointer; color: #ef4444; font-weight: 600;">
+                                    <input type="radio" name="status_{{ st.student_id }}" value="ABSENT" class="att-radio-absent" style="accent-color: #ef4444;">
+                                    Absent
+                                </label>
+                            </div>
+                        </td>
+                        <td>
+                            <input type="text" name="remarks_{{ st.student_id }}" class="form-control" placeholder="Optional remark..." style="padding: 4px 8px; font-size: 0.8rem;">
+                        </td>
+                    </tr>
+                    {% else %}
+                    <tr>
+                        <td colspan="5" style="text-align: center; color: var(--text-muted); padding: 30px;">
+                            No students currently enrolled in this department/subject.
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        {% if students %}
+        <div style="margin-top: 24px; display: flex; justify-content: flex-end;">
+            <button type="submit" class="btn btn-primary" style="padding: 12px 28px; font-size: 1rem;">
+                <span>💾 Commit & Save Session Attendance</span>
+            </button>
+        </div>
+        {% endif %}
+    </div>
+</form>
+{% else %}
+<div class="glass-card" style="text-align: center; padding: 40px;">
+    <p style="color: var(--text-muted);">Please select an assigned subject above to start marking class attendance.</p>
+</div>
+{% endif %}
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+function markAll(status) {
+    if (status === 'PRESENT') {
+        document.querySelectorAll('.att-radio-present').forEach(r => r.checked = true);
+    } else {
+        document.querySelectorAll('.att-radio-absent').forEach(r => r.checked = true);
+    }
+}
+</script>
+{% endblock %}

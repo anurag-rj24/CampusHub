@@ -1,0 +1,75 @@
+{% extends 'base.html' %}
+
+{% block title %}Notice Board Publisher | CampusHub{% endblock %}
+{% block page_title %}📢 Campus Announcements & Circulars Publisher{% endblock %}
+
+{% block content %}
+<div class="grid-2">
+    <!-- Publish Notice Form -->
+    <div class="glass-card">
+        <div class="card-header">
+            <h3 class="card-title">✍️ Compose Campus Circular</h3>
+        </div>
+
+        <form method="POST" action="{{ url_for('admin_notices') }}">
+            <div class="form-group">
+                <label class="form-label" for="title">Notice Headline / Subject</label>
+                <input type="text" id="title" name="title" class="form-control" placeholder="e.g. End-Semester Examination Schedule Announced" required>
+            </div>
+
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+                <div class="form-group">
+                    <label class="form-label" for="target_role">Target Audience</label>
+                    <select id="target_role" name="target_role" class="form-control">
+                        <option value="ALL">All Campus (Students + Faculty)</option>
+                        <option value="STUDENT">Students Only</option>
+                        <option value="FACULTY">Faculty Only</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label class="form-label" for="priority">Priority Tag</label>
+                    <select id="priority" name="priority" class="form-control">
+                        <option value="NORMAL">NORMAL</option>
+                        <option value="HIGH">HIGH PRIORITY</option>
+                        <option value="URGENT">URGENT ALERT</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label class="form-label" for="content">Announcement Details</label>
+                <textarea id="content" name="content" class="form-control" rows="4" placeholder="Full notice body and instructions..." required></textarea>
+            </div>
+
+            <button type="submit" class="btn btn-primary" style="width: 100%;">
+                <span>📢 Broadcast Circular</span>
+            </button>
+        </form>
+    </div>
+
+    <!-- Active Notices Feed -->
+    <div class="glass-card">
+        <div class="card-header">
+            <h3 class="card-title">📜 Published Campus Notices</h3>
+        </div>
+
+        <div style="display: flex; flex-direction: column; gap: 14px; max-height: 500px; overflow-y: auto;">
+            {% for n in notices %}
+            <div style="padding: 14px; background: rgba(255, 255, 255, 0.03); border: 1px solid var(--border-color); border-radius: var(--radius-md); border-left: 4px solid {% if n.priority in ['HIGH', 'URGENT'] %}var(--danger){% else %}var(--primary){% endif %};">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+                    <strong style="font-size: 0.95rem;">{{ n.title }}</strong>
+                    <span class="badge {% if n.priority in ['HIGH', 'URGENT'] %}badge-danger{% else %}badge-primary{% endif %}">{{ n.priority }}</span>
+                </div>
+                <p style="font-size: 0.85rem; color: var(--text-secondary); line-height: 1.5; margin-bottom: 8px;">{{ n.content }}</p>
+                <div style="display: flex; justify-content: space-between; font-size: 0.75rem; color: var(--text-muted);">
+                    <span>Audience: <strong>{{ n.target_role }}</strong></span>
+                    <span>By: {{ n.first_name }} {{ n.last_name }} ({{ n.created_at }})</span>
+                </div>
+            </div>
+            {% else %}
+            <p style="color: var(--text-muted);">No notices published yet.</p>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+{% endblock %}

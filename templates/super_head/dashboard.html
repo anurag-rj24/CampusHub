@@ -1,0 +1,107 @@
+{% extends 'base.html' %}
+
+{% block title %}Super Head Executive Portal | CampusHub{% endblock %}
+{% block page_title %}👑 Executive Leadership & Intelligence Hub{% endblock %}
+
+{% block content %}
+<div class="kpi-grid">
+    <div class="kpi-card" style="--card-accent: #6366f1; --icon-bg: rgba(99, 102, 241, 0.15); --icon-color: #6366f1;">
+        <div class="kpi-icon-wrap">🏛️</div>
+        <div class="kpi-info">
+            <span class="kpi-label">Active Campus Population</span>
+            <span class="kpi-value">{{ total_active_users }}</span>
+            <span class="kpi-meta">Users Verified & Active</span>
+        </div>
+    </div>
+
+    <div class="kpi-card" style="--card-accent: #06b6d4; --icon-bg: rgba(6, 182, 212, 0.15); --icon-color: #06b6d4;">
+        <div class="kpi-icon-wrap">🎓</div>
+        <div class="kpi-info">
+            <span class="kpi-label">Total Students</span>
+            <span class="kpi-value">{{ total_students }}</span>
+            <span class="kpi-meta">In {{ total_depts }} Departments</span>
+        </div>
+    </div>
+
+    <div class="kpi-card" style="--card-accent: #8b5cf6; --icon-bg: rgba(139, 92, 246, 0.15); --icon-color: #8b5cf6;">
+        <div class="kpi-icon-wrap">👨‍🏫</div>
+        <div class="kpi-info">
+            <span class="kpi-label">Faculty Staff</span>
+            <span class="kpi-value">{{ total_faculty }}</span>
+            <span class="kpi-meta">{{ total_admins }} System Admins</span>
+        </div>
+    </div>
+
+    <div class="kpi-card" style="--card-accent: #10b981; --icon-bg: rgba(16, 185, 129, 0.15); --icon-color: #10b981;">
+        <div class="kpi-icon-wrap">💼</div>
+        <div class="kpi-info">
+            <span class="kpi-label">Placed Graduates</span>
+            <span class="kpi-value">{{ total_placed }}</span>
+            <span class="kpi-meta">Across {{ total_drives }} Placement Drives</span>
+        </div>
+    </div>
+</div>
+
+<div class="grid-2" style="margin-top: 24px;">
+    <!-- Campus Distribution -->
+    <div class="glass-card">
+        <div class="card-header">
+            <h3 class="card-title">📊 Departmental Resource Allocation</h3>
+            <a href="{{ url_for('super_head_departments') }}" class="btn btn-secondary btn-sm">Manage →</a>
+        </div>
+
+        <div class="table-responsive">
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th>Department</th>
+                        <th>Students</th>
+                        <th>Faculty</th>
+                        <th>Student/Faculty Ratio</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for ds in dept_stats %}
+                    {% set r = (ds.student_count / ds.faculty_count)|round(1) if ds.faculty_count > 0 else 'N/A' %}
+                    <tr>
+                        <td><strong>{{ ds.department_name }}</strong> ({{ ds.department_code }})</td>
+                        <td><span class="badge badge-primary">{{ ds.student_count }}</span></td>
+                        <td><span class="badge badge-secondary">{{ ds.faculty_count }}</span></td>
+                        <td><strong style="color: var(--secondary);">{{ r }}:1</strong></td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Live System Audit Trail -->
+    <div class="glass-card">
+        <div class="card-header">
+            <h3 class="card-title">🔍 Real-Time System Audit Stream</h3>
+            <a href="{{ url_for('super_head_audit_logs') }}" class="btn btn-secondary btn-sm">Full Logs →</a>
+        </div>
+
+        <div style="display: flex; flex-direction: column; gap: 10px;">
+            {% for l in recent_logs %}
+            <div style="display: flex; justify-content: space-between; align-items: center; padding: 10px 12px; background: rgba(255,255,255,0.03); border-radius: var(--radius-sm); border-left: 3px solid var(--accent); font-size: 0.85rem;">
+                <div>
+                    <div>
+                        <span class="badge {% if l.action == 'INSERT' %}badge-success{% elif l.action == 'UPDATE' %}badge-primary{% elif l.action == 'LOGIN' %}badge-secondary{% else %}badge-warning{% endif %}" style="font-size: 0.7rem; padding: 2px 6px;">
+                            {{ l.action }}
+                        </span>
+                        <strong style="margin-left: 6px;">{{ l.description }}</strong>
+                    </div>
+                    <div style="color: var(--text-muted); font-size: 0.75rem; margin-top: 2px;">
+                        By: {{ l.first_name }} {{ l.last_name }} ({{ l.role }}) on table <code>{{ l.table_name }}</code>
+                    </div>
+                </div>
+                <span style="font-size: 0.72rem; color: var(--text-muted); white-space: nowrap;">{{ l.timestamp }}</span>
+            </div>
+            {% else %}
+            <p style="color: var(--text-muted);">No audit events recorded yet.</p>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,103 @@
+{% extends 'base.html' %}
+
+{% block title %}Administrator Dashboard | CampusHub{% endblock %}
+{% block page_title %}🛡️ Central Administrator Command Console{% endblock %}
+
+{% block content %}
+<div class="kpi-grid">
+    <div class="kpi-card" style="--card-accent: #4f46e5; --icon-bg: rgba(79, 70, 229, 0.15); --icon-color: #4f46e5;">
+        <div class="kpi-icon-wrap">🎓</div>
+        <div class="kpi-info">
+            <span class="kpi-label">Active Students</span>
+            <span class="kpi-value">{{ total_students }}</span>
+            <span class="kpi-meta">Enrolled in Degree Programs</span>
+        </div>
+    </div>
+
+    <div class="kpi-card" style="--card-accent: #06b6d4; --icon-bg: rgba(6, 182, 212, 0.15); --icon-color: #06b6d4;">
+        <div class="kpi-icon-wrap">👨‍🏫</div>
+        <div class="kpi-info">
+            <span class="kpi-label">Active Faculty</span>
+            <span class="kpi-value">{{ total_faculty }}</span>
+            <span class="kpi-meta">Teaching & Research Staff</span>
+        </div>
+    </div>
+
+    <div class="kpi-card" style="--card-accent: #8b5cf6; --icon-bg: rgba(139, 92, 246, 0.15); --icon-color: #8b5cf6;">
+        <div class="kpi-icon-wrap">🏛️</div>
+        <div class="kpi-info">
+            <span class="kpi-label">Departments</span>
+            <span class="kpi-value">{{ total_departments }}</span>
+            <span class="kpi-meta">{{ total_courses }} Degree Courses</span>
+        </div>
+    </div>
+
+    <div class="kpi-card" style="--card-accent: #10b981; --icon-bg: rgba(16, 185, 129, 0.15); --icon-color: #10b981;">
+        <div class="kpi-icon-wrap">💼</div>
+        <div class="kpi-info">
+            <span class="kpi-label">Placement Drives</span>
+            <span class="kpi-value">{{ open_drives }}</span>
+            <span class="kpi-meta">Active Recruitment Cycles</span>
+        </div>
+    </div>
+</div>
+
+<div class="grid-2" style="margin-top: 24px;">
+    <!-- Quick Admin Action Grid -->
+    <div class="glass-card">
+        <div class="card-header">
+            <h3 class="card-title">⚡ Administrative Operations</h3>
+        </div>
+
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 14px;">
+            <a href="{{ url_for('admin_users') }}" class="btn btn-primary" style="padding: 18px 14px; flex-direction: column; gap: 6px;">
+                <span style="font-size: 1.6rem;">👥</span>
+                <span>Manage Users & Roles</span>
+            </a>
+            <a href="{{ url_for('admin_academics') }}" class="btn btn-secondary" style="padding: 18px 14px; flex-direction: column; gap: 6px;">
+                <span style="font-size: 1.6rem;">🏛️</span>
+                <span>Courses & Curriculum</span>
+            </a>
+            <a href="{{ url_for('admin_placements') }}" class="btn btn-secondary" style="padding: 18px 14px; flex-direction: column; gap: 6px;">
+                <span style="font-size: 1.6rem;">💼</span>
+                <span>Create Placement Drive</span>
+            </a>
+            <a href="{{ url_for('admin_notices') }}" class="btn btn-secondary" style="padding: 18px 14px; flex-direction: column; gap: 6px;">
+                <span style="font-size: 1.6rem;">📢</span>
+                <span>Publish Notice</span>
+            </a>
+        </div>
+    </div>
+
+    <!-- Recent Registered Users -->
+    <div class="glass-card">
+        <div class="card-header">
+            <h3 class="card-title">📋 Recently Registered Users</h3>
+            <a href="{{ url_for('admin_users') }}" class="btn btn-secondary btn-sm">View All →</a>
+        </div>
+
+        <div class="table-responsive">
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th>User Name</th>
+                        <th>Email</th>
+                        <th>Role</th>
+                        <th>Status</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for u in recent_users %}
+                    <tr>
+                        <td><strong>{{ u.first_name }} {{ u.last_name }}</strong></td>
+                        <td style="color: var(--text-secondary); font-size: 0.8rem;">{{ u.email }}</td>
+                        <td><span class="badge {% if u.role == 'STUDENT' %}badge-primary{% elif u.role == 'FACULTY' %}badge-secondary{% else %}badge-warning{% endif %}">{{ u.role }}</span></td>
+                        <td><span class="badge {% if u.status == 'ACTIVE' %}badge-success{% else %}badge-danger{% endif %}">{{ u.status }}</span></td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}

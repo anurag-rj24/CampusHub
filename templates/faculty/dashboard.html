@@ -1,0 +1,114 @@
+{% extends 'base.html' %}
+
+{% block title %}Faculty Dashboard | CampusHub{% endblock %}
+{% block page_title %}👨‍🏫 Faculty Command Center{% endblock %}
+
+{% block content %}
+<div class="kpi-grid">
+    <div class="kpi-card" style="--card-accent: #4f46e5; --icon-bg: rgba(79, 70, 229, 0.15); --icon-color: #4f46e5;">
+        <div class="kpi-icon-wrap">📚</div>
+        <div class="kpi-info">
+            <span class="kpi-label">Assigned Subjects</span>
+            <span class="kpi-value">{{ assigned_subjects|length }}</span>
+            <span class="kpi-meta">Active Curriculum Modules</span>
+        </div>
+    </div>
+
+    <div class="kpi-card" style="--card-accent: #06b6d4; --icon-bg: rgba(6, 182, 212, 0.15); --icon-color: #06b6d4;">
+        <div class="kpi-icon-wrap">📅</div>
+        <div class="kpi-info">
+            <span class="kpi-label">Conducted Sessions</span>
+            <span class="kpi-value">{{ total_sessions }}</span>
+            <span class="kpi-meta">Recorded Class Sessions</span>
+        </div>
+    </div>
+
+    <div class="kpi-card" style="--card-accent: #f59e0b; --icon-bg: rgba(245, 158, 11, 0.15); --icon-color: #f59e0b;">
+        <div class="kpi-icon-wrap">📬</div>
+        <div class="kpi-info">
+            <span class="kpi-label">Pending Leaves</span>
+            <span class="kpi-value">{{ pending_leaves }}</span>
+            <span class="kpi-meta">Student Requests in Inbox</span>
+        </div>
+    </div>
+
+    <div class="kpi-card" style="--card-accent: #10b981; --icon-bg: rgba(16, 185, 129, 0.15); --icon-color: #10b981;">
+        <div class="kpi-icon-wrap">🏛️</div>
+        <div class="kpi-info">
+            <span class="kpi-label">Department</span>
+            <span class="kpi-value" style="font-size: 1.3rem;">{{ faculty.department_code or 'CSE' }}</span>
+            <span class="kpi-meta">{{ faculty.department_name or 'Computer Science' }}</span>
+        </div>
+    </div>
+</div>
+
+<div class="grid-2" style="margin-top: 24px;">
+    <!-- Assigned Subjects Quick Launcher -->
+    <div class="glass-card">
+        <div class="card-header">
+            <h3 class="card-title">📖 Assigned Subjects & Teaching Batches</h3>
+        </div>
+
+        <div style="display: flex; flex-direction: column; gap: 12px;">
+            {% for s in assigned_subjects %}
+            <div style="display: flex; justify-content: space-between; align-items: center; padding: 14px; background: rgba(255,255,255,0.03); border: 1px solid var(--border-color); border-radius: var(--radius-md);">
+                <div>
+                    <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 4px;">
+                        <span class="badge badge-primary">{{ s.subject_code }}</span>
+                        <strong>{{ s.subject_name }}</strong>
+                    </div>
+                    <div style="font-size: 0.8rem; color: var(--text-muted);">
+                        Credits: {{ s.credits }} | Semester: Sem {{ s.semester or 1 }}
+                    </div>
+                </div>
+                <div style="display: flex; gap: 8px;">
+                    <a href="{{ url_for('faculty_attendance', subject_id=s.subject_id) }}" class="btn btn-primary btn-sm">Take Roll Call</a>
+                    <a href="{{ url_for('faculty_grading', subject_id=s.subject_id) }}" class="btn btn-secondary btn-sm">Enter Grades</a>
+                </div>
+            </div>
+            {% else %}
+            <p style="color: var(--text-muted);">No subjects currently assigned to your profile.</p>
+            {% endfor %}
+        </div>
+    </div>
+
+    <!-- Quick Actions & Notices -->
+    <div class="glass-card">
+        <div class="card-header">
+            <h3 class="card-title">⚡ Faculty Quick Action Hub</h3>
+        </div>
+
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 20px;">
+            <a href="{{ url_for('faculty_attendance') }}" class="btn btn-primary" style="padding: 16px 12px; flex-direction: column; gap: 6px;">
+                <span style="font-size: 1.5rem;">✅</span>
+                <span>Mark Attendance</span>
+            </a>
+            <a href="{{ url_for('faculty_grading') }}" class="btn btn-secondary" style="padding: 16px 12px; flex-direction: column; gap: 6px;">
+                <span style="font-size: 1.5rem;">🎯</span>
+                <span>Upload Marks</span>
+            </a>
+            <a href="{{ url_for('faculty_leaves') }}" class="btn btn-secondary" style="padding: 16px 12px; flex-direction: column; gap: 6px;">
+                <span style="font-size: 1.5rem;">📬</span>
+                <span>Review Leaves</span>
+            </a>
+            <a href="{{ url_for('faculty_profile') }}" class="btn btn-secondary" style="padding: 16px 12px; flex-direction: column; gap: 6px;">
+                <span style="font-size: 1.5rem;">👤</span>
+                <span>Profile Info</span>
+            </a>
+        </div>
+
+        <div class="card-header" style="margin-top: 10px; margin-bottom: 12px;">
+            <h4 style="font-size: 0.95rem;">📢 Faculty Notices</h4>
+        </div>
+        <div style="display: flex; flex-direction: column; gap: 10px;">
+            {% for n in notices %}
+            <div style="font-size: 0.85rem; padding: 8px 12px; background: rgba(0,0,0,0.15); border-radius: var(--radius-sm);">
+                <strong>{{ n.title }}</strong>: <span style="color: var(--text-secondary);">{{ n.content }}</span>
+            </div>
+            {% else %}
+            <p style="color: var(--text-muted); font-size: 0.82rem;">No notices posted.</p>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+{% endblock %}

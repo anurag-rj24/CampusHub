@@ -1,0 +1,120 @@
+{% extends 'base.html' %}
+
+{% block title %}{% if selected_role %}{{ selected_role.replace('_', ' ') }} Sign-In{% else %}Sign-In{% endif %} | CampusHub ERP{% endblock %}
+
+{% block content %}
+<div style="min-height: 80vh; display: flex; align-items: center; justify-content: center; width: 100%;">
+    <div style="width: 100%; max-width: 950px; display: grid; grid-template-columns: 1.1fr 1fr; gap: 32px; align-items: center;">
+        
+        <!-- Left Hero / Brand Card -->
+        <div class="glass-card" style="padding: 40px; background: linear-gradient(135deg, rgba(30, 41, 59, 0.85), rgba(15, 23, 42, 0.95)); border: 1px solid rgba(255,255,255,0.12);">
+            <div style="display: flex; align-items: center; gap: 14px; margin-bottom: 24px;">
+                <div class="brand-icon" style="width: 50px; height: 50px; font-size: 1.6rem;">🎓</div>
+                <div>
+                    <h1 style="font-size: 1.8rem; font-weight: 800; letter-spacing: -0.5px;">CampusHub</h1>
+                    <span style="color: var(--secondary); font-weight: 700; font-size: 0.8rem; letter-spacing: 1.5px; text-transform: uppercase;">Next-Gen Enterprise ERP</span>
+                </div>
+            </div>
+
+            <p style="color: var(--text-secondary); line-height: 1.6; margin-bottom: 28px; font-size: 0.95rem;">
+                A centralized, unified institutional operating system powering student lifecycles, faculty teaching workflows, automated attendance analytics, academic assessments, and executive governance.
+            </p>
+
+            <div style="display: flex; flex-direction: column; gap: 14px; margin-bottom: 30px;">
+                <div style="display: flex; align-items: center; gap: 12px; font-size: 0.9rem; color: var(--text-primary);">
+                    <span style="color: var(--success); font-weight: 700;">✓</span>
+                    <span>Role-Based Access Control (Student, Faculty, Admin, Super Head)</span>
+                </div>
+                <div style="display: flex; align-items: center; gap: 12px; font-size: 0.9rem; color: var(--text-primary);">
+                    <span style="color: var(--success); font-weight: 700;">✓</span>
+                    <span>AI Attendance Safety Shield & GPA Analytics</span>
+                </div>
+                <div style="display: flex; align-items: center; gap: 12px; font-size: 0.9rem; color: var(--text-primary);">
+                    <span style="color: var(--success); font-weight: 700;">✓</span>
+                    <span>Cryptographic Bcrypt Hashing & Real-time Audit Trail</span>
+                </div>
+            </div>
+
+            <!-- Demo Fast Switch Pills -->
+            <div style="border-top: 1px solid var(--border-color); padding-top: 20px;">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+                    <div style="font-size: 0.75rem; text-transform: uppercase; letter-spacing: 1px; color: var(--text-muted); font-weight: 700;">
+                        ⚡ Choose Another Portal
+                    </div>
+                    <a href="{{ url_for('select_role') }}" style="font-size: 0.8rem; color: var(--secondary); text-decoration: none; font-weight: 600;">
+                        ← View All Roles
+                    </a>
+                </div>
+                <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px;">
+                    <a href="{{ url_for('login', role='STUDENT') }}" class="btn btn-secondary btn-sm {% if selected_role == 'STUDENT' %}btn-primary{% endif %}" style="justify-content: flex-start;">
+                        <span>🎓 Student</span>
+                    </a>
+                    <a href="{{ url_for('login', role='FACULTY') }}" class="btn btn-secondary btn-sm {% if selected_role == 'FACULTY' %}btn-primary{% endif %}" style="justify-content: flex-start;">
+                        <span>👨‍🏫 Faculty</span>
+                    </a>
+                    <a href="{{ url_for('login', role='ADMIN') }}" class="btn btn-secondary btn-sm {% if selected_role == 'ADMIN' %}btn-primary{% endif %}" style="justify-content: flex-start;">
+                        <span>🛡️ Admin</span>
+                    </a>
+                    <a href="{{ url_for('login', role='SUPER_HEAD') }}" class="btn btn-secondary btn-sm {% if selected_role == 'SUPER_HEAD' %}btn-primary{% endif %}" style="justify-content: flex-start;">
+                        <span>👑 Super Head</span>
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Right Login Form Card -->
+        <div class="glass-card" style="padding: 40px; box-shadow: var(--shadow-glow);">
+            <div style="margin-bottom: 28px;">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                    <a href="{{ url_for('select_role') }}" style="font-size: 0.82rem; color: var(--text-muted); text-decoration: none;">
+                        ← Change Role
+                    </a>
+                    {% if selected_role %}
+                    <span class="badge badge-primary">{{ selected_role.replace('_', ' ') }} PORTAL</span>
+                    {% endif %}
+                </div>
+                <h2 style="font-size: 1.5rem; font-weight: 700; margin-bottom: 6px;">
+                    {% if selected_role == 'STUDENT' %}🎓 Student Sign In
+                    {% elif selected_role == 'FACULTY' %}👨‍🏫 Faculty Sign In
+                    {% elif selected_role == 'ADMIN' %}🛡️ Administrator Sign In
+                    {% elif selected_role == 'SUPER_HEAD' %}👑 Super Head Sign In
+                    {% else %}Sign In to Portal{% endif %}
+                </h2>
+                <p style="color: var(--text-muted); font-size: 0.88rem;">Enter your university credentials to continue</p>
+            </div>
+
+            <form method="POST" action="{{ url_for('login') }}">
+                <input type="hidden" name="role" value="{{ selected_role or '' }}">
+
+                <div class="form-group">
+                    <label class="form-label" for="email">Institutional Email</label>
+                    <input type="email" id="email" name="email" class="form-control" value="{{ default_email or '' }}" placeholder="e.g. user@campushub.com" required autocomplete="email">
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label" for="password">Password</label>
+                    <input type="password" id="password" name="password" class="form-control" value="test123" placeholder="••••••••" required autocomplete="current-password">
+                </div>
+
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px; font-size: 0.82rem;">
+                    <label style="display: flex; align-items: center; gap: 6px; cursor: pointer; color: var(--text-secondary);">
+                        <input type="checkbox" checked style="accent-color: var(--primary);"> Remember session
+                    </label>
+                    <span style="color: var(--text-muted);">Default: <code>test123</code></span>
+                </div>
+
+                <button type="submit" class="btn btn-primary" style="width: 100%; padding: 12px; font-size: 1rem; margin-bottom: 14px;">
+                    <span>Sign In Securely →</span>
+                </button>
+
+                {% if selected_role %}
+                <a href="{{ url_for('quick_login', role=selected_role) }}" class="btn btn-secondary btn-sm" style="width: 100%; font-size: 0.82rem;">
+                    <span>⚡ Instant 1-Click Demo Login as {{ selected_role.replace('_', ' ') }}</span>
+                </a>
+                {% endif %}
+            </form>
+        </div>
+
+    </div>
+</div>
+{% endblock %}

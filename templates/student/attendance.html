@@ -1,0 +1,111 @@
+{% extends 'base.html' %}
+
+{% block title %}Attendance Analytics & Safety Shield | CampusHub{% endblock %}
+{% block page_title %}📅 Subject-Wise Attendance & Safety Analytics{% endblock %}
+
+{% block content %}
+<!-- Top Summary Metrics -->
+<div class="kpi-grid">
+    <div class="kpi-card" style="--card-accent: #10b981;">
+        <div class="kpi-icon-wrap" style="background: rgba(16, 185, 129, 0.15); color: #10b981;">📈</div>
+        <div class="kpi-info">
+            <span class="kpi-label">Cumulative Attendance</span>
+            <span class="kpi-value">{{ overall_pct }}%</span>
+            <span class="kpi-meta">{{ overall_present }}/{{ overall_total }} Total Sessions</span>
+        </div>
+    </div>
+
+    <div class="kpi-card" style="--card-accent: #6366f1;">
+        <div class="kpi-icon-wrap" style="background: rgba(99, 102, 241, 0.15); color: #6366f1;">🎯</div>
+        <div class="kpi-info">
+            <span class="kpi-label">Mandatory Minimum</span>
+            <span class="kpi-value">75.0%</span>
+            <span class="kpi-meta">University Regulatory Threshold</span>
+        </div>
+    </div>
+
+    <div class="kpi-card" style="--card-accent: #06b6d4;">
+        <div class="kpi-icon-wrap" style="background: rgba(6, 182, 212, 0.15); color: #06b6d4;">🛡️</div>
+        <div class="kpi-info">
+            <span class="kpi-label">Examination Eligibility</span>
+            <span class="kpi-value">
+                {% if overall_pct >= 75 %}
+                    <span style="color: #10b981; font-size: 1.4rem;">ELIGIBLE</span>
+                {% else %}
+                    <span style="color: #ef4444; font-size: 1.4rem;">SHORTAGE</span>
+                {% endif %}
+            </span>
+            <span class="kpi-meta">End-Term Hall Ticket Status</span>
+        </div>
+    </div>
+</div>
+
+<!-- Subject Attendance Cards & Visuals -->
+<div class="glass-card" style="margin-top: 24px;">
+    <div class="card-header">
+        <h3 class="card-title">📚 Subject Breakdown & Smart Safety Calculator</h3>
+        <div style="display: flex; gap: 10px;">
+            <input type="text" placeholder="Search subject..." class="form-control" style="width: 220px; padding: 6px 12px; font-size: 0.85rem;" data-table-search="attendance-table">
+            <button class="btn btn-secondary btn-sm" onclick="exportTableToCSV('attendance-table', 'my_attendance_report.csv')">📥 Export CSV</button>
+        </div>
+    </div>
+
+    <div class="table-responsive">
+        <table class="data-table" id="attendance-table">
+            <thead>
+                <tr>
+                    <th>Subject Code & Name</th>
+                    <th>Credits</th>
+                    <th>Conducted</th>
+                    <th>Attended</th>
+                    <th>Absent</th>
+                    <th>Attendance %</th>
+                    <th>Safety Status & AI Guidance</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for r in records %}
+                <tr>
+                    <td>
+                        <strong>{{ r.subject_code }}</strong><br>
+                        <span style="color: var(--text-secondary); font-size: 0.8rem;">{{ r.subject_name }}</span>
+                    </td>
+                    <td>{{ r.credits }}</td>
+                    <td>{{ r.total_sessions }}</td>
+                    <td><strong style="color: var(--success);">{{ r.present_count }}</strong></td>
+                    <td><strong style="color: var(--danger);">{{ r.absent_count }}</strong></td>
+                    <td>
+                        <div style="display: flex; align-items: center; gap: 8px;">
+                            <span style="font-weight: 700; width: 48px;">{{ r.percentage }}%</span>
+                            <div class="progress-bar-wrap" style="width: 80px; height: 6px; margin: 0;">
+                                <div class="progress-bar-fill {% if r.percentage >= 75 %}success{% else %}danger{% endif %}" style="width: {{ r.percentage }}%;"></div>
+                            </div>
+                        </div>
+                    </td>
+                    <td>
+                        <div id="ai-tip-{{ loop.index }}" style="font-size: 0.82rem;">
+                            <script>
+                                document.addEventListener('DOMContentLoaded', () => {
+                                    const res = calculateAttendanceSafety({{ r.present_count }}, {{ r.total_sessions }}, 75);
+                                    const badgeClass = res.status === 'SAFE' ? 'badge-success' : 'badge-danger';
+                                    document.getElementById('ai-tip-{{ loop.index }}').innerHTML = `
+                                        <span class="badge ${badgeClass}" style="margin-bottom: 4px;">${res.status}</span>
+                                        <div style="color: var(--text-secondary); font-size: 0.78rem;">${res.message}</div>
+                                    `;
+                                });
+                            </script>
+                        </div>
+                    </td>
+                </tr>
+                {% else %}
+                <tr>
+                    <td colspan="7" style="text-align: center; color: var(--text-muted); padding: 30px;">
+                        No attendance records found yet for current semester.
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

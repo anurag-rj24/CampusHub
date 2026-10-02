@@ -1,0 +1,113 @@
+{% extends 'base.html' %}
+
+{% block title %}Leave Applications | CampusHub{% endblock %}
+{% block page_title %}📝 Leave Management & Medical Applications{% endblock %}
+
+{% block content %}
+<div class="grid-2">
+    <!-- Submit Leave Request Form -->
+    <div class="glass-card">
+        <div class="card-header">
+            <h3 class="card-title">✍️ Submit New Leave Request</h3>
+        </div>
+
+        <form method="POST" action="{{ url_for('student_leaves') }}">
+            <div class="form-group">
+                <label class="form-label" for="leave_type">Leave Classification</label>
+                <select id="leave_type" name="leave_type" class="form-control" required>
+                    <option value="MEDICAL">Medical Leave (Doctor Certificate)</option>
+                    <option value="CASUAL">Casual / Personal Emergency</option>
+                    <option value="ACADEMIC">Academic / Competition / Hackathon</option>
+                    <option value="DUTY">On Duty (Institute Authorized)</option>
+                </select>
+            </div>
+
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
+                <div class="form-group">
+                    <label class="form-label" for="start_date">Start Date</label>
+                    <input type="date" id="start_date" name="start_date" class="form-control" required>
+                </div>
+                <div class="form-group">
+                    <label class="form-label" for="end_date">End Date</label>
+                    <input type="date" id="end_date" name="end_date" class="form-control" required>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label class="form-label" for="reason">Reason / Supporting Justification</label>
+                <textarea id="reason" name="reason" class="form-control" rows="3" placeholder="Provide details regarding the reason for leave..." required></textarea>
+            </div>
+
+            <button type="submit" class="btn btn-primary" style="width: 100%;">
+                <span>Submit Leave Request For Approval →</span>
+            </button>
+        </form>
+    </div>
+
+    <!-- Leave Quota & Policy Notice -->
+    <div class="glass-card">
+        <div class="card-header">
+            <h3 class="card-title">ℹ️ University Leave Guidelines</h3>
+        </div>
+        <div style="display: flex; flex-direction: column; gap: 14px; font-size: 0.88rem; color: var(--text-secondary); line-height: 1.6;">
+            <div style="background: rgba(255, 255, 255, 0.03); padding: 12px; border-radius: var(--radius-md); border-left: 3px solid var(--primary);">
+                <strong style="color: var(--text-primary);">Medical Exemption:</strong> Leaves supported by approved medical certificates are considered in attendance calculation during final eligibility review.
+            </div>
+            <div style="background: rgba(255, 255, 255, 0.03); padding: 12px; border-radius: var(--radius-md); border-left: 3px solid var(--secondary);">
+                <strong style="color: var(--text-primary);">Approval Chain:</strong> Requests are directly routed to your respective Faculty Advisors & Head of Department.
+            </div>
+            <div style="background: rgba(255, 255, 255, 0.03); padding: 12px; border-radius: var(--radius-md); border-left: 3px solid var(--warning);">
+                <strong style="color: var(--text-primary);">Prior Intimation:</strong> For academic competitions, submit at least 48 hours prior to event departure.
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Leave Request History Table -->
+<div class="glass-card" style="margin-top: 24px;">
+    <div class="card-header">
+        <h3 class="card-title">📜 My Leave Request History</h3>
+    </div>
+
+    <div class="table-responsive">
+        <table class="data-table">
+            <thead>
+                <tr>
+                    <th>Leave ID</th>
+                    <th>Classification</th>
+                    <th>From</th>
+                    <th>To</th>
+                    <th>Reason</th>
+                    <th>Status</th>
+                    <th>Faculty Remarks</th>
+                    <th>Submitted On</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for l in leaves %}
+                <tr>
+                    <td>#{{ l.leave_id }}</td>
+                    <td><span class="badge badge-secondary">{{ l.leave_type }}</span></td>
+                    <td>{{ l.start_date }}</td>
+                    <td>{{ l.end_date }}</td>
+                    <td>{{ l.reason }}</td>
+                    <td>
+                        <span class="badge {% if l.status == 'APPROVED' %}badge-success{% elif l.status == 'REJECTED' %}badge-danger{% else %}badge-warning{% endif %}">
+                            {{ l.status }}
+                        </span>
+                    </td>
+                    <td style="color: var(--text-secondary); font-size: 0.85rem;">{{ l.action_remarks or 'Pending review' }}</td>
+                    <td style="color: var(--text-muted); font-size: 0.8rem;">{{ l.created_at }}</td>
+                </tr>
+                {% else %}
+                <tr>
+                    <td colspan="8" style="text-align: center; color: var(--text-muted); padding: 24px;">
+                        No leave history found.
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

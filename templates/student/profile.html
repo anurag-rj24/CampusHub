@@ -1,0 +1,101 @@
+{% extends 'base.html' %}
+
+{% block title %}My Student Profile | CampusHub{% endblock %}
+{% block page_title %}👤 Student Official Profile{% endblock %}
+
+{% block content %}
+<div class="glass-card" style="margin-bottom: 24px;">
+    <div style="display: flex; align-items: center; gap: 24px; flex-wrap: wrap;">
+        <div class="avatar" style="width: 80px; height: 80px; font-size: 2rem; background: linear-gradient(135deg, var(--primary), var(--secondary));">
+            {{ profile.first_name[0] if profile else 'S' }}
+        </div>
+        <div style="flex-grow: 1;">
+            <h2 style="font-size: 1.6rem; font-weight: 800; margin-bottom: 4px;">
+                {{ profile.first_name }} {{ profile.middle_name or '' }} {{ profile.last_name }}
+            </h2>
+            <div style="display: flex; gap: 12px; align-items: center; flex-wrap: wrap; font-size: 0.88rem; color: var(--text-secondary);">
+                <span>Student ID: <strong style="color: var(--text-primary);">#{{ profile.student_id or 'STU-001' }}</strong></span>
+                <span>•</span>
+                <span>Dept: <strong style="color: var(--secondary);">{{ profile.department_name }} ({{ profile.department_code }})</strong></span>
+                <span>•</span>
+                <span class="badge badge-success">{{ profile.student_status or 'ACTIVE' }}</span>
+            </div>
+        </div>
+        <div>
+            <button class="btn btn-secondary" onclick="window.print()">🖨️ Print Student Card</button>
+        </div>
+    </div>
+</div>
+
+<div class="grid-2">
+    <!-- Academic & Enrollment Info -->
+    <div class="glass-card">
+        <div class="card-header">
+            <h3 class="card-title">🎓 Academic Credentials</h3>
+        </div>
+        <table class="data-table">
+            <tbody>
+                <tr>
+                    <td style="width: 40%; color: var(--text-muted); font-weight: 600;">Department</td>
+                    <td>{{ profile.department_name }} ({{ profile.department_code }})</td>
+                </tr>
+                <tr>
+                    <td style="color: var(--text-muted); font-weight: 600;">Admission Date</td>
+                    <td>{{ profile.admission_date or 'N/A' }}</td>
+                </tr>
+                <tr>
+                    <td style="color: var(--text-muted); font-weight: 600;">Previous Qualification</td>
+                    <td>{{ profile.previous_qualification or 'Senior Secondary (10+2)' }}</td>
+                </tr>
+                <tr>
+                    <td style="color: var(--text-muted); font-weight: 600;">Previous Percentage</td>
+                    <td>{{ profile.previous_percentage or '88.5' }}%</td>
+                </tr>
+                <tr>
+                    <td style="color: var(--text-muted); font-weight: 600;">Student Status</td>
+                    <td><span class="badge badge-success">{{ profile.student_status }}</span></td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <!-- Personal & Guardian Info -->
+    <div class="glass-card">
+        <div class="card-header">
+            <h3 class="card-title">👨‍👩‍👦 Personal & Contact Info</h3>
+        </div>
+        <table class="data-table">
+            <tbody>
+                <tr>
+                    <td style="width: 40%; color: var(--text-muted); font-weight: 600;">Email Address</td>
+                    <td>{{ profile.email }}</td>
+                </tr>
+                <tr>
+                    <td style="color: var(--text-muted); font-weight: 600;">Phone Number</td>
+                    <td>{{ profile.phone or '+91 9876543210' }}</td>
+                </tr>
+                <tr>
+                    <td style="color: var(--text-muted); font-weight: 600;">Date of Birth / Gender</td>
+                    <td>{{ profile.date_of_birth or '2003-05-12' }} ({{ profile.gender or 'MALE' }})</td>
+                </tr>
+                <tr>
+                    <td style="color: var(--text-muted); font-weight: 600;">Blood Group</td>
+                    <td><span class="badge badge-primary">{{ profile.blood_group or 'O+' }}</span></td>
+                </tr>
+                <tr>
+                    <td style="color: var(--text-muted); font-weight: 600;">Parents / Guardians</td>
+                    <td>{{ profile.father_name or 'Father' }} & {{ profile.mother_name or 'Mother' }}</td>
+                </tr>
+                <tr>
+                    <td style="color: var(--text-muted); font-weight: 600;">Residential Address</td>
+                    <td>{{ profile.address or 'Campus Hostel 4' }}, {{ profile.city or 'City' }}, {{ profile.state or 'State' }} - {{ profile.pincode or '110001' }}</td>
+                </tr>
+                <tr>
+                    <td style="color: var(--text-muted); font-weight: 600;">Emergency Contact</td>
+                    <td><strong style="color: var(--danger);">{{ profile.emergency_contact or '+91 9988776655' }}</strong></td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

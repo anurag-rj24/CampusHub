@@ -1,0 +1,63 @@
+{% extends 'base.html' %}
+
+{% block title %}Department Management | CampusHub{% endblock %}
+{% block page_title %}🏛️ University Academic Departments Management{% endblock %}
+
+{% block content %}
+<div class="grid-2">
+    <!-- Add Department Form -->
+    <div class="glass-card">
+        <div class="card-header">
+            <h3 class="card-title">➕ Add New Department</h3>
+        </div>
+
+        <form method="POST" action="{{ url_for('super_head_departments') }}">
+            <div class="form-group">
+                <label class="form-label" for="department_name">Department Full Name</label>
+                <input type="text" id="department_name" name="department_name" class="form-control" placeholder="e.g. Electrical & Electronics Engineering" required>
+            </div>
+
+            <div class="form-group">
+                <label class="form-label" for="department_code">Department Code</label>
+                <input type="text" id="department_code" name="department_code" class="form-control" placeholder="e.g. EEE" required style="text-transform: uppercase;">
+            </div>
+
+            <button type="submit" class="btn btn-primary" style="width: 100%;">
+                <span>➕ Create Department</span>
+            </button>
+        </form>
+    </div>
+
+    <!-- Departments List -->
+    <div class="glass-card">
+        <div class="card-header">
+            <h3 class="card-title">🏛️ Active Academic Departments ({{ departments|length }})</h3>
+        </div>
+
+        <div class="table-responsive">
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Code</th>
+                        <th>Department Name</th>
+                        <th>Students</th>
+                        <th>Faculty</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for d in departments %}
+                    <tr>
+                        <td>#{{ d.department_id }}</td>
+                        <td><span class="badge badge-primary">{{ d.department_code }}</span></td>
+                        <td><strong>{{ d.department_name }}</strong></td>
+                        <td>{{ d.student_count }} Students</td>
+                        <td>{{ d.faculty_count }} Faculty</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}

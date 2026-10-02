@@ -1,0 +1,112 @@
+{% extends 'base.html' %}
+
+{% block title %}User Management | CampusHub{% endblock %}
+{% block page_title %}👥 User & Role Administration{% endblock %}
+
+{% block content %}
+<div class="glass-card" style="margin-bottom: 24px;">
+    <div class="card-header">
+        <h3 class="card-title">➕ Provision New Institutional Account</h3>
+    </div>
+
+    <form method="POST" action="{{ url_for('admin_users') }}">
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px;">
+            <div class="form-group">
+                <label class="form-label" for="role">User Role</label>
+                <select id="role" name="role" class="form-control" required>
+                    <option value="STUDENT">Student</option>
+                    <option value="FACULTY">Faculty Member</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label class="form-label" for="first_name">First Name</label>
+                <input type="text" id="first_name" name="first_name" class="form-control" placeholder="e.g. Rohan" required>
+            </div>
+            <div class="form-group">
+                <label class="form-label" for="last_name">Last Name</label>
+                <input type="text" id="last_name" name="last_name" class="form-control" placeholder="e.g. Sharma" required>
+            </div>
+            <div class="form-group">
+                <label class="form-label" for="email">Institutional Email</label>
+                <input type="email" id="email" name="email" class="form-control" placeholder="e.g. rohan.sharma@campushub.com" required>
+            </div>
+            <div class="form-group">
+                <label class="form-label" for="phone">Phone</label>
+                <input type="text" id="phone" name="phone" class="form-control" placeholder="+91 9876543210" required>
+            </div>
+            <div class="form-group">
+                <label class="form-label" for="department_id">Department</label>
+                <select id="department_id" name="department_id" class="form-control" required>
+                    {% for d in departments %}
+                    <option value="{{ d.department_id }}">{{ d.department_name }} ({{ d.department_code }})</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="form-group">
+                <label class="form-label" for="password">Initial Password</label>
+                <input type="password" id="password" name="password" class="form-control" value="test123" required>
+            </div>
+        </div>
+
+        <div style="display: flex; justify-content: flex-end; margin-top: 10px;">
+            <button type="submit" class="btn btn-primary">
+                <span>➕ Create User Account</span>
+            </button>
+        </div>
+    </form>
+</div>
+
+<!-- All Registered Users Table -->
+<div class="glass-card">
+    <div class="card-header">
+        <h3 class="card-title">📋 Registered Students & Faculty ({{ users|length }})</h3>
+        <div style="display: flex; gap: 10px;">
+            <input type="text" placeholder="Search users..." class="form-control" style="width: 220px; padding: 6px 12px; font-size: 0.85rem;" data-table-search="users-table">
+            <button class="btn btn-secondary btn-sm" onclick="exportTableToCSV('users-table', 'registered_users.csv')">📥 Export CSV</button>
+        </div>
+    </div>
+
+    <div class="table-responsive">
+        <table class="data-table" id="users-table">
+            <thead>
+                <tr>
+                    <th>User ID</th>
+                    <th>Full Name</th>
+                    <th>Email Address</th>
+                    <th>Phone</th>
+                    <th>Department</th>
+                    <th>Role</th>
+                    <th>Status</th>
+                    <th>Last Login</th>
+                    <th>Action</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for u in users %}
+                <tr>
+                    <td>#{{ u.user_id }}</td>
+                    <td><strong>{{ u.first_name }} {{ u.last_name }}</strong></td>
+                    <td style="color: var(--text-secondary);">{{ u.email }}</td>
+                    <td>{{ u.phone or '-' }}</td>
+                    <td>{{ u.department_name }}</td>
+                    <td><span class="badge {% if u.role == 'STUDENT' %}badge-primary{% else %}badge-secondary{% endif %}">{{ u.role }}</span></td>
+                    <td><span class="badge {% if u.status == 'ACTIVE' %}badge-success{% else %}badge-danger{% endif %}">{{ u.status }}</span></td>
+                    <td style="color: var(--text-muted); font-size: 0.8rem;">{{ u.last_login or 'Never' }}</td>
+                    <td>
+                        <form method="POST" action="{{ url_for('toggle_user_status', uid=u.user_id) }}">
+                            <button type="submit" class="btn btn-sm {% if u.status == 'ACTIVE' %}btn-danger{% else %}btn-success{% endif %}">
+                                {% if u.status == 'ACTIVE' %}Deactivate{% else %}Activate{% endif %}
+                            </button>
+                        </form>
+                    </td>
+                </tr>
+                {% else %}
+                <tr>
+                    <td colspan="9" style="text-align: center; color: var(--text-muted); padding: 24px;">No users found.</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

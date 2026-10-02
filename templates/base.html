@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}CampusHub ERP{% endblock %} | University Enterprise Portal</title>
+    <!-- Fonts & ChartJS -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    {% block extra_head %}{% endblock %}
+</head>
+<body>
+    <div class="ambient-glow"></div>
+
+    <!-- Quick Role Switcher Bar (For Evaluation & Demos) -->
+    <div class="demo-role-bar">
+        <div style="display: flex; align-items: center; gap: 8px;">
+            <span style="font-weight: 700; font-size: 0.75rem; color: #38bdf8;">✨ DEMO QUICK-SWITCH:</span>
+            <span style="font-size: 0.75rem; color: #94a3b8;">Explore roles with 1-click:</span>
+        </div>
+        <div class="role-pill-group">
+            <a href="{{ url_for('quick_login', role='STUDENT') }}" class="role-pill {% if current_user and current_user.role == 'STUDENT' %}active{% endif %}">
+                <span>🎓</span> Student
+            </a>
+            <a href="{{ url_for('quick_login', role='FACULTY') }}" class="role-pill {% if current_user and current_user.role == 'FACULTY' %}active{% endif %}">
+                <span>👨‍🏫</span> Faculty
+            </a>
+            <a href="{{ url_for('quick_login', role='ADMIN') }}" class="role-pill {% if current_user and current_user.role == 'ADMIN' %}active{% endif %}">
+                <span>🛡️</span> Admin
+            </a>
+            <a href="{{ url_for('quick_login', role='SUPER_HEAD') }}" class="role-pill {% if current_user and current_user.role == 'SUPER_HEAD' %}active{% endif %}">
+                <span>👑</span> Super Head
+            </a>
+        </div>
+    </div>
+
+    <div class="app-container">
+        {% if current_user %}
+        <!-- Sidebar Navigation -->
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <div class="brand-icon">🎓</div>
+                <div class="brand-text">
+                    <h1>CampusHub</h1>
+                    <span>Enterprise ERP</span>
+                </div>
+            </div>
+
+            <nav class="sidebar-menu">
+                {% if current_user.role == 'STUDENT' %}
+                    <div class="menu-section-label">Student Portal</div>
+                    <a href="{{ url_for('student_dashboard') }}" class="nav-link {% if request.path == '/student' or request.path == '/student/dashboard' %}active{% endif %}">
+                        <span class="icon">📊</span> Overview
+                    </a>
+                    <a href="{{ url_for('student_profile') }}" class="nav-link {% if request.path == '/student/profile' %}active{% endif %}">
+                        <span class="icon">👤</span> My Profile
+                    </a>
+                    <a href="{{ url_for('student_attendance') }}" class="nav-link {% if request.path == '/student/attendance' %}active{% endif %}">
+                        <span class="icon">📅</span> Attendance & Safety
+                    </a>
+                    <a href="{{ url_for('student_academics') }}" class="nav-link {% if request.path == '/student/academics' %}active{% endif %}">
+                        <span class="icon">📚</span> Courses & Marks
+                    </a>
+                    <a href="{{ url_for('student_placements') }}" class="nav-link {% if request.path == '/student/placements' %}active{% endif %}">
+                        <span class="icon">💼</span> Placement Hub
+                    </a>
+                    <a href="{{ url_for('student_leaves') }}" class="nav-link {% if request.path == '/student/leaves' %}active{% endif %}">
+                        <span class="icon">📝</span> Leave Applications
+                    </a>
+
+                {% elif current_user.role == 'FACULTY' %}
+                    <div class="menu-section-label">Faculty Portal</div>
+                    <a href="{{ url_for('faculty_dashboard') }}" class="nav-link {% if request.path == '/faculty' or request.path == '/faculty/dashboard' %}active{% endif %}">
+                        <span class="icon">📊</span> Dashboard
+                    </a>
+                    <a href="{{ url_for('faculty_profile') }}" class="nav-link {% if request.path == '/faculty/profile' %}active{% endif %}">
+                        <span class="icon">👤</span> Faculty Profile
+                    </a>
+                    <a href="{{ url_for('faculty_attendance') }}" class="nav-link {% if request.path == '/faculty/attendance' %}active{% endif %}">
+                        <span class="icon">✅</span> Mark Attendance
+                    </a>
+                    <a href="{{ url_for('faculty_grading') }}" class="nav-link {% if request.path == '/faculty/grading' %}active{% endif %}">
+                        <span class="icon">🎯</span> Marks & Grading
+                    </a>
+                    <a href="{{ url_for('faculty_leaves') }}" class="nav-link {% if request.path == '/faculty/leaves' %}active{% endif %}">
+                        <span class="icon">📬</span> Leave Approvals
+                    </a>
+
+                {% elif current_user.role == 'ADMIN' %}
+                    <div class="menu-section-label">Administration</div>
+                    <a href="{{ url_for('admin_dashboard') }}" class="nav-link {% if request.path == '/admin' or request.path == '/admin/dashboard' %}active{% endif %}">
+                        <span class="icon">📊</span> Control Center
+                    </a>
+                    <a href="{{ url_for('admin_users') }}" class="nav-link {% if request.path == '/admin/users' %}active{% endif %}">
+                        <span class="icon">👥</span> User Management
+                    </a>
+                    <a href="{{ url_for('admin_academics') }}" class="nav-link {% if request.path == '/admin/academics' %}active{% endif %}">
+                        <span class="icon">🏛️</span> Courses & Subjects
+                    </a>
+                    <a href="{{ url_for('admin_placements') }}" class="nav-link {% if request.path == '/admin/placements' %}active{% endif %}">
+                        <span class="icon">💼</span> Placement Drives
+                    </a>
+                    <a href="{{ url_for('admin_notices') }}" class="nav-link {% if request.path == '/admin/notices' %}active{% endif %}">
+                        <span class="icon">📢</span> Campus Notices
+                    </a>
+                    <a href="{{ url_for('admin_reports') }}" class="nav-link {% if request.path == '/admin/reports' %}active{% endif %}">
+                        <span class="icon">📑</span> Reports & Analytics
+                    </a>
+
+                {% elif current_user.role == 'SUPER_HEAD' %}
+                    <div class="menu-section-label">Executive Leadership</div>
+                    <a href="{{ url_for('super_head_dashboard') }}" class="nav-link {% if request.path == '/super-head' or request.path == '/super-head/dashboard' %}active{% endif %}">
+                        <span class="icon">💎</span> Executive KPI Hub
+                    </a>
+                    <a href="{{ url_for('super_head_departments') }}" class="nav-link {% if request.path == '/super-head/departments' %}active{% endif %}">
+                        <span class="icon">🏛️</span> Departments
+                    </a>
+                    <a href="{{ url_for('super_head_admins') }}" class="nav-link {% if request.path == '/super-head/admins' %}active{% endif %}">
+                        <span class="icon">🛡️</span> Administrators
+                    </a>
+                    <a href="{{ url_for('super_head_audit_logs') }}" class="nav-link {% if request.path == '/super-head/audit-logs' %}active{% endif %}">
+                        <span class="icon">🔍</span> System Audit Logs
+                    </a>
+                    <a href="{{ url_for('super_head_diagnostics') }}" class="nav-link {% if request.path == '/super-head/diagnostics' %}active{% endif %}">
+                        <span class="icon">💾</span> Diagnostics & Health
+                    </a>
+                {% endif %}
+            </nav>
+
+            <div class="sidebar-footer">
+                <div class="user-badge">
+                    <div class="avatar">{{ current_user.first_name[0] }}</div>
+                    <div class="user-info">
+                        <div class="user-name">{{ current_user.full_name }}</div>
+                        <div class="user-role">{{ current_user.role }}</div>
+                    </div>
+                </div>
+                <a href="{{ url_for('logout') }}" title="Logout" style="color: var(--danger); text-decoration: none; font-size: 1.1rem; padding: 6px;">🚪</a>
+            </div>
+        </aside>
+        {% endif %}
+
+        <!-- Main Content Viewport -->
+        <main class="main-content">
+            {% if current_user %}
+            <header class="top-navbar">
+                <div class="page-title">
+                    {% block page_title %}Dashboard{% endblock %}
+                </div>
+                <div class="top-actions">
+                    <button class="theme-toggle-btn" onclick="toggleTheme()" title="Toggle Dark/Light Mode">
+                        <span id="theme-icon">☀️</span>
+                    </button>
+                    <a href="{{ url_for('logout') }}" class="btn btn-secondary btn-sm">
+                        <span>Logout</span>
+                    </a>
+                </div>
+            </header>
+            {% endif %}
+
+            <div class="page-body">
+                {% with messages = get_flashed_messages(with_categories=true) %}
+                    {% if messages %}
+                        {% for category, message in messages %}
+                            <div class="alert alert-{{ category }}">
+                                <span>{{ message }}</span>
+                            </div>
+                        {% endfor %}
+                    {% endif %}
+                {% endwith %}
+
+                {% block content %}{% endblock %}
+            </div>
+        </main>
+    </div>
+
+    <script src="{{ url_for('static', filename='js/app.js') }}"></script>
+    {% block extra_scripts %}{% endblock %}
+</body>
+</html>

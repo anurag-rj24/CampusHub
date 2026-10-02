@@ -1,0 +1,90 @@
+{% extends 'base.html' %}
+
+{% block title %}Operational Reports | CampusHub{% endblock %}
+{% block page_title %}📑 Comprehensive Operational & Attendance Reports{% endblock %}
+
+{% block content %}
+<!-- Department Strength Report -->
+<div class="glass-card" style="margin-bottom: 24px;">
+    <div class="card-header">
+        <h3 class="card-title">🏛️ Department Enrollment & Faculty Strength</h3>
+        <button class="btn btn-secondary btn-sm" onclick="exportTableToCSV('dept-report-table', 'department_strength_report.csv')">📥 Export CSV</button>
+    </div>
+
+    <div class="table-responsive">
+        <table class="data-table" id="dept-report-table">
+            <thead>
+                <tr>
+                    <th>Department Code</th>
+                    <th>Department Name</th>
+                    <th>Enrolled Active Students</th>
+                    <th>Active Faculty Members</th>
+                    <th>Student-to-Faculty Ratio</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for d in dept_stats %}
+                {% set ratio = (d.student_count / d.faculty_count)|round(1) if d.faculty_count > 0 else 'N/A' %}
+                <tr>
+                    <td><span class="badge badge-primary">{{ d.department_code }}</span></td>
+                    <td><strong>{{ d.department_name }}</strong></td>
+                    <td>{{ d.student_count }} Students</td>
+                    <td>{{ d.faculty_count }} Faculty</td>
+                    <td><strong style="color: var(--secondary);">{{ ratio }}:1</strong></td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<!-- Subject Attendance Health Report -->
+<div class="glass-card">
+    <div class="card-header">
+        <h3 class="card-title">📊 Subject Attendance Compliance Health</h3>
+        <button class="btn btn-secondary btn-sm" onclick="exportTableToCSV('att-report-table', 'attendance_compliance_report.csv')">📥 Export CSV</button>
+    </div>
+
+    <div class="table-responsive">
+        <table class="data-table" id="att-report-table">
+            <thead>
+                <tr>
+                    <th>Subject Code</th>
+                    <th>Subject Name</th>
+                    <th>Total Records Logged</th>
+                    <th>Present Count</th>
+                    <th>Overall Percentage</th>
+                    <th>Department Compliance Status</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for a in attendance_stats %}
+                <tr>
+                    <td><strong>{{ a.subject_code }}</strong></td>
+                    <td>{{ a.subject_name }}</td>
+                    <td>{{ a.total_marked }}</td>
+                    <td>{{ a.present_total }}</td>
+                    <td>
+                        <div style="display: flex; align-items: center; gap: 8px;">
+                            <strong>{{ a.pct }}%</strong>
+                            <div class="progress-bar-wrap" style="width: 80px; height: 6px; margin: 0;">
+                                <div class="progress-bar-fill {% if a.pct >= 75 %}success{% else %}danger{% endif %}" style="width: {{ a.pct }}%;"></div>
+                            </div>
+                        </div>
+                    </td>
+                    <td>
+                        <span class="badge {% if a.pct >= 75 %}badge-success{% else %}badge-warning{% endif %}">
+                            {% if a.pct >= 75 %}COMPLIANT (≥75%){% else %}MONITORING NEEDED{% endif %}
+                        </span>
+                    </td>
+                </tr>
+                {% else %}
+                <tr>
+                    <td colspan="6" style="text-align: center; color: var(--text-muted); padding: 20px;">No records logged.</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

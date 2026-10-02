@@ -1,0 +1,120 @@
+{% extends 'base.html' %}
+
+{% block title %}Grading & Marks Console | CampusHub{% endblock %}
+{% block page_title %}🎯 Examination Marks & Grade Evaluation Console{% endblock %}
+
+{% block content %}
+<div class="glass-card" style="margin-bottom: 24px;">
+    <!-- Subject Selector -->
+    <div>
+        <label style="font-size: 0.85rem; font-weight: 600; color: var(--text-muted); margin-bottom: 6px; display: block;">Select Teaching Subject:</label>
+        <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+            {% for s in subjects %}
+            <a href="{{ url_for('faculty_grading', subject_id=s.subject_id) }}" class="btn {% if selected_subject_id == s.subject_id %}btn-primary{% else %}btn-secondary{% endif %} btn-sm">
+                {{ s.subject_code }} - {{ s.subject_name }}
+            </a>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+
+{% if selected_subject_id %}
+<form method="POST" action="{{ url_for('faculty_grading') }}">
+    <input type="hidden" name="subject_id" value="{{ selected_subject_id }}">
+
+    <div class="glass-card" style="margin-bottom: 24px;">
+        <div class="card-header">
+            <h3 class="card-title">📝 Exam Component Setup</h3>
+        </div>
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+            <div class="form-group">
+                <label class="form-label" for="exam_type">Assessment Component</label>
+                <select id="exam_type" name="exam_type" class="form-control" onchange="this.form.submit()">
+                    <option value="INTERNAL" selected>Internal Assessment / Assignments (Max 100)</option>
+                    <option value="MID_TERM">Mid-Semester Examination (Max 100)</option>
+                    <option value="END_TERM">End-Semester Final Examination (Max 100)</option>
+                    <option value="PRACTICAL">Lab / Practical Evaluation (Max 100)</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label class="form-label" for="max_marks">Maximum Marks</label>
+                <input type="number" id="max_marks" name="max_marks" class="form-control" value="100" min="10" max="100">
+            </div>
+        </div>
+    </div>
+
+    <div class="glass-card">
+        <div class="card-header">
+            <h3 class="card-title">👥 Student Marks Entry Sheet ({{ students|length }} Enrolled)</h3>
+        </div>
+
+        <div class="table-responsive">
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th>Roll / ID</th>
+                        <th>Student Name</th>
+                        <th>Email</th>
+                        <th>Marks Obtained (/100)</th>
+                        <th>Auto Grade</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for st in students %}
+                    {% set key = st.student_id ~ '_INTERNAL' %}
+                    {% set existing = existing_marks.get(key) %}
+                    <tr>
+                        <td><strong>#{{ st.student_id }}</strong></td>
+                        <td>{{ st.first_name }} {{ st.last_name }}</td>
+                        <td style="color: var(--text-secondary);">{{ st.email }}</td>
+                        <td>
+                            <input type="number" step="0.5" min="0" max="100" name="marks_{{ st.student_id }}" value="{{ existing.marks_obtained if existing else '' }}" class="form-control mark-input" placeholder="e.g. 85" style="width: 130px; font-weight: 700; color: var(--primary);" oninput="updateLiveGrade(this, 'grade_{{ st.student_id }}')">
+                        </td>
+                        <td>
+                            <span id="grade_{{ st.student_id }}" class="badge badge-primary">
+                                {{ existing.grade if existing else '-' }}
+                            </span>
+                        </td>
+                    </tr>
+                    {% else %}
+                    <tr>
+                        <td colspan="5" style="text-align: center; color: var(--text-muted); padding: 30px;">
+                            No students found for this subject.
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        {% if students %}
+        <div style="margin-top: 24px; display: flex; justify-content: flex-end;">
+            <button type="submit" class="btn btn-primary" style="padding: 12px 28px; font-size: 1rem;">
+                <span>💾 Save & Publish Assessment Marks</span>
+            </button>
+        </div>
+        {% endif %}
+    </div>
+</form>
+{% endif %}
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+function updateLiveGrade(input, targetId) {
+    const val = parseFloat(input.value);
+    const badge = document.getElementById(targetId);
+    if (isNaN(val)) {
+        badge.textContent = '-';
+        badge.className = 'badge badge-secondary';
+        return;
+    }
+    if (val >= 90) { badge.textContent = 'A+'; badge.className = 'badge badge-success'; }
+    else if (val >= 80) { badge.textContent = 'A'; badge.className = 'badge badge-success'; }
+    else if (val >= 70) { badge.textContent = 'B'; badge.className = 'badge badge-primary'; }
+    else if (val >= 60) { badge.textContent = 'C'; badge.className = 'badge badge-primary'; }
+    else if (val >= 50) { badge.textContent = 'D'; badge.className = 'badge badge-warning'; }
+    else { badge.textContent = 'F'; badge.className = 'badge badge-danger'; }
+}
+</script>
+{% endblock %}

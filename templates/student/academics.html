@@ -1,0 +1,83 @@
+{% extends 'base.html' %}
+
+{% block title %}Academics & Grade Transcripts | CampusHub{% endblock %}
+{% block page_title %}📚 Academic Enrollments & Report Card{% endblock %}
+
+{% block content %}
+<!-- Active Enrollments -->
+<div class="glass-card" style="margin-bottom: 24px;">
+    <div class="card-header">
+        <h3 class="card-title">🎓 Current Degree & Program Enrollments</h3>
+    </div>
+    <div class="kpi-grid">
+        {% for e in enrollments %}
+        <div style="background: rgba(255, 255, 255, 0.03); border: 1px solid var(--border-color); border-radius: var(--radius-md); padding: 18px;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                <span class="badge badge-primary">{{ e.course_code }}</span>
+                <span class="badge badge-success">{{ e.status }}</span>
+            </div>
+            <h4 style="font-size: 1.1rem; font-weight: 700; margin-bottom: 4px;">{{ e.course_name }}</h4>
+            <div style="font-size: 0.82rem; color: var(--text-secondary); margin-bottom: 12px;">{{ e.department_name }}</div>
+            <div style="display: flex; justify-content: space-between; font-size: 0.8rem; color: var(--text-muted);">
+                <span>Current Semester: <strong>Sem {{ e.current_semester }}</strong></span>
+                <span>Duration: <strong>{{ e.duration_years }} Years</strong></span>
+            </div>
+        </div>
+        {% else %}
+        <p style="color: var(--text-muted);">No active enrollments listed.</p>
+        {% endfor %}
+    </div>
+</div>
+
+<!-- Assessment Marks & Grade Sheet -->
+<div class="glass-card">
+    <div class="card-header">
+        <h3 class="card-title">📊 Assessment Marks & Official Transcripts</h3>
+        <button class="btn btn-secondary btn-sm" onclick="exportTableToCSV('marks-table', 'official_transcript.csv')">📥 Export Transcript CSV</button>
+    </div>
+
+    <div class="table-responsive">
+        <table class="data-table" id="marks-table">
+            <thead>
+                <tr>
+                    <th>Subject Code</th>
+                    <th>Subject Name</th>
+                    <th>Credits</th>
+                    <th>Exam Component</th>
+                    <th>Marks Obtained</th>
+                    <th>Max Marks</th>
+                    <th>Percentage</th>
+                    <th>Grade</th>
+                    <th>Evaluation Date</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for m in marks %}
+                {% set pct = (m.marks_obtained / m.max_marks * 100)|round(1) %}
+                <tr>
+                    <td><strong>{{ m.subject_code }}</strong></td>
+                    <td>{{ m.subject_name }}</td>
+                    <td>{{ m.credits }}</td>
+                    <td><span class="badge badge-secondary">{{ m.exam_type }}</span></td>
+                    <td><strong style="color: var(--primary);">{{ m.marks_obtained }}</strong></td>
+                    <td>{{ m.max_marks }}</td>
+                    <td>{{ pct }}%</td>
+                    <td>
+                        <span class="badge {% if m.grade in ['A+', 'A'] %}badge-success{% elif m.grade in ['B', 'C'] %}badge-primary{% elif m.grade == 'D' %}badge-warning{% else %}badge-danger{% endif %}">
+                            {{ m.grade }}
+                        </span>
+                    </td>
+                    <td style="color: var(--text-muted); font-size: 0.8rem;">{{ m.evaluation_date }}</td>
+                </tr>
+                {% else %}
+                <tr>
+                    <td colspan="9" style="text-align: center; color: var(--text-muted); padding: 30px;">
+                        No marks entries released yet for current session.
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

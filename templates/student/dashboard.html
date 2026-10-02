@@ -1,0 +1,110 @@
+{% extends 'base.html' %}
+
+{% block title %}Student Dashboard{% endblock %}
+{% block page_title %}🎓 Student Dashboard{% endblock %}
+
+{% block content %}
+<!-- Top KPI Metric Cards -->
+<div class="kpi-grid">
+    <div class="kpi-card" style="--card-accent: #10b981; --icon-bg: rgba(16, 185, 129, 0.15); --icon-color: #10b981;">
+        <div class="kpi-icon-wrap">📊</div>
+        <div class="kpi-info">
+            <span class="kpi-label">Overall Attendance</span>
+            <span class="kpi-value">{{ att_pct }}%</span>
+            <span class="kpi-meta">{{ pres_count }}/{{ total_sess }} Classes Attended</span>
+        </div>
+    </div>
+
+    <div class="kpi-card" style="--card-accent: #6366f1; --icon-bg: rgba(99, 102, 241, 0.15); --icon-color: #6366f1;">
+        <div class="kpi-icon-wrap">🎯</div>
+        <div class="kpi-info">
+            <span class="kpi-label">Average Score</span>
+            <span class="kpi-value">{{ avg_score }}%</span>
+            <span class="kpi-meta">Across All Assessments</span>
+        </div>
+    </div>
+
+    <div class="kpi-card" style="--card-accent: #06b6d4; --icon-bg: rgba(6, 182, 212, 0.15); --icon-color: #06b6d4;">
+        <div class="kpi-icon-wrap">💼</div>
+        <div class="kpi-info">
+            <span class="kpi-label">Active Drives</span>
+            <span class="kpi-value">{{ open_drives }}</span>
+            <span class="kpi-meta">Open for Application</span>
+        </div>
+    </div>
+
+    <div class="kpi-card" style="--card-accent: #f59e0b; --icon-bg: rgba(245, 158, 11, 0.15); --icon-color: #f59e0b;">
+        <div class="kpi-icon-wrap">📝</div>
+        <div class="kpi-info">
+            <span class="kpi-label">Pending Leaves</span>
+            <span class="kpi-value">{{ pending_leaves }}</span>
+            <span class="kpi-meta">Awaiting Approval</span>
+        </div>
+    </div>
+</div>
+
+<div class="grid-2" style="margin-top: 24px;">
+    <!-- Attendance Safety Shield Widget -->
+    <div class="glass-card">
+        <div class="card-header">
+            <h3 class="card-title">🛡️ Smart Attendance Safety Shield</h3>
+            <span class="badge {% if att_pct >= 75 %}badge-success{% else %}badge-danger{% endif %}">
+                {% if att_pct >= 75 %}SAFE ZONE (≥75%){% else %}SHORTAGE RISK{% endif %}
+            </span>
+        </div>
+
+        <div style="margin-bottom: 16px;">
+            <div style="display: flex; justify-content: space-between; font-size: 0.85rem; margin-bottom: 6px;">
+                <span>Current Progress</span>
+                <span style="font-weight: 700;">{{ att_pct }}% (Minimum 75.0% Required)</span>
+            </div>
+            <div class="progress-bar-wrap" style="height: 12px;">
+                <div class="progress-bar-fill {% if att_pct >= 75 %}success{% else %}danger{% endif %}" style="width: {{ [att_pct, 100]|min }}%;"></div>
+            </div>
+        </div>
+
+        <div id="safety-recommendation" style="background: rgba(255, 255, 255, 0.04); padding: 14px; border-radius: var(--radius-md); border: 1px dashed var(--border-color); font-size: 0.88rem; line-height: 1.5;">
+            <p id="safety-text">Analyzing your attendance metrics...</p>
+        </div>
+
+        <div style="margin-top: 18px; display: flex; gap: 10px;">
+            <a href="{{ url_for('student_attendance') }}" class="btn btn-primary btn-sm">View Full Breakdown →</a>
+            <a href="{{ url_for('student_leaves') }}" class="btn btn-secondary btn-sm">Request Medical Leave</a>
+        </div>
+    </div>
+
+    <!-- Campus Announcements -->
+    <div class="glass-card">
+        <div class="card-header">
+            <h3 class="card-title">📢 Campus Announcements & Notices</h3>
+            <span class="badge badge-primary">Latest</span>
+        </div>
+
+        <div style="display: flex; flex-direction: column; gap: 12px;">
+            {% for n in notices %}
+            <div style="padding: 12px; border-radius: var(--radius-md); background: rgba(255,255,255,0.03); border-left: 3px solid {% if n.priority == 'HIGH' or n.priority == 'URGENT' %}var(--danger){% else %}var(--primary){% endif %};">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px;">
+                    <strong style="font-size: 0.92rem;">{{ n.title }}</strong>
+                    <span class="badge {% if n.priority == 'HIGH' or n.priority == 'URGENT' %}badge-danger{% else %}badge-secondary{% endif %}">{{ n.priority }}</span>
+                </div>
+                <p style="font-size: 0.82rem; color: var(--text-secondary); margin-bottom: 6px;">{{ n.content }}</p>
+                <div style="font-size: 0.72rem; color: var(--text-muted);">Published: {{ n.created_at }}</div>
+            </div>
+            {% else %}
+            <p style="color: var(--text-muted); font-size: 0.88rem;">No active notices for your role.</p>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+    document.addEventListener('DOMContentLoaded', () => {
+        const attended = {{ pres_count }};
+        const total = {{ total_sess }};
+        const res = calculateAttendanceSafety(attended, total, 75);
+        document.getElementById('safety-text').innerHTML = `<strong>AI Safety Analysis:</strong> ${res.message}`;
+    });
+</script>
+{% endblock %}

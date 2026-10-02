@@ -1,0 +1,98 @@
+{% extends 'base.html' %}
+
+{% block title %}Placement & Career Portal | CampusHub{% endblock %}
+{% block page_title %}💼 Campus Placement & Career Portal{% endblock %}
+
+{% block content %}
+<!-- Open Placement Drives -->
+<div class="glass-card" style="margin-bottom: 24px;">
+    <div class="card-header">
+        <h3 class="card-title">🏢 Active Campus Recruitment Drives</h3>
+        <span class="badge badge-success">Open Drives</span>
+    </div>
+
+    <div class="grid-2">
+        {% for d in drives %}
+        <div style="background: rgba(255, 255, 255, 0.03); border: 1px solid var(--border-color); border-radius: var(--radius-lg); padding: 22px; display: flex; flex-direction: column; justify-content: space-between;">
+            <div>
+                <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 8px;">
+                    <div>
+                        <h4 style="font-size: 1.25rem; font-weight: 800; color: var(--text-primary);">{{ d.company_name }}</h4>
+                        <span style="color: var(--secondary); font-size: 0.85rem; font-weight: 600;">{{ d.industry or 'Technology' }}</span>
+                    </div>
+                    <span class="badge badge-primary" style="font-size: 0.9rem; padding: 6px 12px;">₹ {{ d.package_lpa }} LPA</span>
+                </div>
+
+                <div style="font-size: 0.95rem; font-weight: 600; margin-bottom: 6px;">Role: {{ d.job_title }}</div>
+                <p style="font-size: 0.84rem; color: var(--text-secondary); line-height: 1.5; margin-bottom: 12px;">
+                    {{ d.job_description or 'Excellent career opportunity for eligible graduating students.' }}
+                </p>
+
+                <div style="background: rgba(0, 0, 0, 0.2); padding: 10px; border-radius: var(--radius-sm); font-size: 0.78rem; margin-bottom: 16px;">
+                    <div><strong>📍 Location:</strong> {{ d.job_location or 'PAN India / Remote' }}</div>
+                    <div><strong>📋 Eligibility:</strong> {{ d.eligibility_criteria or 'Minimum 60% with no active backlogs' }}</div>
+                    <div><strong>⏰ Deadline:</strong> {{ d.application_deadline or 'N/A' }}</div>
+                </div>
+            </div>
+
+            <div style="display: flex; justify-content: space-between; align-items: center; border-top: 1px solid var(--border-color); padding-top: 14px;">
+                <span style="font-size: 0.8rem; color: var(--text-muted);">Drive Date: <strong>{{ d.drive_date }}</strong></span>
+                {% if d.has_applied %}
+                    <span class="badge badge-success">✓ Applied</span>
+                {% else %}
+                    <form method="POST" action="{{ url_for('apply_drive', drive_id=d.drive_id) }}">
+                        <button type="submit" class="btn btn-primary btn-sm">1-Click Apply →</button>
+                    </form>
+                {% endif %}
+            </div>
+        </div>
+        {% else %}
+        <p style="color: var(--text-muted); padding: 20px;">No open placement drives currently listed.</p>
+        {% endfor %}
+    </div>
+</div>
+
+<!-- My Applications -->
+<div class="glass-card">
+    <div class="card-header">
+        <h3 class="card-title">📝 My Application Pipeline & Interview Status</h3>
+    </div>
+
+    <div class="table-responsive">
+        <table class="data-table">
+            <thead>
+                <tr>
+                    <th>Company</th>
+                    <th>Job Title</th>
+                    <th>CTC (Package)</th>
+                    <th>Applied Date</th>
+                    <th>Pipeline Status</th>
+                    <th>Feedback / Remarks</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for a in applications %}
+                <tr>
+                    <td><strong>{{ a.company_name }}</strong></td>
+                    <td>{{ a.job_title }}</td>
+                    <td>₹ {{ a.package_lpa }} LPA</td>
+                    <td>{{ a.applied_date }}</td>
+                    <td>
+                        <span class="badge {% if a.status == 'SELECTED' %}badge-success{% elif a.status == 'REJECTED' %}badge-danger{% elif a.status == 'SHORTLISTED' %}badge-secondary{% else %}badge-warning{% endif %}">
+                            {{ a.status }}
+                        </span>
+                    </td>
+                    <td style="color: var(--text-secondary); font-size: 0.85rem;">{{ a.interview_feedback or 'Application under review by corporate placement cell.' }}</td>
+                </tr>
+                {% else %}
+                <tr>
+                    <td colspan="6" style="text-align: center; color: var(--text-muted); padding: 24px;">
+                        You have not submitted any placement applications yet.
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}
