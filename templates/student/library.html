@@ -1,0 +1,158 @@
+{% extends "base.html" %}
+
+{% block title %}Digital University Library{% endblock %}
+{% block page_title %}📖 Digital University Library & Resource Center{% endblock %}
+
+{% block content %}
+<div class="content-header">
+    <div>
+        <h2 style="font-size: 1.5rem; font-weight: 700; color: #fff; margin-bottom: 4px;">Central Digital Library & Borrowing System</h2>
+        <p style="color: var(--text-muted); font-size: 0.95rem;">
+            Access over 50,000+ print volumes, international journals, reservation queue, and active borrow ledger.
+        </p>
+    </div>
+    <div style="display: flex; gap: 12px;">
+        <span class="badge badge-info" style="font-size: 0.9rem; padding: 8px 16px;">
+            📚 Student Borrow Limit: 4 Books
+        </span>
+    </div>
+</div>
+
+<!-- Active Issued Books Ledger -->
+<div class="card" style="margin-bottom: 28px; border-left: 4px solid var(--primary);">
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
+        <h3 style="font-size: 1.15rem; font-weight: 700; color: #fff; margin: 0; display: flex; align-items: center; gap: 8px;">
+            <span>🔖</span> My Currently Borrowed Books
+        </h3>
+        <span class="badge badge-success">{{ my_issues|length }} Active Checkouts</span>
+    </div>
+
+    {% if my_issues %}
+    <div class="table-container">
+        <table class="table">
+            <thead>
+                <tr>
+                    <th>Book Title & Author</th>
+                    <th>ISBN / Shelf</th>
+                    <th>Issue Date</th>
+                    <th>Due Date</th>
+                    <th>Fine Accrued</th>
+                    <th>Status</th>
+                    <th>Action</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for issue in my_issues %}
+                <tr>
+                    <td>
+                        <strong style="color: #fff; display: block;">{{ issue.title }}</strong>
+                        <span style="font-size: 0.8rem; color: var(--text-muted);">By {{ issue.author }}</span>
+                    </td>
+                    <td>
+                        <span style="font-family: monospace; font-size: 0.8rem; color: #94a3b8;">{{ issue.isbn }}</span>
+                        <div style="font-size: 0.75rem; color: #38bdf8;">📍 {{ issue.shelf_location }}</div>
+                    </td>
+                    <td>{{ issue.issue_date }}</td>
+                    <td><strong style="color: #fca5a5;">{{ issue.due_date }}</strong></td>
+                    <td>
+                        <span style="color: {% if issue.fine_amount > 0 %}#ef4444{% else %}#10b981{% endif %}; font-weight: 700;">
+                            ₹ {{ issue.fine_amount or '0.00' }}
+                        </span>
+                    </td>
+                    <td>
+                        {% if issue.status == 'ISSUED' %}
+                            <span class="badge badge-info">Borrowed</span>
+                        {% elif issue.status == 'OVERDUE' %}
+                            <span class="badge badge-danger">Overdue</span>
+                        {% else %}
+                            <span class="badge badge-success">Returned</span>
+                        {% endif %}
+                    </td>
+                    <td>
+                        <form method="POST" action="{{ url_for('student_library') }}">
+                            <input type="hidden" name="book_id" value="{{ issue.book_id }}">
+                            <input type="hidden" name="action_type" value="RENEW">
+                            <button type="submit" class="btn btn-secondary btn-sm">
+                                <span>🔄 Renew (14d)</span>
+                            </button>
+                        </form>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% else %}
+    <div style="text-align: center; padding: 24px; color: var(--text-muted);">
+        No books currently checked out. Browse the catalog below to borrow or reserve titles.
+    </div>
+    {% endif %}
+</div>
+
+<!-- Library Catalog & Search -->
+<div class="card">
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; flex-wrap: wrap; gap: 12px;">
+        <h3 style="font-size: 1.15rem; font-weight: 700; color: #fff; margin: 0; display: flex; align-items: center; gap: 8px;">
+            <span>📚</span> University Catalog & Shelf Finder
+        </h3>
+        <div style="display: flex; gap: 12px;">
+            <input type="text" id="bookSearchInput" onkeyup="filterBooks()" placeholder="Quick filter by title, author, category..." class="form-control" style="width: 280px; font-size: 0.85rem;">
+        </div>
+    </div>
+
+    <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 20px;" id="booksGrid">
+        {% for b in books %}
+        <div class="card book-card" style="background: rgba(15, 23, 42, 0.7); border: 1px solid var(--border-color); display: flex; flex-direction: column; justify-content: space-between;">
+            <div>
+                <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 10px;">
+                    <span class="badge" style="background: rgba(56, 189, 248, 0.15); color: #38bdf8; border: 1px solid rgba(56, 189, 248, 0.3);">
+                        {{ b.category }}
+                    </span>
+                    <span class="badge {% if b.available_copies > 0 %}badge-success{% else %}badge-danger{% endif %}">
+                        {{ b.available_copies }} / {{ b.total_copies }} Available
+                    </span>
+                </div>
+
+                <h4 class="book-title" style="font-size: 1.05rem; font-weight: 700; color: #fff; margin-bottom: 6px; line-height: 1.3;">
+                    {{ b.title }}
+                </h4>
+                <p class="book-author" style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 14px;">
+                    By {{ b.author }}
+                </p>
+
+                <div style="font-size: 0.8rem; background: rgba(0,0,0,0.25); border-radius: 6px; padding: 8px 12px; margin-bottom: 16px;">
+                    <div style="color: var(--text-muted);">ISBN: <strong style="color: #cbd5e1; font-family: monospace;">{{ b.isbn }}</strong></div>
+                    <div style="color: var(--text-muted); margin-top: 3px;">Shelf Location: <strong style="color: #38bdf8;">{{ b.shelf_location }}</strong></div>
+                </div>
+            </div>
+
+            <div>
+                <form method="POST" action="{{ url_for('student_library') }}">
+                    <input type="hidden" name="book_id" value="{{ b.book_id }}">
+                    <input type="hidden" name="action_type" value="RESERVE">
+                    <button type="submit" class="btn btn-primary" style="width: 100%;" {% if b.available_copies == 0 %}disabled{% endif %}>
+                        <span>{% if b.available_copies > 0 %}📥 Reserve for Circulation Pickup{% else %}Out of Stock (Join Waitlist){% endif %}</span>
+                    </button>
+                </form>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+
+<script>
+function filterBooks() {
+    const input = document.getElementById('bookSearchInput').value.toLowerCase();
+    const cards = document.querySelectorAll('.book-card');
+    cards.forEach(card => {
+        const title = card.querySelector('.book-title').innerText.toLowerCase();
+        const author = card.querySelector('.book-author').innerText.toLowerCase();
+        if (title.includes(input) || author.includes(input)) {
+            card.style.display = 'flex';
+        } else {
+            card.style.display = 'none';
+        }
+    });
+}
+</script>
+{% endblock %}

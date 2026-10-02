@@ -1,0 +1,151 @@
+{% extends "base.html" %}
+
+{% block title %}Student Support Desk & Grievances{% endblock %}
+{% block page_title %}🎧 Student Support Desk & Grievance Portal{% endblock %}
+
+{% block content %}
+<div class="content-header">
+    <div>
+        <h2 style="font-size: 1.5rem; font-weight: 700; color: #fff; margin-bottom: 4px;">Student Helpdesk & Grievance Redressal</h2>
+        <p style="color: var(--text-muted); font-size: 0.95rem;">
+            Submit official inquiries, examination re-evaluations, fee verification issues, or administrative assistance tickets.
+        </p>
+    </div>
+    <div style="display: flex; gap: 12px;">
+        <button onclick="document.getElementById('ticketFormCard').scrollIntoView({behavior: 'smooth'})" class="btn btn-primary">
+            <span>➕ Raise New Ticket</span>
+        </button>
+    </div>
+</div>
+
+<!-- Support Status Cards -->
+<div class="stats-grid" style="margin-bottom: 24px;">
+    <div class="stat-card">
+        <div class="stat-icon" style="background: rgba(56, 189, 248, 0.15); color: #38bdf8;">🎫</div>
+        <div class="stat-info">
+            <h3>{{ tickets|length }}</h3>
+            <p>Total Raised</p>
+        </div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-icon" style="background: rgba(16, 185, 129, 0.15); color: #10b981;">✅</div>
+        <div class="stat-info">
+            <h3>{{ tickets|selectattr('status', 'equalto', 'RESOLVED')|list|length }}</h3>
+            <p>Resolved</p>
+        </div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-icon" style="background: rgba(245, 158, 11, 0.15); color: #f59e0b;">⏳</div>
+        <div class="stat-info">
+            <h3>{{ tickets|rejectattr('status', 'equalto', 'RESOLVED')|list|length }}</h3>
+            <p>In Progress / Open</p>
+        </div>
+    </div>
+</div>
+
+<!-- Previous Tickets Ledger -->
+<div class="card" style="margin-bottom: 28px;">
+    <h3 style="font-size: 1.15rem; font-weight: 700; color: #fff; margin-bottom: 16px; display: flex; align-items: center; gap: 8px;">
+        <span>📋</span> My Support Tickets & Redressal History
+    </h3>
+
+    {% if tickets %}
+    <div style="display: flex; flex-direction: column; gap: 16px;">
+        {% for t in tickets %}
+        <div style="background: rgba(15, 23, 42, 0.6); border: 1px solid var(--border-color); border-radius: 8px; padding: 18px;">
+            <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 10px; flex-wrap: wrap; gap: 8px;">
+                <div style="display: flex; align-items: center; gap: 10px;">
+                    <span class="badge badge-info" style="font-size: 0.75rem;">#{{ t.ticket_id }}</span>
+                    <span class="badge" style="background: rgba(99, 102, 241, 0.15); color: #818cf8; border: 1px solid rgba(99, 102, 241, 0.3);">
+                        {{ t.category }}
+                    </span>
+                    <strong style="color: #fff; font-size: 1.05rem;">{{ t.subject }}</strong>
+                </div>
+
+                <div style="display: flex; align-items: center; gap: 8px;">
+                    <span class="badge {% if t.priority == 'HIGH' or t.priority == 'URGENT' %}badge-danger{% else %}badge-warning{% endif %}">
+                        {{ t.priority }}
+                    </span>
+                    {% if t.status == 'RESOLVED' %}
+                        <span class="badge badge-success">✓ RESOLVED</span>
+                    {% elif t.status == 'IN_PROGRESS' %}
+                        <span class="badge badge-warning">⏳ IN PROGRESS</span>
+                    {% else %}
+                        <span class="badge badge-info">OPEN</span>
+                    {% endif %}
+                </div>
+            </div>
+
+            <p style="color: var(--text-muted); font-size: 0.9rem; line-height: 1.5; margin-bottom: 12px;">
+                {{ t.description }}
+            </p>
+
+            {% if t.admin_response %}
+            <div style="background: rgba(16, 185, 129, 0.08); border-left: 3px solid #10b981; padding: 10px 14px; border-radius: 4px; margin-bottom: 10px; font-size: 0.85rem;">
+                <strong style="color: #34d399; display: block; margin-bottom: 2px;">💬 Official Staff Resolution / Reply:</strong>
+                <span style="color: #e2e8f0;">{{ t.admin_response }}</span>
+            </div>
+            {% endif %}
+
+            <div style="font-size: 0.75rem; color: var(--text-muted); display: flex; justify-content: space-between;">
+                <span>Submitted on: {{ t.created_at }}</span>
+                {% if t.resolved_at %}<span>Resolved: {{ t.resolved_at }}</span>{% endif %}
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    {% else %}
+    <p style="color: var(--text-muted); text-align: center; padding: 20px;">No support tickets raised yet.</p>
+    {% endif %}
+</div>
+
+<!-- Raise New Ticket Form -->
+<div class="card" id="ticketFormCard">
+    <h3 style="font-size: 1.15rem; font-weight: 700; color: #fff; margin-bottom: 16px; display: flex; align-items: center; gap: 8px;">
+        <span>📝</span> Raise a New Inquiry or Grievance
+    </h3>
+
+    <form method="POST" action="{{ url_for('student_support') }}">
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 16px;">
+            <div class="form-group">
+                <label class="form-label">Category *</label>
+                <select name="category" class="form-control" required>
+                    <option value="ACADEMIC">Academic & Curriculum Queries</option>
+                    <option value="EXAMINATION">Examination & Re-Evaluation</option>
+                    <option value="FEES">Fee Payment & Receipt Discrepancies</option>
+                    <option value="LIBRARY">Digital Library & Book Borrowing</option>
+                    <option value="HOSTEL">Hostel & Campus Facilities</option>
+                    <option value="ID_CARD">Smart ID Card & Gate Pass</option>
+                    <option value="GENERAL">General Administrative Inquiries</option>
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label class="form-label">Priority Level *</label>
+                <select name="priority" class="form-control" required>
+                    <option value="LOW">Low (General Inquiry - 48 hrs)</option>
+                    <option value="MEDIUM" selected>Medium (Standard Request - 24 hrs)</option>
+                    <option value="HIGH">High (Urgent - 12 hrs)</option>
+                    <option value="URGENT">Critical (Immediate Escalation)</option>
+                </select>
+            </div>
+        </div>
+
+        <div class="form-group" style="margin-bottom: 16px;">
+            <label class="form-label">Subject Title *</label>
+            <input type="text" name="subject" required placeholder="Brief summary of the inquiry or issue..." class="form-control">
+        </div>
+
+        <div class="form-group" style="margin-bottom: 20px;">
+            <label class="form-label">Detailed Description *</label>
+            <textarea name="description" rows="4" required placeholder="Describe the specific circumstances, course codes, transaction IDs or exam questions involved..." class="form-control"></textarea>
+        </div>
+
+        <div style="display: flex; justify-content: flex-end;">
+            <button type="submit" class="btn btn-primary" style="padding: 10px 24px;">
+                <span>🚀 Submit Ticket</span>
+            </button>
+        </div>
+    </form>
+</div>
+{% endblock %}

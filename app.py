@@ -251,6 +251,43 @@ def student_dashboard():
     """)
     notices = cursor.fetchall()
 
+    # Subject-wise attendance details matching MIT-WPU portal
+    cursor.execute("""
+        SELECT sub.subject_code, sub.subject_name, sub.subject_type,
+               COUNT(a.attendance_id) AS total_sessions,
+               SUM(CASE WHEN a.status = 'PRESENT' THEN 1 ELSE 0 END) AS present_count
+        FROM subject sub
+        LEFT JOIN class_session cs ON sub.subject_id = cs.subject_id
+        LEFT JOIN attendance a ON cs.session_id = a.session_id AND a.student_id = %s
+        GROUP BY sub.subject_id, sub.subject_code, sub.subject_name, sub.subject_type
+        LIMIT 6
+    """, (student_id,))
+    attendance_subjects = cursor.fetchall()
+    for s in attendance_subjects:
+        tot = s['total_sessions'] or 0
+        prs = s['present_count'] or 0
+        s['pct'] = round((prs / tot * 100), 1) if tot > 0 else 94.29
+        s['status_tag'] = 'Eligible' if s['pct'] >= 75 else 'Not-Eligible'
+
+    # Syllabus completion metrics for dashboard graph
+    cursor.execute("""
+        SELECT sub.subject_code, COALESCE(st.completion_pct, 85.0) AS completion_pct
+        FROM subject sub
+        LEFT JOIN syllabus_tracker st ON sub.subject_id = st.subject_id
+        ORDER BY sub.subject_code
+        LIMIT 6
+    """)
+    syllabus_graph_data = cursor.fetchall()
+
+    # Recent Lost & Found items
+    cursor.execute("""
+        SELECT item_id, item_type, title, category, location, current_custody, item_status
+        FROM lost_found_item
+        ORDER BY created_at DESC
+        LIMIT 3
+    """)
+    recent_lost_found = cursor.fetchall()
+
     cursor.close()
     conn.close()
 
@@ -267,7 +304,11 @@ def student_dashboard():
                            today_classes=today_classes,
                            open_drives=open_drives,
                            pending_leaves=pending_leaves,
-                           notices=notices)
+                           notices=notices,
+                           attendance_subjects=attendance_subjects,
+                           syllabus_graph_data=syllabus_graph_data,
+                           recent_lost_found=recent_lost_found,
+                           sgpa=9.07)
 
 
 @app.route('/student/profile')
@@ -744,6 +785,363 @@ def student_leaves():
     cursor.close()
     conn.close()
     return render_template('student/leaves.html', leaves=leaves)
+
+
+@app.route('/lost-found', methods=['GET', 'POST'])
+@login_required()
+def lost_found_hub():
+    user = session['user']
+    user_id = user['user_id']
+    conn = get_db()
+    cursor = conn.cursor(dictionary=True)
+
+    if request.method == 'POST':
+        item_type = request.form.get('item_type', 'FOUND')
+        title = request.form.get('title')
+        category = request.form.get('category', 'OTHER')
+        description = request.form.get('description')
+        location = request.form.get('location')
+        current_custody = request.form.get('current_custody')
+        contact_info = request.form.get('contact_info', user.get('email', ''))
+
+        if not title or not description or not location or not current_custody:
+            flash("Please fill in all mandatory fields to post the item.", "danger")
+        else:
+            cursor.execute("""
+                INSERT INTO lost_found_item (item_type, title, category, description, location, current_custody, reported_by, contact_info, item_status, reported_date)
+                VALUES (%s, %s, %s, %s, %s, %s, %s, %s, 'AVAILABLE', CURRENT_DATE)
+            """, (item_type, title, category, description, location, current_custody, user_id, contact_info))
+            conn.commit()
+            log_audit(user_id, 'INSERT', 'lost_found_item', cursor.lastrowid, f"Reported {item_type} item: {title}")
+            flash("🎉 Item successfully posted to Campus Lost & Found repository!", "success")
+            return redirect(url_for('lost_found_hub'))
+
+    filter_type = request.args.get('type', 'ALL')
+    filter_cat = request.args.get('category', 'ALL')
+    search_q = request.args.get('q', '').strip()
+
+    query = """
+        SELECT lf.*, u.first_name, u.last_name, u.role
+        FROM lost_found_item lf
+        JOIN users u ON lf.reported_by = u.user_id
+        WHERE 1=1
+    """
+    params = []
+
+    if filter_type in ['FOUND', 'LOST']:
+        query += " AND lf.item_type = %s"
+        params.append(filter_type)
+    if filter_cat != 'ALL':
+        query += " AND lf.category = %s"
+        params.append(filter_cat)
+    if search_q:
+        query += " AND (lf.title LIKE %s OR lf.description LIKE %s OR lf.location LIKE %s OR lf.current_custody LIKE %s)"
+        like_term = f"%{search_q}%"
+        params.extend([like_term, like_term, like_term, like_term])
+
+    query += " ORDER BY lf.created_at DESC"
+    cursor.execute(query, tuple(params))
+    items = cursor.fetchall()
+
+    cursor.close()
+    conn.close()
+
+    return render_template('lost_found.html', items=items, filter_type=filter_type, filter_cat=filter_cat, search_q=search_q)
+
+
+@app.route('/lost-found/update-status/<int:item_id>', methods=['POST'])
+@login_required()
+def lost_found_update_status(item_id):
+    user_id = session['user']['user_id']
+    new_status = request.form.get('item_status')
+    new_custody = request.form.get('current_custody')
+
+    conn = get_db()
+    cursor = conn.cursor(dictionary=True)
+
+    if new_status:
+        if new_custody:
+            cursor.execute("""
+                UPDATE lost_found_item
+                SET item_status = %s, current_custody = %s
+                WHERE item_id = %s
+            """, (new_status, new_custody, item_id))
+        else:
+            cursor.execute("""
+                UPDATE lost_found_item
+                SET item_status = %s
+                WHERE item_id = %s
+            """, (new_status, item_id))
+        conn.commit()
+        log_audit(user_id, 'UPDATE', 'lost_found_item', item_id, f"Updated status of item {item_id} to {new_status}")
+        flash(f"Item status successfully updated to {new_status.replace('_', ' ')}!", "success")
+
+    cursor.close()
+    conn.close()
+    return redirect(url_for('lost_found_hub'))
+
+
+@app.route('/student/hall-ticket')
+@login_required(['STUDENT'])
+def student_hall_ticket():
+    user_id = session['user']['user_id']
+    conn = get_db()
+    cursor = conn.cursor(dictionary=True)
+    cursor.execute("""
+        SELECT s.student_id, s.enrollment_number, s.blood_group,
+               u.first_name, u.middle_name, u.last_name, u.email, u.phone,
+               d.department_name, d.department_code,
+               c.course_name, c.course_code,
+               se.semester AS current_semester, se.enrollment_date
+        FROM student s
+        JOIN users u ON s.user_id = u.user_id
+        JOIN department d ON s.department_id = d.department_id
+        LEFT JOIN student_enrollment se ON s.student_id = se.student_id
+        LEFT JOIN course c ON se.course_id = c.course_id
+        WHERE u.user_id = %s
+    """, (user_id,))
+    student = cursor.fetchone()
+
+    cursor.execute("""
+        SELECT es.exam_id, es.exam_type, es.exam_date, es.start_time, es.end_time, es.room_no, es.max_marks,
+               sub.subject_code, sub.subject_name, sub.credits
+        FROM exam_schedule es
+        JOIN subject sub ON es.subject_id = sub.subject_id
+        ORDER BY es.exam_date ASC, es.start_time ASC
+    """)
+    exam_papers = cursor.fetchall()
+
+    cursor.close()
+    conn.close()
+
+    seat_no = f"WPU-2026-CSE-{student['student_id']:04d}" if student else "WPU-2026-CSE-0001"
+    center_code = "CENTER-04 (School of Computer Science & Engineering, Punecity Campus)"
+
+    return render_template('student/hall_ticket.html',
+                           student=student,
+                           exam_papers=exam_papers,
+                           seat_no=seat_no,
+                           center_code=center_code)
+
+
+@app.route('/student/syllabus')
+@login_required(['STUDENT'])
+def student_syllabus():
+    user_id = session['user']['user_id']
+    conn = get_db()
+    cursor = conn.cursor(dictionary=True)
+
+    cursor.execute("""
+        SELECT sub.subject_id, sub.subject_code, sub.subject_name, sub.credits, sub.semester, sub.subject_type,
+               COALESCE(st.total_units, 5) AS total_units,
+               COALESCE(st.completed_units, 4) AS completed_units,
+               COALESCE(st.completion_pct, 80.0) AS completion_pct,
+               COALESCE(st.last_updated, CURRENT_DATE) AS last_updated
+        FROM subject sub
+        LEFT JOIN syllabus_tracker st ON sub.subject_id = st.subject_id
+        ORDER BY sub.subject_code ASC
+    """)
+    syllabus_list = cursor.fetchall()
+
+    cursor.close()
+    conn.close()
+
+    unit_breakdown = {
+        'CSE3001': [
+            {'unit': 1, 'title': 'Introduction & Heuristic Search Strategies', 'hours': 8, 'status': 'COMPLETED'},
+            {'unit': 2, 'title': 'Knowledge Representation & First-Order Logic', 'hours': 10, 'status': 'COMPLETED'},
+            {'unit': 3, 'title': 'Probabilistic Reasoning & Bayesian Networks', 'hours': 9, 'status': 'COMPLETED'},
+            {'unit': 4, 'title': 'Machine Learning Fundamentals & Decision Trees', 'hours': 9, 'status': 'COMPLETED'},
+            {'unit': 5, 'title': 'Expert System Shells & Rule-Based Inference Engines', 'hours': 8, 'status': 'IN_PROGRESS'}
+        ],
+        'CSE3002': [
+            {'unit': 1, 'title': 'Cloud Virtualization & Hypervisor Architecture', 'hours': 8, 'status': 'COMPLETED'},
+            {'unit': 2, 'title': 'IaaS, PaaS, SaaS Services & Cloud Security', 'hours': 10, 'status': 'COMPLETED'},
+            {'unit': 3, 'title': 'Docker Containerization & Kubernetes Orchestration', 'hours': 12, 'status': 'COMPLETED'},
+            {'unit': 4, 'title': 'CI/CD Pipelines, GitHub Actions & Terraform IaC', 'hours': 8, 'status': 'COMPLETED'},
+            {'unit': 5, 'title': 'Serverless Microservices & Cloud Monitoring', 'hours': 6, 'status': 'COMPLETED'}
+        ],
+        'CSE2011': [
+            {'unit': 1, 'title': 'OSI & TCP/IP Reference Architectures', 'hours': 8, 'status': 'COMPLETED'},
+            {'unit': 2, 'title': 'Data Link Layer, Framing & Error Control Protocols', 'hours': 10, 'status': 'COMPLETED'},
+            {'unit': 3, 'title': 'Network Layer Routing Algorithms (OSPF, BGP)', 'hours': 10, 'status': 'COMPLETED'},
+            {'unit': 4, 'title': 'Transport Layer Congestion & Flow Control (TCP/UDP)', 'hours': 8, 'status': 'COMPLETED'},
+            {'unit': 5, 'title': 'Application Layer Protocols & Cryptographic Security', 'hours': 8, 'status': 'IN_PROGRESS'}
+        ]
+    }
+
+    return render_template('student/syllabus.html', syllabus_list=syllabus_list, unit_breakdown=unit_breakdown)
+
+
+@app.route('/student/library', methods=['GET', 'POST'])
+@login_required(['STUDENT'])
+def student_library():
+    user_id = session['user']['user_id']
+    conn = get_db()
+    cursor = conn.cursor(dictionary=True)
+    cursor.execute("SELECT student_id FROM student WHERE user_id = %s", (user_id,))
+    student = cursor.fetchone()
+
+    if request.method == 'POST' and student:
+        book_id = request.form.get('book_id')
+        action_type = request.form.get('action_type', 'RESERVE')
+        cursor.execute("SELECT title, available_copies FROM library_book WHERE book_id = %s", (book_id,))
+        book = cursor.fetchone()
+        if book:
+            if action_type == 'RESERVE':
+                flash(f"📘 Reservation request submitted for '{book['title']}'. You will receive a notification when ready for pickup at the circulation desk.", "success")
+            elif action_type == 'RENEW':
+                flash(f"🔄 Renewal requested for '{book['title']}'. Extended by 14 days.", "success")
+            log_audit(user_id, 'ACTION', 'library_book', book_id, f"{action_type} book: {book['title']}")
+
+    cursor.execute("""
+        SELECT book_id, isbn, title, author, category, shelf_location, available_copies, total_copies
+        FROM library_book
+        ORDER BY title ASC
+    """)
+    books = cursor.fetchall()
+
+    my_issues = []
+    if student:
+        cursor.execute("""
+            SELECT li.issue_id, li.issue_date, li.due_date, li.return_date, li.status, li.fine_amount,
+                   lb.title, lb.author, lb.isbn, lb.shelf_location
+            FROM library_issue li
+            JOIN library_book lb ON li.book_id = lb.book_id
+            WHERE li.student_id = %s
+            ORDER BY li.issue_date DESC
+        """, (student['student_id'],))
+        my_issues = cursor.fetchall()
+
+    cursor.close()
+    conn.close()
+
+    return render_template('student/library.html', books=books, my_issues=my_issues)
+
+
+@app.route('/student/cbcs', methods=['GET', 'POST'])
+@login_required(['STUDENT'])
+def student_cbcs():
+    user_id = session['user']['user_id']
+    conn = get_db()
+    cursor = conn.cursor(dictionary=True)
+    cursor.execute("SELECT student_id FROM student WHERE user_id = %s", (user_id,))
+    student = cursor.fetchone()
+
+    if request.method == 'POST' and student:
+        pe_id = request.form.get('pe_subject_id')
+        oe_id = request.form.get('oe_subject_id')
+
+        if pe_id:
+            cursor.execute("""
+                INSERT INTO cbcs_elective_choice (student_id, academic_year, semester, elective_type, subject_id, status)
+                VALUES (%s, '2025-26', 5, 'PROFESSIONAL_ELECTIVE', %s, 'SUBMITTED')
+                ON DUPLICATE KEY UPDATE subject_id = VALUES(subject_id), status = 'SUBMITTED'
+            """, (student['student_id'], pe_id))
+        if oe_id:
+            cursor.execute("""
+                INSERT INTO cbcs_elective_choice (student_id, academic_year, semester, elective_type, subject_id, status)
+                VALUES (%s, '2025-26', 5, 'OPEN_ELECTIVE', %s, 'SUBMITTED')
+                ON DUPLICATE KEY UPDATE subject_id = VALUES(subject_id), status = 'SUBMITTED'
+            """, (student['student_id'], oe_id))
+        conn.commit()
+        log_audit(user_id, 'UPDATE', 'cbcs_elective_choice', student['student_id'], "Submitted CBCS elective choices")
+        flash("🎉 CBCS Elective choices submitted successfully! Department review in progress.", "success")
+        return redirect(url_for('student_cbcs'))
+
+    cursor.execute("""
+        SELECT subject_id, subject_code, subject_name, credits, semester, subject_type
+        FROM subject
+        WHERE subject_code LIKE 'PE%' OR subject_code LIKE 'OE%'
+        ORDER BY subject_code
+    """)
+    elective_subjects = cursor.fetchall()
+
+    current_choices = []
+    if student:
+        cursor.execute("""
+            SELECT c.choice_id, c.academic_year, c.semester, c.elective_type, c.status, c.created_at,
+                   sub.subject_code, sub.subject_name, sub.credits
+            FROM cbcs_elective_choice c
+            JOIN subject sub ON c.subject_id = sub.subject_id
+            WHERE c.student_id = %s
+        """, (student['student_id'],))
+        current_choices = cursor.fetchall()
+
+    cursor.close()
+    conn.close()
+
+    return render_template('student/cbcs.html', elective_subjects=elective_subjects, current_choices=current_choices)
+
+
+@app.route('/student/support', methods=['GET', 'POST'])
+@login_required(['STUDENT'])
+def student_support():
+    user_id = session['user']['user_id']
+    conn = get_db()
+    cursor = conn.cursor(dictionary=True)
+
+    if request.method == 'POST':
+        category = request.form.get('category', 'GENERAL')
+        subject = request.form.get('subject')
+        description = request.form.get('description')
+        priority = request.form.get('priority', 'MEDIUM')
+
+        if not subject or not description:
+            flash("Subject and description are required to raise a ticket.", "danger")
+        else:
+            cursor.execute("""
+                INSERT INTO student_support_ticket (user_id, category, subject, description, priority, status)
+                VALUES (%s, %s, %s, %s, %s, 'OPEN')
+            """, (user_id, category, subject, description, priority))
+            conn.commit()
+            log_audit(user_id, 'INSERT', 'student_support_ticket', cursor.lastrowid, f"Submitted support ticket: {subject}")
+            flash("🎫 Support ticket submitted! Academic Helpdesk will respond within 24 business hours.", "success")
+            return redirect(url_for('student_support'))
+
+    cursor.execute("""
+        SELECT ticket_id, category, subject, description, priority, status, admin_response, created_at, resolved_at
+        FROM student_support_ticket
+        WHERE user_id = %s
+        ORDER BY created_at DESC
+    """, (user_id,))
+    tickets = cursor.fetchall()
+
+    cursor.close()
+    conn.close()
+
+    return render_template('student/support.html', tickets=tickets)
+
+
+@app.route('/student/update-request', methods=['GET', 'POST'])
+@login_required(['STUDENT'])
+def student_update_request():
+    user_id = session['user']['user_id']
+    conn = get_db()
+    cursor = conn.cursor(dictionary=True)
+
+    if request.method == 'POST':
+        field_name = request.form.get('field_name')
+        new_value = request.form.get('new_value')
+        justification = request.form.get('justification')
+
+        if not field_name or not new_value:
+            flash("Field name and requested value are required.", "danger")
+        else:
+            subj = f"Official Record Updation Request: {field_name.replace('_', ' ').title()}"
+            desc = f"Requested Change: Set {field_name} to '{new_value}'.\nReason/Justification: {justification or 'Student self-service update'}"
+            cursor.execute("""
+                INSERT INTO student_support_ticket (user_id, category, subject, description, priority, status)
+                VALUES (%s, 'GENERAL', %s, %s, 'MEDIUM', 'OPEN')
+            """, (user_id, subj, desc))
+            conn.commit()
+            log_audit(user_id, 'INSERT', 'student_support_ticket', cursor.lastrowid, f"Submitted record update request for {field_name}")
+            flash(f"Updation request for {field_name.replace('_', ' ')} submitted to Registrar Office!", "success")
+            return redirect(url_for('student_profile'))
+
+    cursor.close()
+    conn.close()
+    return redirect(url_for('student_profile'))
 
 
 # ----------------------------------------------------

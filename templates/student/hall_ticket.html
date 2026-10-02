@@ -1,0 +1,186 @@
+{% extends "base.html" %}
+
+{% block title %}Examination Hall Ticket | Admit Card{% endblock %}
+{% block page_title %}🎫 Official Examination Hall Ticket{% endblock %}
+
+{% block extra_head %}
+<style>
+@media print {
+    body {
+        background: #fff !important;
+        color: #000 !important;
+    }
+    .sidebar, .top-navbar, .no-print, .ambient-glow {
+        display: none !important;
+    }
+    .main-content {
+        margin: 0 !important;
+        padding: 0 !important;
+    }
+    .hall-ticket-container {
+        border: 2px solid #000 !important;
+        box-shadow: none !important;
+        background: #fff !important;
+        color: #000 !important;
+        page-break-inside: avoid;
+    }
+    .hall-ticket-container * {
+        color: #000 !important;
+        border-color: #333 !important;
+    }
+    .badge {
+        border: 1px solid #000 !important;
+    }
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="content-header no-print">
+    <div>
+        <h2 style="font-size: 1.5rem; font-weight: 700; color: #fff; margin-bottom: 4px;">University Examination Admit Card</h2>
+        <p style="color: var(--text-muted); font-size: 0.95rem;">
+            Official End-Term Examination Hall Ticket for Spring Session 2026. Carry this verified admit card along with your University ID Card to all examination halls.
+        </p>
+    </div>
+    <div style="display: flex; gap: 12px;">
+        <button onclick="window.print()" class="btn btn-primary">
+            <span>🖨️ Print / Download PDF</span>
+        </button>
+    </div>
+</div>
+
+<div class="hall-ticket-container card" style="max-width: 900px; margin: 0 auto; padding: 36px; border: 2px solid var(--border-color); background: rgba(15, 23, 42, 0.85); box-shadow: 0 20px 45px rgba(0,0,0,0.5);">
+    
+    <!-- University Header -->
+    <div style="text-align: center; border-bottom: 2px solid var(--border-color); padding-bottom: 20px; margin-bottom: 24px;">
+        <div style="display: flex; align-items: center; justify-content: center; gap: 16px; margin-bottom: 8px;">
+            <div style="font-size: 2.8rem;">🎓</div>
+            <div>
+                <h1 style="font-size: 1.45rem; font-weight: 800; color: #fff; text-transform: uppercase; letter-spacing: 0.5px; margin: 0;">
+                    School of Computer Science & Engineering, Punecity
+                </h1>
+                <p style="font-size: 0.85rem; color: var(--text-muted); margin: 2px 0 0;">
+                    Affiliated to State Technological University • Recognized by UGC & AICTE
+                </p>
+            </div>
+        </div>
+        <div style="display: inline-block; background: rgba(16, 185, 129, 0.15); border: 1px solid rgba(16, 185, 129, 0.4); padding: 4px 18px; border-radius: 20px; margin-top: 6px;">
+            <span style="color: #34d399; font-weight: 700; font-size: 0.9rem; text-transform: uppercase; letter-spacing: 1px;">
+                End-Semester Examination Hall Ticket • Spring 2026
+            </span>
+        </div>
+    </div>
+
+    <!-- Candidate Info & Photo Grid -->
+    <div style="display: grid; grid-template-columns: 1fr auto; gap: 24px; margin-bottom: 24px; align-items: center;">
+        <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; font-size: 0.9rem;">
+            <div>
+                <span style="color: var(--text-muted); font-size: 0.8rem; display: block;">Candidate Name</span>
+                <strong style="color: #fff; font-size: 1.05rem;">{{ current_user.full_name }}</strong>
+            </div>
+            <div>
+                <span style="color: var(--text-muted); font-size: 0.8rem; display: block;">Exam Seat Number</span>
+                <strong style="color: var(--accent); font-size: 1.1rem; letter-spacing: 0.5px;">{{ seat_no }}</strong>
+            </div>
+            <div>
+                <span style="color: var(--text-muted); font-size: 0.8rem; display: block;">University PRN / Roll No</span>
+                <strong style="color: #e2e8f0;">{{ student.enrollment_number or 'PRN-2024-CSE-8921' }} / CSE-24-101</strong>
+            </div>
+            <div>
+                <span style="color: var(--text-muted); font-size: 0.8rem; display: block;">Program / Degree</span>
+                <strong style="color: #e2e8f0;">{{ student.course_name or 'B.Tech in Computer Science & Engineering' }}</strong>
+            </div>
+            <div>
+                <span style="color: var(--text-muted); font-size: 0.8rem; display: block;">Semester / Batch</span>
+                <strong style="color: #e2e8f0;">Semester {{ student.current_semester or 5 }} (Batch {{ student.enrollment_year or 2024 }})</strong>
+            </div>
+            <div>
+                <span style="color: var(--text-muted); font-size: 0.8rem; display: block;">Examination Center</span>
+                <strong style="color: #38bdf8; font-size: 0.85rem;">{{ center_code }}</strong>
+            </div>
+        </div>
+
+        <!-- Student Photo & Barcode -->
+        <div style="text-align: center; border: 1px dashed var(--border-color); padding: 12px 18px; border-radius: 8px; background: rgba(0,0,0,0.2);">
+            <div style="width: 100px; height: 115px; border: 1px solid var(--border-color); border-radius: 6px; margin: 0 auto 8px; display: flex; align-items: center; justify-content: center; background: rgba(255,255,255,0.05); font-size: 2.8rem;">
+                👨‍🎓
+            </div>
+            <div style="font-family: monospace; font-size: 0.85rem; letter-spacing: 3px; color: #94a3b8; border-top: 1px solid var(--border-color); padding-top: 4px;">
+                ||||| | |||| || |||||
+            </div>
+            <span style="font-size: 0.7rem; color: var(--text-muted); display: block;">{{ seat_no }}</span>
+        </div>
+    </div>
+
+    <!-- Exam Schedule Table -->
+    <div style="margin-bottom: 28px;">
+        <h3 style="font-size: 1rem; font-weight: 700; color: #fff; margin-bottom: 12px; display: flex; align-items: center; gap: 8px;">
+            <span>📋 Scheduled Examination Papers</span>
+        </h3>
+
+        <table class="table" style="font-size: 0.88rem; width: 100%;">
+            <thead>
+                <tr>
+                    <th style="width: 110px;">Date</th>
+                    <th style="width: 110px;">Time</th>
+                    <th style="width: 90px;">Sub Code</th>
+                    <th>Subject Title</th>
+                    <th style="width: 100px;">Exam Hall</th>
+                    <th style="width: 120px; text-align: center;">Invigilator Sign</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for p in exam_papers %}
+                <tr>
+                    <td><strong style="color: #fff;">{{ p.exam_date }}</strong></td>
+                    <td style="color: var(--text-muted);">{{ p.start_time }} - {{ p.end_time }}</td>
+                    <td><span class="badge badge-info" style="font-size: 0.75rem;">{{ p.subject_code }}</span></td>
+                    <td style="font-weight: 600; color: #f8fafc;">{{ p.subject_name }}</td>
+                    <td><strong style="color: #38bdf8;">{{ p.room_no }}</strong></td>
+                    <td style="border: 1px dashed rgba(255,255,255,0.2); height: 38px; text-align: center; vertical-align: middle;">
+                        <span style="opacity: 0.3; font-size: 0.7rem;">[ Verified ]</span>
+                    </td>
+                </tr>
+                {% else %}
+                <tr>
+                    <td colspan="6" style="text-align: center; color: var(--text-muted);">No exam schedule found.</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+    <!-- Mandatory Candidate Instructions -->
+    <div style="border-top: 1px solid var(--border-color); padding-top: 16px; margin-bottom: 30px; font-size: 0.8rem; color: var(--text-muted); line-height: 1.6;">
+        <h4 style="color: #cbd5e1; font-weight: 600; margin-bottom: 6px;">Important Instructions for Examinees:</h4>
+        <ol style="padding-left: 18px; margin: 0;">
+            <li>Candidates must occupy allotted seats 15 minutes before the scheduled commencement of the examination.</li>
+            <li>Possession of smart watches, mobile phones, programmable calculators or unauthorized paper material is strictly prohibited inside the hall.</li>
+            <li>Admit card must be preserved carefully until the final university grade card / transcript declaration.</li>
+            <li>No candidate will be permitted to leave the examination hall before half duration of the examination.</li>
+        </ol>
+    </div>
+
+    <!-- Signatures & Verification Seal -->
+    <div style="display: flex; justify-content: space-between; align-items: flex-end; padding-top: 20px; border-top: 1px dashed var(--border-color);">
+        <div style="text-align: center;">
+            <div style="width: 140px; border-bottom: 1px solid var(--text-muted); margin-bottom: 6px; height: 30px;"></div>
+            <span style="font-size: 0.8rem; color: var(--text-muted);">Candidate Signature</span>
+        </div>
+
+        <div style="text-align: center;">
+            <div style="display: inline-block; border: 2px solid rgba(16, 185, 129, 0.4); padding: 4px 12px; border-radius: 4px; color: #34d399; font-size: 0.75rem; font-weight: 700; margin-bottom: 6px;">
+                OFFICIALLY SEALED & VERIFIED
+            </div>
+            <span style="font-size: 0.75rem; color: var(--text-muted); display: block;">Center Superintendent</span>
+        </div>
+
+        <div style="text-align: center;">
+            <div style="font-family: cursive; font-size: 1.1rem; color: #60a5fa; margin-bottom: 4px;">Dr. S. K. Kulkarni</div>
+            <div style="width: 160px; border-bottom: 1px solid var(--text-muted); margin-bottom: 6px;"></div>
+            <span style="font-size: 0.8rem; color: var(--text-muted);">Controller of Examinations</span>
+        </div>
+    </div>
+</div>
+{% endblock %}

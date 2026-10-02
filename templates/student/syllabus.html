@@ -1,0 +1,236 @@
+{% extends "base.html" %}
+
+{% block title %}Syllabus & Coverage Status{% endblock %}
+{% block page_title %}📚 Syllabus & Curriculum Coverage{% endblock %}
+
+{% block content %}
+<div class="content-header">
+    <div>
+        <h2 style="font-size: 1.5rem; font-weight: 700; color: #fff; margin-bottom: 4px;">My Syllabus Status & Coverage</h2>
+        <p style="color: var(--text-muted); font-size: 0.95rem;">
+            Real-time track of curriculum progress, unit-wise topic completion, and official course learning outcomes for Semester 5.
+        </p>
+    </div>
+    <div style="display: flex; gap: 12px;">
+        <button onclick="window.print()" class="btn btn-secondary">
+            <span>📥 Download Curriculum PDF</span>
+        </button>
+    </div>
+</div>
+
+<!-- Syllabus Progress Bar Chart & Metrics Card -->
+<div class="dashboard-grid" style="grid-template-columns: 2fr 1fr; margin-bottom: 24px;">
+    <!-- Chart Widget matching image -->
+    <div class="card">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
+            <h3 style="font-size: 1.1rem; font-weight: 700; color: #fff; margin: 0; display: flex; align-items: center; gap: 8px;">
+                <span>📊</span> My Syllabus Status (Course Completion %)
+            </h3>
+            <span class="badge badge-success">Spring 2026</span>
+        </div>
+        <div style="height: 280px; position: relative;">
+            <canvas id="syllabusChart"></canvas>
+        </div>
+    </div>
+
+    <!-- Quick Coverage Summary -->
+    <div class="card" style="display: flex; flex-direction: column; justify-content: space-between;">
+        <div>
+            <h3 style="font-size: 1.1rem; font-weight: 700; color: #fff; margin-bottom: 16px;">
+                ⚡ Syllabus Milestones
+            </h3>
+            <div style="display: flex; flex-direction: column; gap: 16px;">
+                <div style="background: rgba(16, 185, 129, 0.1); border: 1px solid rgba(16, 185, 129, 0.3); border-radius: 8px; padding: 14px;">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px;">
+                        <span style="font-size: 0.85rem; color: #34d399; font-weight: 600;">Overall Covered Status</span>
+                        <strong style="font-size: 1.2rem; color: #34d399;">88.5%</strong>
+                    </div>
+                    <div style="height: 6px; background: rgba(0,0,0,0.3); border-radius: 3px; overflow: hidden;">
+                        <div style="width: 88.5%; height: 100%; background: #10b981;"></div>
+                    </div>
+                </div>
+
+                <div style="background: rgba(56, 189, 248, 0.1); border: 1px solid rgba(56, 189, 248, 0.3); border-radius: 8px; padding: 14px;">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px;">
+                        <span style="font-size: 0.85rem; color: #38bdf8; font-weight: 600;">Theory Units Delivered</span>
+                        <strong style="font-size: 1.2rem; color: #38bdf8;">22 / 25</strong>
+                    </div>
+                    <div style="height: 6px; background: rgba(0,0,0,0.3); border-radius: 3px; overflow: hidden;">
+                        <div style="width: 88%; height: 100%; background: #38bdf8;"></div>
+                    </div>
+                </div>
+
+                <div style="background: rgba(168, 85, 247, 0.1); border: 1px solid rgba(168, 85, 247, 0.3); border-radius: 8px; padding: 14px;">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px;">
+                        <span style="font-size: 0.85rem; color: #c084fc; font-weight: 600;">Lab Experiments Performed</span>
+                        <strong style="font-size: 1.2rem; color: #c084fc;">100%</strong>
+                    </div>
+                    <div style="height: 6px; background: rgba(0,0,0,0.3); border-radius: 3px; overflow: hidden;">
+                        <div style="width: 100%; height: 100%; background: #a855f7;"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div style="font-size: 0.8rem; color: var(--text-muted); text-align: center; margin-top: 12px;">
+            Target Completion Date: April 05, 2026
+        </div>
+    </div>
+</div>
+
+<!-- Detailed Course-Wise Syllabus Progress Table -->
+<div class="card" style="margin-bottom: 24px;">
+    <h3 style="font-size: 1.15rem; font-weight: 700; color: #fff; margin-bottom: 16px; display: flex; align-items: center; gap: 8px;">
+        <span>📖</span> Subject-Wise Course Completion Matrix
+    </h3>
+
+    <div class="table-container">
+        <table class="table">
+            <thead>
+                <tr>
+                    <th>Subject Code</th>
+                    <th>Subject Title</th>
+                    <th>Credits</th>
+                    <th>Type</th>
+                    <th>Units Completed</th>
+                    <th>Coverage Progress</th>
+                    <th>Status</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for sub in syllabus_list %}
+                <tr>
+                    <td><strong style="color: var(--primary);">{{ sub.subject_code }}</strong></td>
+                    <td style="font-weight: 600; color: #f8fafc;">{{ sub.subject_name }}</td>
+                    <td>{{ sub.credits }}</td>
+                    <td>
+                        <span class="badge {% if sub.subject_type == 'THEORY' %}badge-info{% else %}badge-success{% endif %}" style="font-size: 0.75rem;">
+                            {{ sub.subject_type }}
+                        </span>
+                    </td>
+                    <td>{{ sub.completed_units }} / {{ sub.total_units }} Units</td>
+                    <td style="width: 200px;">
+                        <div style="display: flex; align-items: center; gap: 10px;">
+                            <div style="flex: 1; height: 8px; background: rgba(255,255,255,0.1); border-radius: 4px; overflow: hidden;">
+                                <div style="width: {{ sub.completion_pct }}%; height: 100%; background: {% if sub.completion_pct >= 90 %}#10b981{% elif sub.completion_pct >= 75 %}#38bdf8{% else %}#f59e0b{% endif %};"></div>
+                            </div>
+                            <span style="font-size: 0.85rem; font-weight: 700; color: #fff; min-width: 45px;">{{ sub.completion_pct }}%</span>
+                        </div>
+                    </td>
+                    <td>
+                        {% if sub.completion_pct >= 100 %}
+                            <span class="badge badge-success">Completed</span>
+                        {% elif sub.completion_pct >= 75 %}
+                            <span class="badge badge-info">On Track</span>
+                        {% else %}
+                            <span class="badge badge-warning">In Progress</span>
+                        {% endif %}
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<!-- Unit-by-Unit Detailed Topic Checklist -->
+<div class="card">
+    <h3 style="font-size: 1.15rem; font-weight: 700; color: #fff; margin-bottom: 20px;">
+        📑 Detailed Unit Breakdown & Learning Outcomes
+    </h3>
+
+    {% for code, units in unit_breakdown.items() %}
+    <div style="margin-bottom: 24px; background: rgba(0,0,0,0.2); border: 1px solid var(--border-color); border-radius: 8px; padding: 18px;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px;">
+            <h4 style="font-size: 1.05rem; font-weight: 700; color: #38bdf8; margin: 0;">
+                {{ code }} - Modular Unit Coverage
+            </h4>
+            <span class="badge badge-info">{{ units|length }} Units Curriculum</span>
+        </div>
+
+        <div style="display: flex; flex-direction: column; gap: 10px;">
+            {% for u in units %}
+            <div style="display: flex; justify-content: space-between; align-items: center; background: rgba(255,255,255,0.03); border: 1px solid var(--border-color); border-radius: 6px; padding: 10px 14px;">
+                <div style="display: flex; align-items: center; gap: 12px;">
+                    <span style="font-weight: 700; color: var(--text-muted); font-size: 0.85rem;">Unit {{ u.unit }}</span>
+                    <strong style="color: #e2e8f0; font-size: 0.9rem;">{{ u.title }}</strong>
+                </div>
+                <div style="display: flex; align-items: center; gap: 16px;">
+                    <span style="color: var(--text-muted); font-size: 0.8rem;">{{ u.hours }} Lecture Hours</span>
+                    {% if u.status == 'COMPLETED' %}
+                        <span class="badge badge-success" style="font-size: 0.75rem;">✓ Completed</span>
+                    {% else %}
+                        <span class="badge badge-warning" style="font-size: 0.75rem;">⏳ In Progress</span>
+                    {% endif %}
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+    {% endfor %}
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+    const ctx = document.getElementById('syllabusChart');
+    if (ctx) {
+        const labels = {{ syllabus_list|map(attribute='subject_code')|list|tojson }};
+        const data = {{ syllabus_list|map(attribute='completion_pct')|list|tojson }};
+
+        new Chart(ctx, {
+            type: 'bar',
+            data: {
+                labels: labels,
+                datasets: [{
+                    label: 'Covered Status %',
+                    data: data,
+                    backgroundColor: [
+                        'rgba(56, 189, 248, 0.8)',
+                        'rgba(16, 185, 129, 0.8)',
+                        'rgba(99, 102, 241, 0.8)',
+                        'rgba(168, 85, 247, 0.8)',
+                        'rgba(245, 158, 11, 0.8)',
+                        'rgba(236, 72, 153, 0.8)'
+                    ],
+                    borderColor: [
+                        '#38bdf8', '#10b981', '#6366f1', '#a855f7', '#f59e0b', '#ec4899'
+                    ],
+                    borderWidth: 1,
+                    borderRadius: 6
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        max: 100,
+                        title: {
+                            display: true,
+                            text: 'Covered Status %',
+                            color: '#94a3b8'
+                        },
+                        grid: { color: 'rgba(255,255,255,0.06)' },
+                        ticks: { color: '#94a3b8', stepSize: 20 }
+                    },
+                    x: {
+                        grid: { display: false },
+                        ticks: { color: '#94a3b8', maxRotation: 45, minRotation: 45 }
+                    }
+                },
+                plugins: {
+                    legend: { display: false },
+                    tooltip: {
+                        callbacks: {
+                            label: function(context) {
+                                return `Coverage: ${context.parsed.y}%`;
+                            }
+                        }
+                    }
+                }
+            }
+        });
+    }
+});
+</script>
+{% endblock %}

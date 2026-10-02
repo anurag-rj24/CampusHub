@@ -29,7 +29,7 @@
 
             <nav class="sidebar-menu">
                 {% if current_user.role == 'STUDENT' %}
-                    <div class="menu-section-label">Student Portal</div>
+                    <div class="menu-section-label">Academic Portal</div>
                     <a href="{{ url_for('student_dashboard') }}" class="nav-link {% if request.path == '/student' or request.path == '/student/dashboard' %}active{% endif %}">
                         <span class="icon">📊</span> Overview
                     </a>
@@ -37,13 +37,25 @@
                         <span class="icon">👤</span> Profile & Documents
                     </a>
                     <a href="{{ url_for('student_attendance') }}" class="nav-link {% if request.path == '/student/attendance' %}active{% endif %}">
-                        <span class="icon">📅</span> Attendance & Analytics
+                        <span class="icon">📅</span> My Attendance
+                    </a>
+                    <a href="{{ url_for('student_syllabus') }}" class="nav-link {% if request.path == '/student/syllabus' %}active{% endif %}">
+                        <span class="icon">📈</span> Syllabus & Coverage
+                    </a>
+                    <a href="{{ url_for('student_hall_ticket') }}" class="nav-link {% if request.path == '/student/hall-ticket' %}active{% endif %}">
+                        <span class="icon">🎫</span> Exam Hall Ticket
                     </a>
                     <a href="{{ url_for('student_academics') }}" class="nav-link {% if request.path == '/student/academics' %}active{% endif %}">
-                        <span class="icon">📚</span> Courses & Transcripts
+                        <span class="icon">📚</span> Courses & Marks
+                    </a>
+                    <a href="{{ url_for('student_cbcs') }}" class="nav-link {% if request.path == '/student/cbcs' %}active{% endif %}">
+                        <span class="icon">📑</span> CBCS Electives
                     </a>
                     <a href="{{ url_for('student_schedule') }}" class="nav-link {% if request.path == '/student/schedule' %}active{% endif %}">
-                        <span class="icon">📆</span> Timetable & Exams
+                        <span class="icon">📆</span> Timetable & Calendar
+                    </a>
+                    <a href="{{ url_for('student_library') }}" class="nav-link {% if request.path == '/student/library' %}active{% endif %}">
+                        <span class="icon">📖</span> Digital Library
                     </a>
                     <a href="{{ url_for('student_fees') }}" class="nav-link {% if request.path == '/student/fees' %}active{% endif %}">
                         <span class="icon">💳</span> Fee Receipts
@@ -53,6 +65,9 @@
                     </a>
                     <a href="{{ url_for('student_placements') }}" class="nav-link {% if request.path == '/student/placements' %}active{% endif %}">
                         <span class="icon">💼</span> Placement Hub
+                    </a>
+                    <a href="{{ url_for('student_support') }}" class="nav-link {% if request.path == '/student/support' %}active{% endif %}">
+                        <span class="icon">🎧</span> Support Desk
                     </a>
                     <a href="{{ url_for('student_leaves') }}" class="nav-link {% if request.path == '/student/leaves' %}active{% endif %}">
                         <span class="icon">📝</span> Leave Applications
@@ -115,6 +130,12 @@
                         <span class="icon">💾</span> Diagnostics & Health
                     </a>
                 {% endif %}
+
+                <!-- Universal Campus Community Links for all Roles -->
+                <div class="menu-section-label">Campus Services</div>
+                <a href="{{ url_for('lost_found_hub') }}" class="nav-link {% if request.path == '/lost-found' %}active{% endif %}">
+                    <span class="icon">🔍</span> Lost & Found Hub
+                </a>
             </nav>
 
             <div class="sidebar-footer">

@@ -1,0 +1,146 @@
+{% extends "base.html" %}
+
+{% block title %}CBCS Elective Application{% endblock %}
+{% block page_title %}📑 CBCS Elective Application & Track Selector{% endblock %}
+
+{% block content %}
+<div class="content-header">
+    <div>
+        <h2 style="font-size: 1.5rem; font-weight: 700; color: #fff; margin-bottom: 4px;">Choice-Based Credit System (CBCS) Electives</h2>
+        <p style="color: var(--text-muted); font-size: 0.95rem;">
+            Select your specialized Professional Elective (PE) and inter-disciplinary Open Elective (OE) for Academic Year 2025-26 Semester 5.
+        </p>
+    </div>
+    <div style="display: flex; gap: 12px;">
+        <span class="badge badge-success" style="font-size: 0.9rem; padding: 8px 16px;">
+            ✨ CBCS Window Active (Closes April 15, 2026)
+        </span>
+    </div>
+</div>
+
+<!-- Current Allocated Electives -->
+<div class="card" style="margin-bottom: 28px; border-left: 4px solid #10b981;">
+    <h3 style="font-size: 1.15rem; font-weight: 700; color: #fff; margin-bottom: 16px; display: flex; align-items: center; gap: 8px;">
+        <span>🎯</span> My Current CBCS Allocations
+    </h3>
+
+    {% if current_choices %}
+    <div class="table-container">
+        <table class="table">
+            <thead>
+                <tr>
+                    <th>Elective Track</th>
+                    <th>Subject Code</th>
+                    <th>Course Title</th>
+                    <th>Credits</th>
+                    <th>Semester</th>
+                    <th>Status</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for c in current_choices %}
+                <tr>
+                    <td>
+                        <strong style="color: {% if c.elective_type == 'PROFESSIONAL_ELECTIVE' %}#38bdf8{% else %}#a855f7{% endif %};">
+                            {{ c.elective_type.replace('_', ' ') }}
+                        </strong>
+                    </td>
+                    <td><span class="badge badge-info">{{ c.subject_code }}</span></td>
+                    <td style="font-weight: 600; color: #f8fafc;">{{ c.subject_name }}</td>
+                    <td>{{ c.credits }} Credits</td>
+                    <td>Sem {{ c.semester }} ({{ c.academic_year }})</td>
+                    <td>
+                        {% if c.status == 'ALLOCATED' or c.status == 'APPROVED' %}
+                            <span class="badge badge-success">✓ {{ c.status }}</span>
+                        {% else %}
+                            <span class="badge badge-warning">⏳ {{ c.status }}</span>
+                        {% endif %}
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% else %}
+    <p style="color: var(--text-muted); margin: 0;">No electives submitted yet. Please submit your preferences below.</p>
+    {% endif %}
+</div>
+
+<!-- Elective Selection Form -->
+<div class="card">
+    <h3 style="font-size: 1.15rem; font-weight: 700; color: #fff; margin-bottom: 16px; display: flex; align-items: center; gap: 8px;">
+        <span>📝</span> Elective Preference Submission (Semester 5)
+    </h3>
+
+    <form method="POST" action="{{ url_for('student_cbcs') }}">
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 24px; margin-bottom: 24px;">
+            
+            <!-- Professional Elective (PE) -->
+            <div style="background: rgba(15, 23, 42, 0.6); border: 1px solid var(--border-color); border-radius: 8px; padding: 20px;">
+                <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 12px;">
+                    <span style="font-size: 1.4rem;">🔬</span>
+                    <div>
+                        <h4 style="color: #38bdf8; font-weight: 700; margin: 0;">Professional Elective - I (PE-I)</h4>
+                        <span style="font-size: 0.8rem; color: var(--text-muted);">Departmental Specialization (3 Credits)</span>
+                    </div>
+                </div>
+
+                <div class="form-group" style="margin-bottom: 16px;">
+                    <label class="form-label">Select Course:</label>
+                    <select name="pe_subject_id" class="form-control" required>
+                        <option value="">-- Choose Professional Elective --</option>
+                        {% for s in elective_subjects %}
+                            {% if s.subject_code.startswith('PE') %}
+                            <option value="{{ s.subject_id }}">
+                                {{ s.subject_code }}: {{ s.subject_name }} ({{ s.credits }} Credits)
+                            </option>
+                            {% endif %}
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <ul style="font-size: 0.8rem; color: var(--text-muted); padding-left: 18px; margin: 0; line-height: 1.6;">
+                    <li>Deep Learning & Neural Networks</li>
+                    <li>Blockchain Architecture & Smart Contracts</li>
+                </ul>
+            </div>
+
+            <!-- Open Elective (OE) -->
+            <div style="background: rgba(15, 23, 42, 0.6); border: 1px solid var(--border-color); border-radius: 8px; padding: 20px;">
+                <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 12px;">
+                    <span style="font-size: 1.4rem;">🌐</span>
+                    <div>
+                        <h4 style="color: #c084fc; font-weight: 700; margin: 0;">Open Elective - II (OE-II)</h4>
+                        <span style="font-size: 0.8rem; color: var(--text-muted);">Inter-Departmental Exploration (3 Credits)</span>
+                    </div>
+                </div>
+
+                <div class="form-group" style="margin-bottom: 16px;">
+                    <label class="form-label">Select Course:</label>
+                    <select name="oe_subject_id" class="form-control" required>
+                        <option value="">-- Choose Open Elective --</option>
+                        {% for s in elective_subjects %}
+                            {% if s.subject_code.startswith('OE') %}
+                            <option value="{{ s.subject_id }}">
+                                {{ s.subject_code }}: {{ s.subject_name }} ({{ s.credits }} Credits)
+                            </option>
+                            {% endif %}
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <ul style="font-size: 0.8rem; color: var(--text-muted); padding-left: 18px; margin: 0; line-height: 1.6;">
+                    <li>Robotics & Autonomous Systems (Robotics Dept)</li>
+                    <li>Fintech & Quantitative Finance (Business School)</li>
+                </ul>
+            </div>
+        </div>
+
+        <div style="display: flex; justify-content: flex-end; gap: 12px; border-top: 1px solid var(--border-color); padding-top: 18px;">
+            <button type="submit" class="btn btn-primary" style="padding: 10px 24px;">
+                <span>🚀 Confirm & Submit CBCS Choices</span>
+            </button>
+        </div>
+    </form>
+</div>
+{% endblock %}
