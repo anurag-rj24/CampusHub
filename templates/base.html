@@ -34,13 +34,22 @@
                         <span class="icon">📊</span> Overview
                     </a>
                     <a href="{{ url_for('student_profile') }}" class="nav-link {% if request.path == '/student/profile' %}active{% endif %}">
-                        <span class="icon">👤</span> My Profile
+                        <span class="icon">👤</span> Profile & Documents
                     </a>
                     <a href="{{ url_for('student_attendance') }}" class="nav-link {% if request.path == '/student/attendance' %}active{% endif %}">
-                        <span class="icon">📅</span> Attendance & Safety
+                        <span class="icon">📅</span> Attendance & Analytics
                     </a>
                     <a href="{{ url_for('student_academics') }}" class="nav-link {% if request.path == '/student/academics' %}active{% endif %}">
-                        <span class="icon">📚</span> Courses & Marks
+                        <span class="icon">📚</span> Courses & Transcripts
+                    </a>
+                    <a href="{{ url_for('student_schedule') }}" class="nav-link {% if request.path == '/student/schedule' %}active{% endif %}">
+                        <span class="icon">📆</span> Timetable & Exams
+                    </a>
+                    <a href="{{ url_for('student_fees') }}" class="nav-link {% if request.path == '/student/fees' %}active{% endif %}">
+                        <span class="icon">💳</span> Fee Receipts
+                    </a>
+                    <a href="{{ url_for('student_mooc_quizzes') }}" class="nav-link {% if request.path == '/student/mooc-quizzes' %}active{% endif %}">
+                        <span class="icon">🌐</span> MOOCs & Quizzes
                     </a>
                     <a href="{{ url_for('student_placements') }}" class="nav-link {% if request.path == '/student/placements' %}active{% endif %}">
                         <span class="icon">💼</span> Placement Hub

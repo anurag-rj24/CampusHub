@@ -1,6 +1,6 @@
 {% extends 'base.html' %}
 
-{% block title %}Student Dashboard{% endblock %}
+{% block title %}Student Dashboard | CampusHub{% endblock %}
 {% block page_title %}🎓 Student Dashboard{% endblock %}
 
 {% block content %}
@@ -16,11 +16,11 @@
     </div>
 
     <div class="kpi-card" style="--card-accent: #6366f1; --icon-bg: rgba(99, 102, 241, 0.15); --icon-color: #6366f1;">
-        <div class="kpi-icon-wrap">🎯</div>
+        <div class="kpi-icon-wrap">🎓</div>
         <div class="kpi-info">
-            <span class="kpi-label">Average Score</span>
-            <span class="kpi-value">{{ avg_score }}%</span>
-            <span class="kpi-meta">Across All Assessments</span>
+            <span class="kpi-label">Degree Completion</span>
+            <span class="kpi-value">{{ completion_pct }}%</span>
+            <span class="kpi-meta">{{ earned_credits }}/{{ total_degree_credits }} Total Credits Earned</span>
         </div>
     </div>
 
@@ -29,22 +29,95 @@
         <div class="kpi-info">
             <span class="kpi-label">Active Drives</span>
             <span class="kpi-value">{{ open_drives }}</span>
-            <span class="kpi-meta">Open for Application</span>
+            <span class="kpi-meta">Eligible for Application</span>
         </div>
     </div>
 
-    <div class="kpi-card" style="--card-accent: #f59e0b; --icon-bg: rgba(245, 158, 11, 0.15); --icon-color: #f59e0b;">
-        <div class="kpi-icon-wrap">📝</div>
+    <div class="kpi-card" style="--card-accent: {% if total_due > 0 %}#f59e0b{% else %}#10b981{% endif %}; --icon-bg: {% if total_due > 0 %}rgba(245, 158, 11, 0.15){% else %}rgba(16, 185, 129, 0.15){% endif %}; --icon-color: {% if total_due > 0 %}#f59e0b{% else %}#10b981{% endif %};">
+        <div class="kpi-icon-wrap">💳</div>
         <div class="kpi-info">
-            <span class="kpi-label">Pending Leaves</span>
-            <span class="kpi-value">{{ pending_leaves }}</span>
-            <span class="kpi-meta">Awaiting Approval</span>
+            <span class="kpi-label">Semester Fee Status</span>
+            <span class="kpi-value" style="font-size: 1.45rem;">
+                {% if total_due > 0 %}₹ {{ "{:,.0f}".format(total_due) }} Due{% else %}Cleared (₹ 0){% endif %}
+            </span>
+            <span class="kpi-meta">{% if total_due > 0 %}Installment Pending{% else %}All Invoices Paid{% endif %}</span>
         </div>
     </div>
 </div>
 
+<!-- Course Completion & Today's Schedule Grid -->
 <div class="grid-2" style="margin-top: 24px;">
-    <!-- Attendance Safety Shield Widget -->
+    <!-- Course Completion Progress Card -->
+    <div class="glass-card">
+        <div class="card-header">
+            <h3 class="card-title">📈 Degree Milestone & Credit Progression</h3>
+            <span class="badge badge-primary">{{ completion_pct }}% Completed</span>
+        </div>
+
+        <div style="margin-bottom: 20px;">
+            <div style="display: flex; justify-content: space-between; font-size: 0.85rem; margin-bottom: 6px;">
+                <span>Undergraduate Curriculum Credits</span>
+                <span style="font-weight: 700;">{{ earned_credits }} / {{ total_degree_credits }} Credits</span>
+            </div>
+            <div class="progress-bar-wrap" style="height: 12px;">
+                <div class="progress-bar-fill" style="width: {{ completion_pct }}%;"></div>
+            </div>
+        </div>
+
+        <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-bottom: 18px;">
+            <div style="background: rgba(255,255,255,0.03); padding: 12px; border-radius: var(--radius-md); text-align: center;">
+                <div style="font-size: 0.72rem; color: var(--text-muted); text-transform: uppercase;">Core Subjects</div>
+                <div style="font-size: 1.15rem; font-weight: 700; color: #10b981;">64 / 80 Cr</div>
+            </div>
+            <div style="background: rgba(255,255,255,0.03); padding: 12px; border-radius: var(--radius-md); text-align: center;">
+                <div style="font-size: 0.72rem; color: var(--text-muted); text-transform: uppercase;">Electives & Labs</div>
+                <div style="font-size: 1.15rem; font-weight: 700; color: #6366f1;">40 / 60 Cr</div>
+            </div>
+            <div style="background: rgba(255,255,255,0.03); padding: 12px; border-radius: var(--radius-md); text-align: center;">
+                <div style="font-size: 0.72rem; color: var(--text-muted); text-transform: uppercase;">MOOC Credits</div>
+                <div style="font-size: 1.15rem; font-weight: 700; color: #06b6d4;">6 / 20 Cr</div>
+            </div>
+        </div>
+
+        <div style="display: flex; gap: 10px;">
+            <a href="{{ url_for('student_academics') }}" class="btn btn-primary btn-sm">Full Credit Breakdown →</a>
+            <a href="{{ url_for('student_mooc_quizzes') }}" class="btn btn-secondary btn-sm">Browse MOOCs & Quizzes</a>
+        </div>
+    </div>
+
+    <!-- Today's Class & Lab Routine -->
+    <div class="glass-card">
+        <div class="card-header">
+            <h3 class="card-title">⏰ Today's Class & Lab Schedule</h3>
+            <a href="{{ url_for('student_schedule') }}" class="btn btn-secondary btn-sm">Full Timetable →</a>
+        </div>
+
+        <div style="display: flex; flex-direction: column; gap: 12px;">
+            {% for c in today_classes %}
+            <div style="display: flex; justify-content: space-between; align-items: center; padding: 12px 14px; background: rgba(255,255,255,0.03); border: 1px solid var(--border-color); border-radius: var(--radius-md); border-left: 3px solid {% if c.session_type == 'LAB' %}#06b6d4{% else %}#6366f1{% endif %};">
+                <div>
+                    <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 2px;">
+                        <strong style="font-size: 0.95rem;">{{ c.subject_name }}</strong>
+                        <span class="badge {% if c.session_type == 'LAB' %}badge-secondary{% else %}badge-primary{% endif %}" style="font-size: 0.7rem; padding: 2px 6px;">{{ c.session_type }}</span>
+                    </div>
+                    <div style="font-size: 0.8rem; color: var(--text-muted);">
+                        Faculty: {{ c.faculty_name }} | Room: <strong>{{ c.room_no }}</strong>
+                    </div>
+                </div>
+                <div style="font-weight: 700; font-size: 0.88rem; color: var(--text-primary);">
+                    {{ c.start_time }} - {{ c.end_time }}
+                </div>
+            </div>
+            {% else %}
+            <p style="color: var(--text-muted); font-size: 0.88rem;">No classes scheduled for today.</p>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+
+<!-- Attendance Safety & Notices Grid -->
+<div class="grid-2" style="margin-top: 24px;">
+    <!-- Attendance Safety Shield -->
     <div class="glass-card">
         <div class="card-header">
             <h3 class="card-title">🛡️ Smart Attendance Safety Shield</h3>
@@ -53,23 +126,13 @@
             </span>
         </div>
 
-        <div style="margin-bottom: 16px;">
-            <div style="display: flex; justify-content: space-between; font-size: 0.85rem; margin-bottom: 6px;">
-                <span>Current Progress</span>
-                <span style="font-weight: 700;">{{ att_pct }}% (Minimum 75.0% Required)</span>
-            </div>
-            <div class="progress-bar-wrap" style="height: 12px;">
-                <div class="progress-bar-fill {% if att_pct >= 75 %}success{% else %}danger{% endif %}" style="width: {{ [att_pct, 100]|min }}%;"></div>
-            </div>
-        </div>
-
-        <div id="safety-recommendation" style="background: rgba(255, 255, 255, 0.04); padding: 14px; border-radius: var(--radius-md); border: 1px dashed var(--border-color); font-size: 0.88rem; line-height: 1.5;">
+        <div id="safety-recommendation" style="background: rgba(255, 255, 255, 0.04); padding: 14px; border-radius: var(--radius-md); border: 1px dashed var(--border-color); font-size: 0.88rem; line-height: 1.5; margin-bottom: 16px;">
             <p id="safety-text">Analyzing your attendance metrics...</p>
         </div>
 
-        <div style="margin-top: 18px; display: flex; gap: 10px;">
-            <a href="{{ url_for('student_attendance') }}" class="btn btn-primary btn-sm">View Full Breakdown →</a>
-            <a href="{{ url_for('student_leaves') }}" class="btn btn-secondary btn-sm">Request Medical Leave</a>
+        <div style="display: flex; gap: 10px;">
+            <a href="{{ url_for('student_attendance') }}" class="btn btn-primary btn-sm">Subject Breakdown & Graphs →</a>
+            <a href="{{ url_for('student_leaves') }}" class="btn btn-secondary btn-sm">Request Leave</a>
         </div>
     </div>
 
@@ -82,10 +145,9 @@
 
         <div style="display: flex; flex-direction: column; gap: 12px;">
             {% for n in notices %}
-            <div style="padding: 12px; border-radius: var(--radius-md); background: rgba(255,255,255,0.03); border-left: 3px solid {% if n.priority == 'HIGH' or n.priority == 'URGENT' %}var(--danger){% else %}var(--primary){% endif %};">
+            <div style="padding: 12px; border-radius: var(--radius-md); background: rgba(255,255,255,0.03); border-left: 3px solid var(--primary);">
                 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px;">
                     <strong style="font-size: 0.92rem;">{{ n.title }}</strong>
-                    <span class="badge {% if n.priority == 'HIGH' or n.priority == 'URGENT' %}badge-danger{% else %}badge-secondary{% endif %}">{{ n.priority }}</span>
                 </div>
                 <p style="font-size: 0.82rem; color: var(--text-secondary); margin-bottom: 6px;">{{ n.content }}</p>
                 <div style="font-size: 0.72rem; color: var(--text-muted);">Published: {{ n.created_at }}</div>

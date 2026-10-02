@@ -1,0 +1,166 @@
+{% extends 'base.html' %}
+
+{% block title %}Fee Payments & Receipts | CampusHub{% endblock %}
+{% block page_title %}💳 University Fee Payments & Receipts Ledger{% endblock %}
+
+{% block content %}
+<!-- Fee Balance KPIs -->
+<div class="kpi-grid">
+    <div class="kpi-card" style="--card-accent: #6366f1;">
+        <div class="kpi-icon-wrap" style="background: rgba(99, 102, 241, 0.15); color: #6366f1;">📋</div>
+        <div class="kpi-info">
+            <span class="kpi-label">Total Cumulative Billed</span>
+            <span class="kpi-value">₹ {{ "{:,.2f}".format(total_billed) }}</span>
+            <span class="kpi-meta">Semesters 1 through 4</span>
+        </div>
+    </div>
+
+    <div class="kpi-card" style="--card-accent: #10b981;">
+        <div class="kpi-icon-wrap" style="background: rgba(16, 185, 129, 0.15); color: #10b981;">✓</div>
+        <div class="kpi-info">
+            <span class="kpi-label">Total Paid Amount</span>
+            <span class="kpi-value">₹ {{ "{:,.2f}".format(total_paid) }}</span>
+            <span class="kpi-meta">Verified Bank Receipts</span>
+        </div>
+    </div>
+
+    <div class="kpi-card" style="--card-accent: {% if total_due > 0 %}#f59e0b{% else %}#10b981{% endif %};">
+        <div class="kpi-icon-wrap" style="background: {% if total_due > 0 %}rgba(245, 158, 11, 0.15){% else %}rgba(16, 185, 129, 0.15){% endif %}; color: {% if total_due > 0 %}#f59e0b{% else %}#10b981{% endif %};">⚠️</div>
+        <div class="kpi-info">
+            <span class="kpi-label">Current Outstanding Balance</span>
+            <span class="kpi-value">₹ {{ "{:,.2f}".format(total_due) }}</span>
+            <span class="kpi-meta">{% if total_due > 0 %}Payment Due for Semester 4{% else %}No Outstanding Dues{% endif %}</span>
+        </div>
+    </div>
+</div>
+
+<!-- Fee Invoices & Payment Ledger Table -->
+<div class="glass-card" style="margin-top: 24px;">
+    <div class="card-header">
+        <h3 class="card-title">📜 Semester Invoices & Official Payment Receipts</h3>
+        <button class="btn btn-secondary btn-sm" onclick="exportTableToCSV('fees-table', 'fee_receipts_ledger.csv')">📥 Export CSV</button>
+    </div>
+
+    <div class="table-responsive">
+        <table class="data-table" id="fees-table">
+            <thead>
+                <tr>
+                    <th>Semester</th>
+                    <th>Academic Year</th>
+                    <th>Tuition Fee</th>
+                    <th>Exam & Library</th>
+                    <th>Total Billed</th>
+                    <th>Paid Amount</th>
+                    <th>Balance Due</th>
+                    <th>Status</th>
+                    <th>Payment Mode</th>
+                    <th>Receipt No / Action</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for f in fee_records %}
+                <tr>
+                    <td><strong>Semester {{ f.semester }}</strong></td>
+                    <td style="color: var(--text-secondary);">{{ f.academic_year }}</td>
+                    <td>₹ {{ "{:,.0f}".format(f.tuition_fee) }}</td>
+                    <td>₹ {{ "{:,.0f}".format(f.exam_fee + f.library_fee) }}</td>
+                    <td><strong>₹ {{ "{:,.0f}".format(f.total_amount) }}</strong></td>
+                    <td><strong style="color: var(--success);">₹ {{ "{:,.0f}".format(f.paid_amount) }}</strong></td>
+                    <td>
+                        {% if f.due_amount > 0 %}
+                        <strong style="color: var(--danger);">₹ {{ "{:,.0f}".format(f.due_amount) }}</strong>
+                        {% else %}
+                        <span style="color: var(--text-muted);">₹ 0</span>
+                        {% endif %}
+                    </td>
+                    <td>
+                        <span class="badge {% if f.status == 'PAID' %}badge-success{% elif f.status == 'PARTIAL' %}badge-warning{% else %}badge-danger{% endif %}">
+                            {{ f.status }}
+                        </span>
+                    </td>
+                    <td>{{ f.payment_mode or 'N/A' }}</td>
+                    <td>
+                        {% if f.due_amount > 0 %}
+                        <form method="POST" action="{{ url_for('pay_fee', fee_id=f.fee_id) }}">
+                            <button type="submit" class="btn btn-primary btn-sm">💳 Pay Due (₹ {{ "{:,.0f}".format(f.due_amount) }})</button>
+                        </form>
+                        {% else %}
+                        <button class="btn btn-secondary btn-sm" onclick="showReceipt('{{ f.receipt_no }}', 'Semester {{ f.semester }} ({{ f.academic_year }})', '₹ {{ '{:,.2f}'.format(f.total_amount) }}', '{{ f.payment_date }}', '{{ f.transaction_ref }}')">
+                            🖨️ Receipt
+                        </button>
+                        {% endif %}
+                    </td>
+                </tr>
+                {% else %}
+                <tr>
+                    <td colspan="10" style="text-align: center; color: var(--text-muted); padding: 24px;">No fee records found.</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<!-- Receipt Modal -->
+<div id="receipt-modal" class="modal-overlay">
+    <div class="modal-dialog" style="max-width: 550px;">
+        <div class="modal-header">
+            <h3 style="font-size: 1.15rem; font-weight: 700;">🏛️ Official Fee Receipt</h3>
+            <button onclick="closeModal('receipt-modal')" style="background: none; border: none; font-size: 1.2rem; cursor: pointer; color: var(--text-muted);">✕</button>
+        </div>
+        <div class="modal-body" id="receipt-print-area">
+            <div style="text-align: center; border-bottom: 2px solid var(--border-color); padding-bottom: 16px; margin-bottom: 16px;">
+                <h2 style="font-size: 1.4rem; font-weight: 800;">CampusHub University</h2>
+                <div style="font-size: 0.8rem; color: var(--text-muted);">Office of the Comptroller of Finance & Accounts</div>
+                <div class="badge badge-success" style="margin-top: 8px;">✓ Official Paid Receipt</div>
+            </div>
+
+            <table class="data-table" style="margin-bottom: 16px;">
+                <tbody>
+                    <tr>
+                        <td style="width: 40%; color: var(--text-muted);">Receipt No</td>
+                        <td><strong id="rcp-no"></strong></td>
+                    </tr>
+                    <tr>
+                        <td style="color: var(--text-muted);">Semester / Session</td>
+                        <td id="rcp-sem"></td>
+                    </tr>
+                    <tr>
+                        <td style="color: var(--text-muted);">Total Amount Paid</td>
+                        <td><strong style="color: var(--success); font-size: 1.1rem;" id="rcp-amount"></strong></td>
+                    </tr>
+                    <tr>
+                        <td style="color: var(--text-muted);">Payment Date</td>
+                        <td id="rcp-date"></td>
+                    </tr>
+                    <tr>
+                        <td style="color: var(--text-muted);">Bank Transaction Ref</td>
+                        <td><code id="rcp-txn"></code></td>
+                    </tr>
+                    <tr>
+                        <td style="color: var(--text-muted);">Verification Seal</td>
+                        <td><span style="color: #10b981; font-weight: 700;">✓ Digitally Signed & Reconciled</span></td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+        <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" onclick="closeModal('receipt-modal')">Close</button>
+            <button type="button" class="btn btn-primary" onclick="window.print()">🖨️ Print Official Receipt</button>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+function showReceipt(no, sem, amount, date, txn) {
+    document.getElementById('rcp-no').textContent = no;
+    document.getElementById('rcp-sem').textContent = sem;
+    document.getElementById('rcp-amount').textContent = amount;
+    document.getElementById('rcp-date').textContent = date;
+    document.getElementById('rcp-txn').textContent = txn;
+    openModal('receipt-modal');
+}
+</script>
+{% endblock %}

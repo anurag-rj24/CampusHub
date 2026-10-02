@@ -1,30 +1,72 @@
 {% extends 'base.html' %}
 
-{% block title %}Academics & Grade Transcripts | CampusHub{% endblock %}
-{% block page_title %}📚 Academic Enrollments & Report Card{% endblock %}
+{% block title %}Academics & Course Completion | CampusHub{% endblock %}
+{% block page_title %}📚 Academic Degree Progression & Transcripts{% endblock %}
 
 {% block content %}
-<!-- Active Enrollments -->
-<div class="glass-card" style="margin-bottom: 24px;">
-    <div class="card-header">
-        <h3 class="card-title">🎓 Current Degree & Program Enrollments</h3>
-    </div>
-    <div class="kpi-grid">
-        {% for e in enrollments %}
-        <div style="background: rgba(255, 255, 255, 0.03); border: 1px solid var(--border-color); border-radius: var(--radius-md); padding: 18px;">
-            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
-                <span class="badge badge-primary">{{ e.course_code }}</span>
-                <span class="badge badge-success">{{ e.status }}</span>
+<!-- Course Completion Analytics Grid with Chart -->
+<div class="grid-2" style="margin-bottom: 24px;">
+    <!-- Donut Completion Chart -->
+    <div class="glass-card">
+        <div class="card-header">
+            <h3 class="card-title">📈 Degree Credit Completion Audit</h3>
+            <span class="badge badge-success">{{ credit_stats.completion_pct }}% Completed</span>
+        </div>
+
+        <div style="display: flex; align-items: center; justify-content: space-around; flex-wrap: wrap; gap: 20px;">
+            <div style="width: 200px; height: 200px; position: relative;">
+                <canvas id="creditDonutChart"></canvas>
             </div>
-            <h4 style="font-size: 1.1rem; font-weight: 700; margin-bottom: 4px;">{{ e.course_name }}</h4>
-            <div style="font-size: 0.82rem; color: var(--text-secondary); margin-bottom: 12px;">{{ e.department_name }}</div>
-            <div style="display: flex; justify-content: space-between; font-size: 0.8rem; color: var(--text-muted);">
-                <span>Current Semester: <strong>Sem {{ e.current_semester }}</strong></span>
-                <span>Duration: <strong>{{ e.duration_years }} Years</strong></span>
+            <div style="display: flex; flex-direction: column; gap: 10px; font-size: 0.88rem;">
+                <div style="display: flex; align-items: center; gap: 10px;">
+                    <div style="width: 14px; height: 14px; border-radius: 4px; background: #10b981;"></div>
+                    <span>Core Discipline Credits: <strong>{{ credit_stats.earned_core }} / 80</strong></span>
+                </div>
+                <div style="display: flex; align-items: center; gap: 10px;">
+                    <div style="width: 14px; height: 14px; border-radius: 4px; background: #6366f1;"></div>
+                    <span>Department Electives: <strong>{{ credit_stats.earned_elective }} / 40</strong></span>
+                </div>
+                <div style="display: flex; align-items: center; gap: 10px;">
+                    <div style="width: 14px; height: 14px; border-radius: 4px; background: #06b6d4;"></div>
+                    <span>Practical & Lab Work: <strong>{{ credit_stats.earned_lab }} / 20</strong></span>
+                </div>
+                <div style="display: flex; align-items: center; gap: 10px;">
+                    <div style="width: 14px; height: 14px; border-radius: 4px; background: #f59e0b;"></div>
+                    <span>MOOC / Swayam Credits: <strong>{{ credit_stats.earned_mooc }} / 20</strong></span>
+                </div>
+                <div style="border-top: 1px solid var(--border-color); padding-top: 8px; margin-top: 4px;">
+                    <span style="font-weight: 700; color: var(--text-primary);">Total Earned: {{ credit_stats.total_earned }} / {{ credit_stats.total_required }} Credits</span>
+                </div>
             </div>
         </div>
-        {% else %}
-        <p style="color: var(--text-muted);">No active enrollments listed.</p>
+    </div>
+
+    <!-- Active Degree Enrollments -->
+    <div class="glass-card">
+        <div class="card-header">
+            <h3 class="card-title">🎓 Current Degree Program</h3>
+            <span class="badge badge-primary">Active Matriculation</span>
+        </div>
+        {% for e in enrollments %}
+        <div style="background: rgba(255, 255, 255, 0.03); border: 1px solid var(--border-color); border-radius: var(--radius-md); padding: 20px;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+                <span class="badge badge-primary" style="font-size: 0.9rem;">{{ e.course_code }}</span>
+                <span class="badge badge-success">{{ e.status }}</span>
+            </div>
+            <h4 style="font-size: 1.25rem; font-weight: 700; margin-bottom: 6px;">{{ e.course_name }}</h4>
+            <div style="font-size: 0.88rem; color: var(--text-secondary); margin-bottom: 16px;">{{ e.department_name }}</div>
+            <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; font-size: 0.82rem; color: var(--text-muted);">
+                <div style="background: rgba(0,0,0,0.2); padding: 8px; border-radius: var(--radius-sm); text-align: center;">
+                    Current: <strong>Sem {{ e.current_semester }}</strong>
+                </div>
+                <div style="background: rgba(0,0,0,0.2); padding: 8px; border-radius: var(--radius-sm); text-align: center;">
+                    Duration: <strong>{{ e.duration_years }} Years</strong>
+                </div>
+                <div style="background: rgba(0,0,0,0.2); padding: 8px; border-radius: var(--radius-sm); text-align: center;">
+                    Degree: <strong>{{ e.degree_level }}</strong>
+                </div>
+            </div>
+        </div>
         {% endfor %}
     </div>
 </div>
@@ -48,7 +90,7 @@
                     <th>Max Marks</th>
                     <th>Percentage</th>
                     <th>Grade</th>
-                    <th>Evaluation Date</th>
+                    <th>Status</th>
                 </tr>
             </thead>
             <tbody>
@@ -57,7 +99,7 @@
                 <tr>
                     <td><strong>{{ m.subject_code }}</strong></td>
                     <td>{{ m.subject_name }}</td>
-                    <td>{{ m.credits }}</td>
+                    <td>{{ m.credits }} Cr</td>
                     <td><span class="badge badge-secondary">{{ m.exam_type }}</span></td>
                     <td><strong style="color: var(--primary);">{{ m.marks_obtained }}</strong></td>
                     <td>{{ m.max_marks }}</td>
@@ -67,7 +109,7 @@
                             {{ m.grade }}
                         </span>
                     </td>
-                    <td style="color: var(--text-muted); font-size: 0.8rem;">{{ m.evaluation_date }}</td>
+                    <td><span class="badge badge-success">PASSED</span></td>
                 </tr>
                 {% else %}
                 <tr>
@@ -80,4 +122,31 @@
         </table>
     </div>
 </div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+    const ctx = document.getElementById('creditDonutChart').getContext('2d');
+    new Chart(ctx, {
+        type: 'doughnut',
+        data: {
+            labels: ['Core Credits', 'Electives', 'Labs', 'MOOC Credits', 'Remaining Needed'],
+            datasets: [{
+                data: [{{ credit_stats.earned_core }}, {{ credit_stats.earned_elective }}, {{ credit_stats.earned_lab }}, {{ credit_stats.earned_mooc }}, {{ credit_stats.total_required - credit_stats.total_earned }}],
+                backgroundColor: ['#10b981', '#6366f1', '#06b6d4', '#f59e0b', 'rgba(255, 255, 255, 0.1)'],
+                borderWidth: 0
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: { display: false }
+            },
+            cutout: '72%'
+        }
+    });
+});
+</script>
 {% endblock %}

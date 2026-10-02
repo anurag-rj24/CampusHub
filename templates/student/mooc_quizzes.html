@@ -1,0 +1,160 @@
+{% extends 'base.html' %}
+
+{% block title %}MOOCs & Online Quizzes | CampusHub{% endblock %}
+{% block page_title %}🌐 MOOC Certifications & Interactive Assessment Center{% endblock %}
+
+{% block content %}
+<!-- Top KPI summary -->
+<div class="kpi-grid">
+    <div class="kpi-card" style="--card-accent: #06b6d4;">
+        <div class="kpi-icon-wrap" style="background: rgba(6, 182, 212, 0.15); color: #06b6d4;">📜</div>
+        <div class="kpi-info">
+            <span class="kpi-label">Completed MOOCs</span>
+            <span class="kpi-value">{{ moocs|selectattr('status', 'equalto', 'COMPLETED')|list|length }}</span>
+            <span class="kpi-meta">Verified Digital Credentials</span>
+        </div>
+    </div>
+
+    <div class="kpi-card" style="--card-accent: #10b981;">
+        <div class="kpi-icon-wrap" style="background: rgba(16, 185, 129, 0.15); color: #10b981;">🎯</div>
+        <div class="kpi-info">
+            <span class="kpi-label">Quizzes Completed</span>
+            <span class="kpi-value">{{ attempts|length }}</span>
+            <span class="kpi-meta">All Passed Successfully</span>
+        </div>
+    </div>
+
+    <div class="kpi-card" style="--card-accent: #6366f1;">
+        <div class="kpi-icon-wrap" style="background: rgba(99, 102, 241, 0.15); color: #6366f1;">⚡</div>
+        <div class="kpi-info">
+            <span class="kpi-label">MOOC Credits Transferred</span>
+            <span class="kpi-value">6 Cr</span>
+            <span class="kpi-meta">Counted Towards Degree</span>
+        </div>
+    </div>
+</div>
+
+<!-- MOOC Online Courses Section -->
+<div class="glass-card" style="margin-top: 24px;">
+    <div class="card-header">
+        <h3 class="card-title">🎓 MOOC Online Courses & Industry Certifications</h3>
+        <span class="badge badge-primary">NPTEL • Coursera • Swayam • edX</span>
+    </div>
+
+    <div class="grid-2">
+        {% for m in moocs %}
+        <div style="background: rgba(255, 255, 255, 0.03); border: 1px solid var(--border-color); border-radius: var(--radius-lg); padding: 22px; display: flex; flex-direction: column; justify-content: space-between;">
+            <div>
+                <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 8px;">
+                    <span class="badge {% if m.platform == 'NPTEL' %}badge-warning{% elif m.platform == 'COURSERA' %}badge-primary{% elif m.platform == 'SWAYAM' %}badge-success{% else %}badge-secondary{% endif %}">
+                        {{ m.platform }}
+                    </span>
+                    <span class="badge {% if m.status == 'COMPLETED' %}badge-success{% else %}badge-primary{% endif %}">
+                        {{ m.status }}
+                    </span>
+                </div>
+
+                <h4 style="font-size: 1.15rem; font-weight: 700; margin-bottom: 6px;">{{ m.course_title }}</h4>
+                <div style="font-size: 0.82rem; color: var(--text-secondary); margin-bottom: 12px;">Instructor: {{ m.instructor }}</div>
+
+                <div style="margin-bottom: 14px;">
+                    <div style="display: flex; justify-content: space-between; font-size: 0.8rem; margin-bottom: 4px;">
+                        <span>Progress</span>
+                        <strong>{{ m.progress_pct }}%</strong>
+                    </div>
+                    <div class="progress-bar-wrap" style="height: 6px; margin: 0;">
+                        <div class="progress-bar-fill {% if m.status == 'COMPLETED' %}success{% else %}warning{% endif %}" style="width: {{ m.progress_pct }}%;"></div>
+                    </div>
+                </div>
+
+                <div style="background: rgba(0,0,0,0.2); padding: 8px 12px; border-radius: var(--radius-sm); font-size: 0.78rem; color: var(--text-muted);">
+                    <div>Credits: <strong>{{ m.credits }} Cr</strong> | Duration: <strong>{{ m.duration_weeks }} Weeks</strong></div>
+                    {% if m.grade %}<div>Grade Achieved: <strong style="color: var(--success);">{{ m.grade }}</strong></div>{% endif %}
+                </div>
+            </div>
+
+            <div style="border-top: 1px solid var(--border-color); padding-top: 12px; margin-top: 14px; display: flex; justify-content: space-between; align-items: center;">
+                {% if m.certificate_id %}
+                <span style="font-size: 0.75rem; color: var(--text-muted);">ID: {{ m.certificate_id }}</span>
+                <button class="btn btn-secondary btn-sm" onclick="alert('Viewing verified certificate: {{ m.course_title }}\nIssued by: {{ m.platform }}')">📜 Certificate</button>
+                {% else %}
+                <span style="font-size: 0.75rem; color: var(--text-muted);">In Progress</span>
+                <button class="btn btn-primary btn-sm" onclick="alert('Navigating to course module LMS...')">Continue Learning →</button>
+                {% endif %}
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+
+<!-- Interactive Quiz Assessment Center -->
+<div class="glass-card" style="margin-top: 24px;">
+    <div class="card-header">
+        <h3 class="card-title">📝 Interactive Subject Quizzes & Self-Assessment</h3>
+        <span class="badge badge-success">Live Test Center</span>
+    </div>
+
+    <div class="grid-3">
+        {% for q in quizzes %}
+        <div style="background: rgba(255, 255, 255, 0.03); border: 1px solid var(--border-color); border-radius: var(--radius-md); padding: 18px; display: flex; flex-direction: column; justify-content: space-between;">
+            <div>
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+                    <span class="badge badge-primary">{{ q.subject_code }}</span>
+                    <span class="badge badge-secondary">{{ q.difficulty }}</span>
+                </div>
+                <h4 style="font-size: 1rem; font-weight: 700; margin-bottom: 4px;">{{ q.title }}</h4>
+                <div style="font-size: 0.8rem; color: var(--text-secondary); margin-bottom: 12px;">Topic: {{ q.topic }}</div>
+
+                <div style="font-size: 0.78rem; color: var(--text-muted); margin-bottom: 16px;">
+                    ⏱️ {{ q.duration_minutes }} Mins | ❓ {{ q.total_questions }} Questions | 🎯 {{ q.max_marks }} Marks
+                </div>
+            </div>
+
+            <form method="POST" action="{{ url_for('take_quiz', quiz_id=q.quiz_id) }}">
+                <button type="submit" class="btn btn-primary btn-sm" style="width: 100%;">
+                    <span>Start Test Now →</span>
+                </button>
+            </form>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+
+<!-- Quiz Attempt History -->
+<div class="glass-card" style="margin-top: 24px;">
+    <div class="card-header">
+        <h3 class="card-title">📜 My Completed Quiz Attempts</h3>
+    </div>
+
+    <div class="table-responsive">
+        <table class="data-table">
+            <thead>
+                <tr>
+                    <th>Attempt ID</th>
+                    <th>Assessment Title</th>
+                    <th>Score</th>
+                    <th>Percentage</th>
+                    <th>Result Status</th>
+                    <th>Completed At</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for a in attempts %}
+                <tr>
+                    <td>#{{ a.attempt_id }}</td>
+                    <td><strong>{{ a.quiz_title }}</strong></td>
+                    <td><strong style="color: var(--primary);">{{ a.score }} / {{ a.max_score }}</strong></td>
+                    <td>{{ a.percentage }}%</td>
+                    <td><span class="badge badge-success">✓ {{ a.status }}</span></td>
+                    <td style="color: var(--text-muted); font-size: 0.8rem;">{{ a.completed_at }}</td>
+                </tr>
+                {% else %}
+                <tr>
+                    <td colspan="6" style="text-align: center; color: var(--text-muted); padding: 20px;">No quiz attempts recorded yet.</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}
