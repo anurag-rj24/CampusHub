@@ -4,63 +4,63 @@
 
 {% block content %}
 <div style="min-height: 80vh; display: flex; align-items: center; justify-content: center; width: 100%;">
-    <div style="width: 100%; max-width: 950px; display: grid; grid-template-columns: 1.1fr 1fr; gap: 32px; align-items: center;">
+    <div style="width: 100%; max-width: 900px; display: grid; grid-template-columns: 1fr 1.1fr; gap: 28px; align-items: center;">
         
         <!-- Left Hero / Brand Card -->
-        <div class="glass-card" style="padding: 40px; background: linear-gradient(135deg, rgba(30, 41, 59, 0.85), rgba(15, 23, 42, 0.95)); border: 1px solid rgba(255,255,255,0.12);">
-            <div style="display: flex; align-items: center; gap: 14px; margin-bottom: 24px;">
-                <div class="brand-icon" style="width: 50px; height: 50px; font-size: 1.6rem;">🎓</div>
+        <div class="glass-card" style="padding: 36px 32px; background: linear-gradient(135deg, rgba(17, 24, 39, 0.85), rgba(9, 13, 22, 0.95)); border: 1px solid rgba(255,255,255,0.1);">
+            <div style="display: flex; align-items: center; gap: 14px; margin-bottom: 20px;">
+                <div class="brand-icon">🎓</div>
                 <div>
-                    <h1 style="font-size: 1.8rem; font-weight: 800; letter-spacing: -0.5px;">CampusHub</h1>
-                    <span style="color: var(--secondary); font-weight: 700; font-size: 0.8rem; letter-spacing: 1.5px; text-transform: uppercase;">Enterprise University ERP</span>
+                    <h1 style="font-size: 1.6rem; font-weight: 800; letter-spacing: -0.5px;">CampusHub</h1>
+                    <span style="color: var(--secondary); font-weight: 700; font-size: 0.75rem; letter-spacing: 1.5px; text-transform: uppercase;">Enterprise ERP</span>
                 </div>
             </div>
 
-            <p style="color: var(--text-secondary); line-height: 1.6; margin-bottom: 28px; font-size: 0.95rem;">
-                A centralized, role-based university portal engineered for secure access, real-time academic records, attendance automation, and governance.
+            <p style="color: var(--text-secondary); line-height: 1.6; margin-bottom: 24px; font-size: 0.92rem;">
+                Secure role-based university portal engineered for real-time academic records, attendance automation, and governance.
             </p>
 
-            <div style="display: flex; flex-direction: column; gap: 14px; margin-bottom: 30px;">
-                <div style="display: flex; align-items: center; gap: 12px; font-size: 0.9rem; color: var(--text-primary);">
+            <div style="display: flex; flex-direction: column; gap: 12px; margin-bottom: 28px;">
+                <div style="display: flex; align-items: center; gap: 10px; font-size: 0.88rem; color: var(--text-primary);">
                     <span style="color: var(--success); font-weight: 700;">✓</span>
-                    <span>Strict Role-Based Access Control</span>
+                    <span>Role-Based Protected Access</span>
                 </div>
-                <div style="display: flex; align-items: center; gap: 12px; font-size: 0.9rem; color: var(--text-primary);">
+                <div style="display: flex; align-items: center; gap: 10px; font-size: 0.88rem; color: var(--text-primary);">
                     <span style="color: var(--success); font-weight: 700;">✓</span>
                     <span>Encrypted Cryptographic Authentication</span>
                 </div>
-                <div style="display: flex; align-items: center; gap: 12px; font-size: 0.9rem; color: var(--text-primary);">
+                <div style="display: flex; align-items: center; gap: 10px; font-size: 0.88rem; color: var(--text-primary);">
                     <span style="color: var(--success); font-weight: 700;">✓</span>
                     <span>Immutable Audit Activity Tracking</span>
                 </div>
             </div>
 
-            <div style="border-top: 1px solid var(--border-color); padding-top: 20px;">
+            <div style="border-top: 1px solid var(--border-color); padding-top: 18px;">
                 <a href="{{ url_for('select_role') }}" class="btn btn-secondary btn-sm" style="width: 100%;">
-                    <span>← Switch Role (Back to Main Screen)</span>
+                    <span>← Switch Role (Back to Home)</span>
                 </a>
             </div>
         </div>
 
         <!-- Right Login Form Card -->
-        <div class="glass-card" style="padding: 40px; box-shadow: var(--shadow-glow);">
-            <div style="margin-bottom: 28px;">
+        <div class="glass-card" style="padding: 36px 32px; box-shadow: var(--shadow-glow);">
+            <div style="margin-bottom: 24px;">
                 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
                     <a href="{{ url_for('select_role') }}" style="font-size: 0.82rem; color: var(--text-muted); text-decoration: none;">
                         ← Choose Role
                     </a>
                     {% if selected_role %}
-                    <span class="badge badge-primary">{{ selected_role.replace('_', ' ') }} PORTAL</span>
+                    <span class="badge badge-primary">{{ selected_role.replace('_', ' ') }}</span>
                     {% endif %}
                 </div>
-                <h2 style="font-size: 1.5rem; font-weight: 700; margin-bottom: 6px;">
+                <h2 style="font-size: 1.45rem; font-weight: 700; margin-bottom: 4px;">
                     {% if selected_role == 'STUDENT' %}🎓 Student Sign In
                     {% elif selected_role == 'FACULTY' %}👨‍🏫 Faculty Sign In
                     {% elif selected_role == 'ADMIN' %}🛡️ Administrator Sign In
                     {% elif selected_role == 'SUPER_HEAD' %}👑 Super Head Sign In
                     {% else %}Sign In to Portal{% endif %}
                 </h2>
-                <p style="color: var(--text-muted); font-size: 0.88rem;">Enter your institutional credentials to continue</p>
+                <p style="color: var(--text-muted); font-size: 0.85rem;">Enter your institutional credentials to continue</p>
             </div>
 
             <form method="POST" action="{{ url_for('login') }}">
@@ -76,13 +76,13 @@
                     <input type="password" id="password" name="password" class="form-control" placeholder="Enter your password" required autocomplete="current-password">
                 </div>
 
-                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px; font-size: 0.82rem;">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 22px; font-size: 0.82rem;">
                     <label style="display: flex; align-items: center; gap: 6px; cursor: pointer; color: var(--text-secondary);">
                         <input type="checkbox" checked style="accent-color: var(--primary);"> Remember session
                     </label>
                 </div>
 
-                <button type="submit" class="btn btn-primary" style="width: 100%; padding: 12px; font-size: 1rem;">
+                <button type="submit" class="btn btn-primary" style="width: 100%; padding: 12px; font-size: 0.95rem;">
                     <span>Sign In Securely →</span>
                 </button>
             </form>

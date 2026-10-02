@@ -1,117 +1,81 @@
 {% extends 'base.html' %}
 
-{% block title %}Welcome to CampusHub | University ERP Portal{% endblock %}
+{% block title %}Welcome to CampusHub ERP{% endblock %}
 
 {% block content %}
-<div style="min-height: 85vh; display: flex; flex-direction: column; justify-content: center; align-items: center; width: 100%; padding: 20px 0;">
-    
-    <!-- Hero Header -->
-    <div style="text-align: center; max-width: 800px; margin-bottom: 40px;">
-        <div style="display: inline-flex; align-items: center; gap: 8px; padding: 6px 16px; border-radius: 9999px; background: rgba(79, 70, 229, 0.15); border: 1px solid rgba(99, 102, 241, 0.3); color: #818cf8; font-size: 0.85rem; font-weight: 600; margin-bottom: 16px;">
-            <span>✨ University Enterprise Portal</span>
-        </div>
-        <h1 style="font-size: 2.5rem; font-weight: 800; letter-spacing: -1px; margin-bottom: 12px; background: linear-gradient(135deg, #ffffff, #94a3b8); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">
-            Welcome to CampusHub
+<div class="landing-wrapper">
+    <!-- Hero Section -->
+    <div class="landing-hero">
+        <h1 class="landing-title">
+            Welcome to <span class="gradient-text">CampusHub</span>
         </h1>
-        <p style="color: var(--text-secondary); font-size: 1.05rem; line-height: 1.6;">
-            Please select your institutional role to access your dedicated login portal.
+        <p class="landing-subtitle">
+            Select your role to access your institutional portal
         </p>
     </div>
 
-    <!-- 4 Role Options Grid -->
-    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 24px; width: 100%; max-width: 1200px;">
+    <!-- 4 Clean, Elegant Role Cards Grid -->
+    <div class="role-grid">
         
-        <!-- 1. Student Card -->
-        <div class="glass-card role-card" style="display: flex; flex-direction: column; justify-content: space-between; padding: 32px 24px; border-top: 4px solid #10b981;">
-            <div>
-                <div style="width: 56px; height: 56px; border-radius: var(--radius-md); background: rgba(16, 185, 129, 0.15); color: #10b981; display: flex; align-items: center; justify-content: center; font-size: 1.8rem; margin-bottom: 20px;">
-                    🎓
+        <!-- 1. Student -->
+        <a href="{{ url_for('login', role='STUDENT') }}" class="role-card role-student">
+            <div class="role-card-inner">
+                <div class="role-icon-box">🎓</div>
+                <div class="role-content">
+                    <h2 class="role-name">Student</h2>
+                    <span class="role-tagline">Academics & Attendance</span>
                 </div>
-                <h2 style="font-size: 1.35rem; font-weight: 700; margin-bottom: 8px;">Student</h2>
-                <p style="color: var(--text-secondary); font-size: 0.88rem; line-height: 1.5; margin-bottom: 20px;">
-                    Access your course enrollments, attendance analytics, AI safety shield, academic report cards, placement drives, and leave requests.
-                </p>
-                <div style="display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 24px;">
-                    <span class="badge badge-success">Attendance & Safety</span>
-                    <span class="badge badge-primary">Transcripts</span>
-                    <span class="badge badge-secondary">Placements</span>
+                <div class="role-action-arrow">
+                    <span>Enter Portal</span>
+                    <span class="arrow-icon">→</span>
                 </div>
             </div>
-            <div>
-                <a href="{{ url_for('login', role='STUDENT') }}" class="btn btn-primary" style="width: 100%;">
-                    <span>Student Login →</span>
-                </a>
-            </div>
-        </div>
+        </a>
 
-        <!-- 2. Faculty Card -->
-        <div class="glass-card role-card" style="display: flex; flex-direction: column; justify-content: space-between; padding: 32px 24px; border-top: 4px solid #4f46e5;">
-            <div>
-                <div style="width: 56px; height: 56px; border-radius: var(--radius-md); background: rgba(79, 70, 229, 0.15); color: #818cf8; display: flex; align-items: center; justify-content: center; font-size: 1.8rem; margin-bottom: 20px;">
-                    👨‍🏫
+        <!-- 2. Faculty -->
+        <a href="{{ url_for('login', role='FACULTY') }}" class="role-card role-faculty">
+            <div class="role-card-inner">
+                <div class="role-icon-box">👨‍🏫</div>
+                <div class="role-content">
+                    <h2 class="role-name">Faculty</h2>
+                    <span class="role-tagline">Teaching & Evaluation</span>
                 </div>
-                <h2 style="font-size: 1.35rem; font-weight: 700; margin-bottom: 8px;">Faculty</h2>
-                <p style="color: var(--text-secondary); font-size: 0.88rem; line-height: 1.5; margin-bottom: 20px;">
-                    Manage assigned subjects, record class attendance roll calls, evaluate continuous assessment marks, and process student leaves.
-                </p>
-                <div style="display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 24px;">
-                    <span class="badge badge-primary">Roll Call Sheet</span>
-                    <span class="badge badge-secondary">Grade Evaluation</span>
-                    <span class="badge badge-warning">Leave Approvals</span>
+                <div class="role-action-arrow">
+                    <span>Enter Portal</span>
+                    <span class="arrow-icon">→</span>
                 </div>
             </div>
-            <div>
-                <a href="{{ url_for('login', role='FACULTY') }}" class="btn btn-primary" style="width: 100%;">
-                    <span>Faculty Login →</span>
-                </a>
-            </div>
-        </div>
+        </a>
 
-        <!-- 3. Administrator Card -->
-        <div class="glass-card role-card" style="display: flex; flex-direction: column; justify-content: space-between; padding: 32px 24px; border-top: 4px solid #06b6d4;">
-            <div>
-                <div style="width: 56px; height: 56px; border-radius: var(--radius-md); background: rgba(6, 182, 212, 0.15); color: #06b6d4; display: flex; align-items: center; justify-content: center; font-size: 1.8rem; margin-bottom: 20px;">
-                    🛡️
+        <!-- 3. Administrator -->
+        <a href="{{ url_for('login', role='ADMIN') }}" class="role-card role-admin">
+            <div class="role-card-inner">
+                <div class="role-icon-box">🛡️</div>
+                <div class="role-content">
+                    <h2 class="role-name">Administrator</h2>
+                    <span class="role-tagline">Campus Management</span>
                 </div>
-                <h2 style="font-size: 1.35rem; font-weight: 700; margin-bottom: 8px;">Administrator</h2>
-                <p style="color: var(--text-secondary); font-size: 0.88rem; line-height: 1.5; margin-bottom: 20px;">
-                    Manage student and faculty user accounts, curriculum subjects, company placement drives, announcements, and operational reports.
-                </p>
-                <div style="display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 24px;">
-                    <span class="badge badge-secondary">User Accounts</span>
-                    <span class="badge badge-primary">Curriculum</span>
-                    <span class="badge badge-success">Drives & Notices</span>
+                <div class="role-action-arrow">
+                    <span>Enter Portal</span>
+                    <span class="arrow-icon">→</span>
                 </div>
             </div>
-            <div>
-                <a href="{{ url_for('login', role='ADMIN') }}" class="btn btn-primary" style="width: 100%;">
-                    <span>Admin Login →</span>
-                </a>
-            </div>
-        </div>
+        </a>
 
-        <!-- 4. Super Head Card -->
-        <div class="glass-card role-card" style="display: flex; flex-direction: column; justify-content: space-between; padding: 32px 24px; border-top: 4px solid #8b5cf6;">
-            <div>
-                <div style="width: 56px; height: 56px; border-radius: var(--radius-md); background: rgba(139, 92, 246, 0.15); color: #a78bfa; display: flex; align-items: center; justify-content: center; font-size: 1.8rem; margin-bottom: 20px;">
-                    👑
+        <!-- 4. Super Head -->
+        <a href="{{ url_for('login', role='SUPER_HEAD') }}" class="role-card role-superhead">
+            <div class="role-card-inner">
+                <div class="role-icon-box">👑</div>
+                <div class="role-content">
+                    <h2 class="role-name">Super Head</h2>
+                    <span class="role-tagline">Executive Governance</span>
                 </div>
-                <h2 style="font-size: 1.35rem; font-weight: 700; margin-bottom: 8px;">Super Head</h2>
-                <p style="color: var(--text-secondary); font-size: 0.88rem; line-height: 1.5; margin-bottom: 20px;">
-                    Executive leadership oversight with campus macro KPIs, department governance, administrator controls, and real-time audit logs.
-                </p>
-                <div style="display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 24px;">
-                    <span class="badge badge-primary">Executive KPIs</span>
-                    <span class="badge badge-warning">Audit Trail</span>
-                    <span class="badge badge-secondary">Diagnostics</span>
+                <div class="role-action-arrow">
+                    <span>Enter Portal</span>
+                    <span class="arrow-icon">→</span>
                 </div>
             </div>
-            <div>
-                <a href="{{ url_for('login', role='SUPER_HEAD') }}" class="btn btn-primary" style="width: 100%;">
-                    <span>Super Head Login →</span>
-                </a>
-            </div>
-        </div>
+        </a>
 
     </div>
 </div>
