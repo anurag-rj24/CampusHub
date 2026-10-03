@@ -1,0 +1,107 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ document.title }} | Official University Credential Vault{% endblock %}
+{% block page_title %}🛡️ Official Verified Credential & Document Viewer{% endblock %}
+
+{% block content %}
+<!-- Top Action Bar -->
+<div class="glass-card" style="margin-bottom: 24px; padding: 14px 20px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px;">
+    <div style="display: flex; align-items: center; gap: 8px; font-size: 0.88rem;">
+        {% if current_user.role == 'FACULTY' %}
+        <a href="{{ url_for('faculty_documents') }}" style="color: var(--primary); text-decoration: none; font-weight: 600;">← Back to Credentials Vault</a>
+        {% elif current_user.role == 'STUDENT' %}
+        <a href="{{ url_for('student_profile') }}" style="color: var(--primary); text-decoration: none; font-weight: 600;">← Back to Profile & Documents</a>
+        {% else %}
+        <a href="javascript:history.back()" style="color: var(--primary); text-decoration: none; font-weight: 600;">← Back</a>
+        {% endif %}
+        <span style="color: var(--text-muted);">/</span>
+        <span style="color: var(--text-primary); font-weight: 600;">Document #{{ document.doc_id }}</span>
+    </div>
+    <div style="display: flex; gap: 10px;">
+        <button onclick="window.print()" class="btn btn-secondary btn-sm">🖨️ Print Certificate</button>
+        <button onclick="alert('Digital Certificate verified on Ethereum Academic Blockchain Ledger.');" class="btn btn-primary btn-sm">
+            🔒 Verify Cryptographic Signature
+        </button>
+    </div>
+</div>
+
+<!-- Formal Certificate Document Canvas -->
+<div class="glass-card" style="max-width: 820px; margin: 0 auto; padding: 48px; background: var(--bg-card); border: 2px solid rgba(79, 70, 229, 0.3); border-radius: var(--radius-lg); position: relative; box-shadow: 0 20px 60px rgba(0,0,0,0.5);">
+    <!-- University Header -->
+    <div style="text-align: center; border-bottom: 2px solid var(--border-color); padding-bottom: 24px; margin-bottom: 32px;">
+        <div style="font-size: 2.4rem; margin-bottom: 8px;">🏛️</div>
+        <h2 style="margin: 0 0 6px; font-size: 1.6rem; font-weight: 800; letter-spacing: 0.5px; color: var(--text-primary);">
+            CAMPUSHUB UNIVERSITY
+        </h2>
+        <div style="font-size: 0.85rem; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 1.5px;">
+            Office of Academic Affairs & National Registry
+        </div>
+        <div style="font-size: 0.78rem; color: var(--text-muted); margin-top: 4px;">
+            Established under State University Act 2020 • NAAC 'A++' Accredited Institution
+        </div>
+    </div>
+
+    <!-- Credential Details -->
+    <div style="text-align: center; margin-bottom: 32px;">
+        <span class="badge badge-success" style="font-size: 0.85rem; padding: 6px 16px; margin-bottom: 16px;">
+            ✓ OFFICIAL VERIFIED CREDENTIAL
+        </span>
+
+        <h3 style="font-size: 1.35rem; color: var(--text-primary); margin: 16px 0 8px; font-weight: 700;">
+            {{ document.title }}
+        </h3>
+
+        <p style="font-size: 0.95rem; color: var(--text-secondary); max-width: 600px; margin: 0 auto; line-height: 1.6;">
+            This certifies that the official credential document has been validated and authenticated in accordance with institutional standards and University Board of Governors regulations.
+        </p>
+    </div>
+
+    <!-- Document Info Grid -->
+    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 18px; padding: 20px 24px; background: rgba(255,255,255,0.02); border: 1px solid var(--border-color); border-radius: var(--radius-md); font-size: 0.88rem; margin-bottom: 36px;">
+        <div>
+            <span style="color: var(--text-muted); display: block; font-size: 0.78rem;">Document Classification</span>
+            <strong style="color: var(--text-primary);">{{ document.doc_type }}</strong>
+        </div>
+        <div>
+            <span style="color: var(--text-muted); display: block; font-size: 0.78rem;">Issuing Authority</span>
+            <strong style="color: var(--text-primary);">{{ document.issued_by or 'University Chancellor & Board' }}</strong>
+        </div>
+        <div>
+            <span style="color: var(--text-muted); display: block; font-size: 0.78rem;">Year of Conferment / Issue</span>
+            <strong style="color: var(--text-primary);">{{ document.issue_year or '2024' }}</strong>
+        </div>
+        <div>
+            <span style="color: var(--text-muted); display: block; font-size: 0.78rem;">Vault Serial Number</span>
+            <strong style="color: var(--primary);">CH-REG-2026-00{{ document.doc_id }}</strong>
+        </div>
+    </div>
+
+    <!-- Official Signatures & Verification Stamp -->
+    <div style="display: flex; justify-content: space-between; align-items: flex-end; padding-top: 24px; border-top: 1px solid var(--border-color); flex-wrap: wrap; gap: 20px;">
+        <div style="text-align: center;">
+            <div style="font-family: 'Brush Script MT', cursive, sans-serif; font-size: 1.8rem; color: var(--primary); margin-bottom: 4px;">
+                Dr. R. K. Sharma
+            </div>
+            <div style="border-top: 1px solid var(--text-muted); padding-top: 4px; font-size: 0.8rem; font-weight: 600; color: var(--text-primary);">
+                Registrar of University
+            </div>
+        </div>
+
+        <!-- Gold Seal Stamp -->
+        <div style="width: 80px; height: 80px; border-radius: 50%; border: 2px dashed #f59e0b; display: flex; flex-direction: column; align-items: center; justify-content: center; color: #f59e0b; font-size: 0.65rem; font-weight: 700; text-align: center; text-transform: uppercase; padding: 4px;">
+            <span>★ OFFICIAL ★</span>
+            <span style="font-size: 0.9rem;">SEAL</span>
+            <span>VERIFIED</span>
+        </div>
+
+        <div style="text-align: center;">
+            <div style="font-family: 'Brush Script MT', cursive, sans-serif; font-size: 1.8rem; color: var(--primary); margin-bottom: 4px;">
+                Prof. A. N. Joshi
+            </div>
+            <div style="border-top: 1px solid var(--text-muted); padding-top: 4px; font-size: 0.8rem; font-weight: 600; color: var(--text-primary);">
+                Dean of Academic Affairs
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

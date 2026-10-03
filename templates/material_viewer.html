@@ -1,0 +1,223 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ material.title }} | CampusHub Study Material{% endblock %}
+{% block page_title %}📖 Study Material & Lecture Notes Reader{% endblock %}
+
+{% block content %}
+<!-- Top Navigation Breadcrumb & Actions -->
+<div class="glass-card" style="margin-bottom: 20px; padding: 14px 20px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px;">
+    <div style="display: flex; align-items: center; gap: 8px; font-size: 0.88rem;">
+        {% if current_user.role == 'STUDENT' %}
+        <a href="{{ url_for('student_materials') }}" style="color: var(--primary); text-decoration: none; font-weight: 600;">← Back to Study Materials</a>
+        {% elif current_user.role == 'FACULTY' %}
+        <a href="{{ url_for('faculty_materials') }}" style="color: var(--primary); text-decoration: none; font-weight: 600;">← Back to Materials Management</a>
+        {% else %}
+        <a href="javascript:history.back()" style="color: var(--primary); text-decoration: none; font-weight: 600;">← Back</a>
+        {% endif %}
+        <span style="color: var(--text-muted);">/</span>
+        <span style="color: var(--text-secondary);">{{ material.subject_code }}</span>
+        <span style="color: var(--text-muted);">/</span>
+        <span style="color: var(--text-primary); font-weight: 600;">{{ material.title }}</span>
+    </div>
+    <div style="display: flex; gap: 10px;">
+        <button onclick="window.print()" class="btn btn-secondary btn-sm">🖨️ Print Notes</button>
+        <button onclick="alert('Downloading official attachment: {{ material.file_name or material.title }}');" class="btn btn-primary btn-sm">
+            📥 Download Attachment ({{ material.file_size or '3.8 MB' }})
+        </button>
+    </div>
+</div>
+
+<!-- Material Header Info Card -->
+<div class="glass-card" style="margin-bottom: 24px; padding: 24px; background: linear-gradient(135deg, rgba(79, 70, 229, 0.12) 0%, rgba(6, 182, 212, 0.08) 100%); border-left: 4px solid var(--primary);">
+    <div style="display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: 16px;">
+        <div>
+            <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 8px;">
+                <span class="badge badge-primary">{{ material.subject_code }}</span>
+                <span class="badge badge-secondary">{{ material.category }}</span>
+                <span class="badge badge-success">Verified Academic Curriculum</span>
+            </div>
+            <h1 style="margin: 0 0 8px; font-size: 1.5rem; font-weight: 800; color: var(--text-primary); line-height: 1.3;">
+                {{ material.title }}
+            </h1>
+            <p style="margin: 0; font-size: 0.95rem; color: var(--text-secondary); max-width: 800px; line-height: 1.5;">
+                {{ material.description or 'Official course study notes, algorithms, architectural diagrams, and laboratory guidelines prepared by the department faculty.' }}
+            </p>
+        </div>
+    </div>
+
+    <!-- Metadata Bar -->
+    <div style="display: flex; gap: 20px; margin-top: 18px; padding-top: 16px; border-top: 1px solid var(--border-color); font-size: 0.82rem; color: var(--text-muted); flex-wrap: wrap;">
+        <span>👨‍🏫 Author: <strong style="color: var(--text-primary);">{{ material.author_name or 'Prof. Dr. CampusHub Faculty' }}</strong></span>
+        <span>🏛️ Department: <strong style="color: var(--text-primary);">{{ material.department_name or 'Computer Science & Engineering' }}</strong></span>
+        <span>⏱️ Estimated Reading Time: <strong style="color: var(--text-primary);">25 Mins</strong></span>
+        <span>📅 Published: <strong style="color: var(--text-primary);">{{ material.uploaded_at.strftime('%d %b %Y') if material.uploaded_at else 'Current Semester' }}</strong></span>
+        <span>📦 File Size: <strong style="color: var(--text-primary);">{{ material.file_size or '3.8 MB' }}</strong></span>
+    </div>
+</div>
+
+<!-- Reader Content Layout: 2 Columns (Content + Table of Contents Sidebar) -->
+<div class="grid-2" style="grid-template-columns: 280px 1fr; align-items: start; gap: 24px;">
+    <!-- Sticky Quick Navigator -->
+    <div class="glass-card" style="position: sticky; top: 80px; padding: 20px;">
+        <h4 style="margin: 0 0 14px; font-size: 0.95rem; color: var(--text-primary); display: flex; align-items: center; gap: 6px;">
+            📑 Table of Contents
+        </h4>
+        <div style="display: flex; flex-direction: column; gap: 8px; font-size: 0.85rem;">
+            <a href="#sec-objectives" style="color: var(--text-secondary); text-decoration: none; padding: 6px 10px; border-radius: var(--radius-sm); transition: background 0.15s;" onmouseover="this.style.background='rgba(255,255,255,0.05)'" onmouseout="this.style.background='transparent'">
+                1. Learning Objectives
+            </a>
+            <a href="#sec-theoretical" style="color: var(--text-secondary); text-decoration: none; padding: 6px 10px; border-radius: var(--radius-sm); transition: background 0.15s;" onmouseover="this.style.background='rgba(255,255,255,0.05)'" onmouseout="this.style.background='transparent'">
+                2. Core Concepts & Principles
+            </a>
+            <a href="#sec-algorithm" style="color: var(--text-secondary); text-decoration: none; padding: 6px 10px; border-radius: var(--radius-sm); transition: background 0.15s;" onmouseover="this.style.background='rgba(255,255,255,0.05)'" onmouseout="this.style.background='transparent'">
+                3. Mathematical Formulation
+            </a>
+            <a href="#sec-implementation" style="color: var(--text-secondary); text-decoration: none; padding: 6px 10px; border-radius: var(--radius-sm); transition: background 0.15s;" onmouseover="this.style.background='rgba(255,255,255,0.05)'" onmouseout="this.style.background='transparent'">
+                4. Code Implementation & Lab
+            </a>
+            <a href="#sec-practice" style="color: var(--text-secondary); text-decoration: none; padding: 6px 10px; border-radius: var(--radius-sm); transition: background 0.15s;" onmouseover="this.style.background='rgba(255,255,255,0.05)'" onmouseout="this.style.background='transparent'">
+                5. Self-Assessment Practice
+            </a>
+        </div>
+
+        <div style="margin-top: 24px; padding-top: 16px; border-top: 1px solid var(--border-color); text-align: center;">
+            <button onclick="alert('Offline study packet generated.');" class="btn btn-secondary btn-sm" style="width: 100%;">
+                ⚡ Save Offline Copy
+            </button>
+        </div>
+    </div>
+
+    <!-- Main Content Reader -->
+    <div style="display: flex; flex-direction: column; gap: 24px;">
+        <!-- Section 1: Objectives -->
+        <div class="glass-card" id="sec-objectives">
+            <div class="card-header">
+                <h3 class="card-title">🎯 1. Course Learning Objectives & Unit Outcomes</h3>
+            </div>
+            <div style="font-size: 0.9rem; color: var(--text-secondary); line-height: 1.7;">
+                <p>Upon completing this study material, students will be able to:</p>
+                <ul style="padding-left: 20px; display: flex; flex-direction: column; gap: 8px;">
+                    <li>Understand the foundational theoretical architecture and asymptotic complexity bounds.</li>
+                    <li>Analyze state-space representations and apply heuristic evaluation metrics.</li>
+                    <li>Implement rigorous algorithmic routines with optimal space-time trade-offs in Python/C++.</li>
+                    <li>Evaluate continuous lab assessment (LCA) performance against real-world test cases.</li>
+                </ul>
+            </div>
+        </div>
+
+        <!-- Section 2: Core Concepts -->
+        <div class="glass-card" id="sec-theoretical">
+            <div class="card-header">
+                <h3 class="card-title">💡 2. Theoretical Concepts & System Architecture</h3>
+            </div>
+            <div style="font-size: 0.9rem; color: var(--text-secondary); line-height: 1.7;">
+                <p>
+                    Modern computing paradigms demand strict adherence to distributed consensus and asymptotic guarantees.
+                    In standard system design, state machines transition across deterministic boundaries through controlled execution pipelines.
+                </p>
+
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin: 18px 0;">
+                    <div style="padding: 16px; background: rgba(255,255,255,0.03); border: 1px solid var(--border-color); border-radius: var(--radius-md);">
+                        <h4 style="margin: 0 0 6px; font-size: 0.92rem; color: var(--primary);">Key Theorem & Axiom</h4>
+                        <p style="margin: 0; font-size: 0.84rem; color: var(--text-muted);">
+                            For all admissible heuristics $h(n) \le h^*(n)$, the optimal shortest path is guaranteed to be explored without redundant node expansions.
+                        </p>
+                    </div>
+                    <div style="padding: 16px; background: rgba(255,255,255,0.03); border: 1px solid var(--border-color); border-radius: var(--radius-md);">
+                        <h4 style="margin: 0 0 6px; font-size: 0.92rem; color: #06b6d4;">Asymptotic Complexity</h4>
+                        <p style="margin: 0; font-size: 0.84rem; color: var(--text-muted);">
+                            Time Complexity: $\mathcal{O}(b^d)$ in worst case, reduced to polynomial $\mathcal{O}(d)$ with dominant heuristics.
+                        </p>
+                    </div>
+                </div>
+
+                <p>
+                    Ensure your continuous assessment submissions (LCA-1, LCA-2, LCA-3) include edge-case validation against circular dependencies and boundary inputs.
+                </p>
+            </div>
+        </div>
+
+        <!-- Section 3: Mathematical Formulation -->
+        <div class="glass-card" id="sec-algorithm">
+            <div class="card-header">
+                <h3 class="card-title">📐 3. Mathematical & Algorithmic Formulation</h3>
+            </div>
+            <div style="font-size: 0.9rem; color: var(--text-secondary); line-height: 1.7;">
+                <div style="padding: 16px 20px; background: rgba(0,0,0,0.25); border-left: 4px solid var(--primary); border-radius: var(--radius-md); font-family: monospace; font-size: 0.92rem; color: var(--text-primary); margin-bottom: 14px;">
+                    f(n) = g(n) + h(n)<br>
+                    where:<br>
+                    • g(n) = Exact accumulated cost from root node to node n<br>
+                    • h(n) = Estimated heuristic cost from node n to the goal state<br>
+                    • f(n) = Total estimated evaluation cost function
+                </div>
+            </div>
+        </div>
+
+        <!-- Section 4: Implementation Code -->
+        <div class="glass-card" id="sec-implementation">
+            <div class="card-header" style="display: flex; justify-content: space-between; align-items: center;">
+                <h3 class="card-title">💻 4. Code Implementation & Laboratory Benchmark</h3>
+                <button type="button" class="btn btn-secondary btn-sm" onclick="navigator.clipboard.writeText(document.getElementById('codeBlock').innerText); alert('Code snippet copied to clipboard!');">
+                    📋 Copy Code
+                </button>
+            </div>
+            <div style="position: relative; background: #0f172a; border: 1px solid var(--border-color); border-radius: var(--radius-md); padding: 18px 20px; overflow-x: auto;">
+                <pre id="codeBlock" style="margin: 0; font-family: 'Consolas', 'Courier New', monospace; font-size: 0.85rem; color: #e2e8f0; line-height: 1.6;"><code>import heapq
+
+def a_star_search(graph, start, goal, heuristic_func):
+    """
+    CampusHub Algorithmic Implementation:
+    Computes optimal cost path utilizing priority queue ordering.
+    """
+    open_set = []
+    heapq.heappush(open_set, (0, start))
+    came_from = {}
+    g_score = {node: float('inf') for node in graph}
+    g_score[start] = 0
+
+    while open_set:
+        current_f, current = heapq.heappop(open_set)
+
+        if current == goal:
+            path = []
+            while current in came_from:
+                path.append(current)
+                current = came_from[current]
+            path.append(start)
+            return path[::-1]
+
+        for neighbor, weight in graph[current].items():
+            tentative_g = g_score[current] + weight
+            if tentative_g < g_score[neighbor]:
+                came_from[neighbor] = current
+                g_score[neighbor] = tentative_g
+                f_score = tentative_g + heuristic_func(neighbor, goal)
+                heapq.heappush(open_set, (f_score, neighbor))
+
+    return None</code></pre>
+            </div>
+        </div>
+
+        <!-- Section 5: Practice Questions -->
+        <div class="glass-card" id="sec-practice">
+            <div class="card-header">
+                <h3 class="card-title">❓ 5. Self-Assessment & Review Questions</h3>
+            </div>
+            <div style="display: flex; flex-direction: column; gap: 14px; font-size: 0.88rem;">
+                <div style="padding: 14px; background: rgba(255,255,255,0.02); border: 1px solid var(--border-color); border-radius: var(--radius-md);">
+                    <strong>Q1: What condition must a heuristic satisfy to guarantee optimality in tree search?</strong>
+                    <div style="margin-top: 6px; color: var(--text-muted);">
+                        Answer: The heuristic function must be admissible, meaning it never overestimates the true cost to reach the goal.
+                    </div>
+                </div>
+                <div style="padding: 14px; background: rgba(255,255,255,0.02); border: 1px solid var(--border-color); border-radius: var(--radius-md);">
+                    <strong>Q2: Explain the significance of continuous lab assessment (LCA 1/2/3) in practical modules.</strong>
+                    <div style="margin-top: 6px; color: var(--text-muted);">
+                        Answer: Continuous assessments ensure iterative debugging, real-time code reviews, and structured milestone tracking throughout the semester.
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

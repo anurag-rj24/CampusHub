@@ -68,7 +68,7 @@
                 <div style="display: flex; justify-content: space-between; align-items: center; font-size: 0.75rem; color: var(--text-muted);">
                     <span>Uploaded: {{ m.created_at.strftime('%d %b %Y') if m.created_at else 'Recent' }}</span>
                     <div style="display: flex; gap: 8px;">
-                        <a href="{{ m.file_url or '#' }}" target="_blank" class="btn btn-secondary btn-sm">📥 View/Download</a>
+                        <a href="{{ url_for('view_material', material_id=m.material_id) }}" class="btn btn-primary btn-sm">👁️ Read Content</a>
                         <form method="POST" action="{{ url_for('faculty_materials_delete', material_id=m.material_id) }}" onsubmit="return confirm('Remove this material?');" style="display: inline;">
                             <button type="submit" class="btn btn-secondary btn-sm" style="color: #ef4444;">🗑️</button>
                         </form>

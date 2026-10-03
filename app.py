@@ -1275,6 +1275,95 @@ def student_update_request():
     return redirect(url_for('student_profile'))
 
 
+@app.route('/student/materials')
+@login_required(['STUDENT'])
+def student_materials():
+    user_id = session['user']['user_id']
+    conn = get_db()
+    cursor = conn.cursor(dictionary=True)
+
+    cursor.execute("""
+        SELECT DISTINCT sub.subject_id, sub.subject_code, sub.subject_name
+        FROM subject sub
+        JOIN student s ON sub.department_id = s.department_id
+        WHERE s.user_id = %s
+        ORDER BY sub.subject_code
+    """, (user_id,))
+    subjects = cursor.fetchall()
+
+    selected_subject_id = request.args.get('subject_id')
+    query = """
+        SELECT m.*, sub.subject_code, sub.subject_name, u.first_name, u.last_name
+        FROM faculty_study_material m
+        JOIN subject sub ON m.subject_id = sub.subject_id
+        JOIN faculty f ON m.faculty_id = f.faculty_id
+        JOIN users u ON f.user_id = u.user_id
+        WHERE 1=1
+    """
+    params = []
+    if selected_subject_id:
+        query += " AND m.subject_id = %s"
+        params.append(selected_subject_id)
+
+    query += " ORDER BY m.uploaded_at DESC"
+    cursor.execute(query, tuple(params))
+    materials = cursor.fetchall()
+
+    cursor.close()
+    conn.close()
+
+    return render_template('student/materials.html', subjects=subjects, materials=materials, selected_subject_id=int(selected_subject_id) if selected_subject_id else None)
+
+
+@app.route('/material/<int:material_id>')
+@login_required()
+def view_material(material_id):
+    conn = get_db()
+    cursor = conn.cursor(dictionary=True)
+    cursor.execute("""
+        SELECT m.*, sub.subject_code, sub.subject_name, d.department_name,
+               CONCAT(u.first_name, ' ', u.last_name) AS author_name
+        FROM faculty_study_material m
+        JOIN subject sub ON m.subject_id = sub.subject_id
+        LEFT JOIN department d ON sub.department_id = d.department_id
+        JOIN faculty f ON m.faculty_id = f.faculty_id
+        JOIN users u ON f.user_id = u.user_id
+        WHERE m.material_id = %s
+    """, (material_id,))
+    material = cursor.fetchone()
+    cursor.close()
+    conn.close()
+
+    if not material:
+        flash("Requested study material could not be found.", "danger")
+        return redirect(url_for('student_dashboard'))
+
+    return render_template('material_viewer.html', material=material)
+
+
+@app.route('/document/<int:doc_id>')
+@login_required()
+def view_document(doc_id):
+    conn = get_db()
+    cursor = conn.cursor(dictionary=True)
+    cursor.execute("""
+        SELECT d.*, f.designation, u.first_name, u.last_name, u.email
+        FROM faculty_document d
+        JOIN faculty f ON d.faculty_id = f.faculty_id
+        JOIN users u ON f.user_id = u.user_id
+        WHERE d.doc_id = %s
+    """, (doc_id,))
+    doc = cursor.fetchone()
+    cursor.close()
+    conn.close()
+
+    if not doc:
+        flash("Requested verified credential document could not be found.", "danger")
+        return redirect(url_for('faculty_documents'))
+
+    return render_template('document_viewer.html', document=doc)
+
+
 # ----------------------------------------------------
 # FACULTY PORTAL ROUTES
 # ----------------------------------------------------

@@ -1,0 +1,69 @@
+{% extends 'base.html' %}
+
+{% block title %}Study Materials & Lecture Notes | CampusHub{% endblock %}
+{% block page_title %}📖 Course Study Materials, Notes & Lab Handouts{% endblock %}
+
+{% block content %}
+<!-- Subject & Category Filter Banner -->
+<div class="glass-card" style="margin-bottom: 24px; padding: 20px 24px;">
+    <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 16px;">
+        <div>
+            <label style="font-size: 0.85rem; font-weight: 600; color: var(--text-muted); margin-bottom: 8px; display: block;">Filter Study Materials by Subject:</label>
+            <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+                <a href="{{ url_for('student_materials') }}" class="btn {% if not selected_subject_id %}btn-primary{% else %}btn-secondary{% endif %} btn-sm">
+                    All Subjects
+                </a>
+                {% for s in subjects %}
+                <a href="{{ url_for('student_materials', subject_id=s.subject_id) }}" class="btn {% if selected_subject_id == s.subject_id %}btn-primary{% else %}btn-secondary{% endif %} btn-sm">
+                    {{ s.subject_code }} - {{ s.subject_name }}
+                </a>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Materials Grid -->
+<div class="grid-2">
+    {% for m in materials %}
+    <div class="glass-card" style="display: flex; flex-direction: column; justify-content: space-between;">
+        <div>
+            <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 8px;">
+                <div>
+                    <span class="badge badge-primary">{{ m.subject_code }}</span>
+                    <span class="badge badge-secondary">{{ m.category }}</span>
+                </div>
+                <span style="font-size: 0.75rem; color: var(--text-muted);">{{ m.uploaded_at.strftime('%d %b %Y') if m.uploaded_at else 'Recent' }}</span>
+            </div>
+
+            <h3 style="margin: 6px 0 8px; font-size: 1.1rem; font-weight: 700; color: var(--text-primary); line-height: 1.3;">
+                {{ m.title }}
+            </h3>
+
+            <p style="font-size: 0.85rem; color: var(--text-secondary); line-height: 1.5; margin-bottom: 14px;">
+                {{ m.description or 'Detailed curriculum notes, learning objectives, and practice questions.' }}
+            </p>
+
+            <div style="display: flex; gap: 14px; font-size: 0.78rem; color: var(--text-muted); margin-bottom: 16px; flex-wrap: wrap;">
+                <span>📦 Size: <strong>{{ m.file_size or '3.8 MB' }}</strong></span>
+                <span>⏱️ Read Time: <strong>25 mins</strong></span>
+                <span>👨‍🏫 By: <strong>{{ m.first_name or 'Faculty' }} {{ m.last_name or 'Coordinator' }}</strong></span>
+            </div>
+        </div>
+
+        <div style="display: flex; gap: 10px; border-top: 1px solid var(--border-color); padding-top: 14px;">
+            <a href="{{ url_for('view_material', material_id=m.material_id) }}" class="btn btn-primary btn-sm" style="flex: 1; text-align: center;">
+                👁️ Open Full Notes & Content
+            </a>
+            <button type="button" class="btn btn-secondary btn-sm" onclick="alert('Downloading {{ m.file_name or m.title }}');">
+                📥
+            </button>
+        </div>
+    </div>
+    {% else %}
+    <div class="glass-card" style="grid-column: 1 / -1; text-align: center; padding: 40px;">
+        <p style="color: var(--text-muted);">No study materials found for the selected filter.</p>
+    </div>
+    {% endfor %}
+</div>
+{% endblock %}

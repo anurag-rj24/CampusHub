@@ -65,7 +65,7 @@
                 </div>
                 <div style="display: flex; justify-content: space-between; align-items: center; font-size: 0.75rem; color: var(--text-muted);">
                     <span>Vault ID: CH-DOC-{{ doc.doc_id }}</span>
-                    <a href="{{ doc.file_url or '#' }}" target="_blank" class="btn btn-secondary btn-sm">👁️ Preview Certificate</a>
+                    <a href="{{ url_for('view_document', doc_id=doc.doc_id) }}" class="btn btn-primary btn-sm">👁️ Open & Verify Credential</a>
                 </div>
             </div>
             {% else %}

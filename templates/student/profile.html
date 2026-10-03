@@ -66,9 +66,9 @@
                     </td>
                     <td style="font-size: 0.8rem; color: var(--text-muted);">{{ doc.verified_by }}</td>
                     <td>
-                        <button class="btn btn-secondary btn-sm" onclick="alert('Viewing verified document: {{ doc.doc_title }}\nCryptographic Hash Signature: OK')">
-                            👁️ View / Download
-                        </button>
+                        <a href="{{ url_for('view_document', doc_id=doc.doc_id or 1) }}" class="btn btn-primary btn-sm">
+                            👁️ Open & Verify Credential
+                        </a>
                     </td>
                 </tr>
                 {% else %}

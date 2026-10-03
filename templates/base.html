@@ -41,7 +41,7 @@
 
             <nav class="sidebar-menu">
                 {% if current_user.role == 'STUDENT' %}
-                    <div class="menu-section-label">Academic Portal</div>
+                    <div class="menu-section-label">Academic Learning</div>
                     <a href="{{ url_for('student_dashboard') }}" class="nav-link {% if request.path == '/student' or request.path == '/student/dashboard' %}active{% endif %}">
                         <span class="icon">📊</span> Overview
                     </a>
@@ -54,9 +54,14 @@
                     <a href="{{ url_for('student_syllabus') }}" class="nav-link {% if request.path == '/student/syllabus' %}active{% endif %}">
                         <span class="icon">📈</span> Syllabus & Coverage
                     </a>
+                    <a href="{{ url_for('student_materials') }}" class="nav-link {% if request.path == '/student/materials' or '/material/' in request.path %}active{% endif %}">
+                        <span class="icon">📖</span> Study Materials
+                    </a>
                     <a href="{{ url_for('student_hall_ticket') }}" class="nav-link {% if request.path == '/student/hall-ticket' %}active{% endif %}">
                         <span class="icon">🎫</span> Exam Hall Ticket
                     </a>
+
+                    <div class="menu-section-label">Curriculum & Library</div>
                     <a href="{{ url_for('student_academics') }}" class="nav-link {% if request.path == '/student/academics' %}active{% endif %}">
                         <span class="icon">📚</span> Courses & Marks
                     </a>
@@ -69,14 +74,16 @@
                     <a href="{{ url_for('student_library') }}" class="nav-link {% if request.path == '/student/library' %}active{% endif %}">
                         <span class="icon">📖</span> Digital Library
                     </a>
-                    <a href="{{ url_for('student_fees') }}" class="nav-link {% if request.path == '/student/fees' %}active{% endif %}">
-                        <span class="icon">💳</span> Fee Receipts
+
+                    <div class="menu-section-label">Career & Services</div>
+                    <a href="{{ url_for('student_placements') }}" class="nav-link {% if request.path == '/student/placements' %}active{% endif %}">
+                        <span class="icon">💼</span> Placement Hub
                     </a>
                     <a href="{{ url_for('student_mooc_quizzes') }}" class="nav-link {% if request.path == '/student/mooc-quizzes' %}active{% endif %}">
                         <span class="icon">🌐</span> MOOCs & Quizzes
                     </a>
-                    <a href="{{ url_for('student_placements') }}" class="nav-link {% if request.path == '/student/placements' %}active{% endif %}">
-                        <span class="icon">💼</span> Placement Hub
+                    <a href="{{ url_for('student_fees') }}" class="nav-link {% if request.path == '/student/fees' %}active{% endif %}">
+                        <span class="icon">💳</span> Fee Receipts
                     </a>
                     <a href="{{ url_for('student_support') }}" class="nav-link {% if request.path == '/student/support' %}active{% endif %}">
                         <span class="icon">🎧</span> Support Desk

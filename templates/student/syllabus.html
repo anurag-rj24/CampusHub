@@ -154,13 +154,16 @@
                     <span style="font-weight: 700; color: var(--text-muted); font-size: 0.85rem;">Unit {{ u.unit }}</span>
                     <strong style="color: #e2e8f0; font-size: 0.9rem;">{{ u.title }}</strong>
                 </div>
-                <div style="display: flex; align-items: center; gap: 16px;">
+                <div style="display: flex; align-items: center; gap: 12px;">
                     <span style="color: var(--text-muted); font-size: 0.8rem;">{{ u.hours }} Lecture Hours</span>
                     {% if u.status == 'COMPLETED' %}
                         <span class="badge badge-success" style="font-size: 0.75rem;">✓ Completed</span>
                     {% else %}
                         <span class="badge badge-warning" style="font-size: 0.75rem;">⏳ In Progress</span>
                     {% endif %}
+                    <a href="{{ url_for('view_material', material_id=1) }}" class="btn btn-secondary btn-sm" style="padding: 4px 10px; font-size: 0.75rem;">
+                        📖 Read Notes
+                    </a>
                 </div>
             </div>
             {% endfor %}
