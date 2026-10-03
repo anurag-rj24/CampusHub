@@ -34,6 +34,10 @@
                     <div style="width: 14px; height: 14px; border-radius: 4px; background: #f59e0b;"></div>
                     <span>MOOC / Swayam Credits: <strong>{{ credit_stats.earned_mooc }} / 20</strong></span>
                 </div>
+                <div style="display: flex; align-items: center; gap: 10px;">
+                    <div style="width: 14px; height: 14px; border-radius: 4px; background: #94a3b8;"></div>
+                    <span>Remaining Required: <strong style="color: var(--text-muted);">{{ credit_stats.total_required - credit_stats.total_earned }} / 160</strong></span>
+                </div>
                 <div style="border-top: 1px solid var(--border-color); padding-top: 8px; margin-top: 4px;">
                     <span style="font-weight: 700; color: var(--text-primary);">Total Earned: {{ credit_stats.total_earned }} / {{ credit_stats.total_required }} Credits</span>
                 </div>
@@ -128,13 +132,16 @@
 <script>
 document.addEventListener('DOMContentLoaded', () => {
     const ctx = document.getElementById('creditDonutChart').getContext('2d');
+    const isLight = document.documentElement.getAttribute('data-theme') === 'light';
+    const trackColor = isLight ? '#cbd5e1' : 'rgba(255, 255, 255, 0.18)';
+
     new Chart(ctx, {
         type: 'doughnut',
         data: {
             labels: ['Core Credits', 'Electives', 'Labs', 'MOOC Credits', 'Remaining Needed'],
             datasets: [{
                 data: [{{ credit_stats.earned_core }}, {{ credit_stats.earned_elective }}, {{ credit_stats.earned_lab }}, {{ credit_stats.earned_mooc }}, {{ credit_stats.total_required - credit_stats.total_earned }}],
-                backgroundColor: ['#10b981', '#6366f1', '#06b6d4', '#f59e0b', 'rgba(255, 255, 255, 0.1)'],
+                backgroundColor: ['#10b981', '#6366f1', '#06b6d4', '#f59e0b', trackColor],
                 borderWidth: 0
             }]
         },

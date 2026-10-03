@@ -1729,7 +1729,9 @@ select.form-control {
 [data-theme="light"] [style*="color: #f1f5f9"],
 [data-theme="light"] [style*="color:#f1f5f9"],
 [data-theme="light"] [style*="color: #f8fafc"],
-[data-theme="light"] [style*="color:#f8fafc"] {
+[data-theme="light"] [style*="color:#f8fafc"],
+[data-theme="light"] [style*="color: #e2e8f0"],
+[data-theme="light"] [style*="color:#e2e8f0"] {
   color: #0f172a !important;
 }
 
@@ -1738,6 +1740,12 @@ select.form-control {
 [data-theme="light"] [style*="color: #94a3b8"],
 [data-theme="light"] [style*="color:#94a3b8"] {
   color: #334155 !important;
+}
+
+[data-theme="light"] span[style*="color: #38bdf8"],
+[data-theme="light"] div[style*="color: #38bdf8"],
+[data-theme="light"] a[style*="color: #38bdf8"] {
+  color: #0284c7 !important;
 }
 
 /* Maintain crisp white text on primary buttons & active badges */

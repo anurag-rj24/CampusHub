@@ -1,7 +1,7 @@
-// CampusHub ERP - Interactive UI Engine
-
 document.addEventListener('DOMContentLoaded', () => {
     initTheme();
+    initSidebar();
+    initSidebarScroll();
     initSearchFilters();
 });
 
@@ -116,6 +116,38 @@ function initSidebar() {
     if (appContainer && isCollapsed && window.innerWidth > 1024) {
         appContainer.classList.add('sidebar-collapsed');
     }
+}
+
+// Sidebar Scroll Persistence & Stability
+function initSidebarScroll() {
+    const sidebarNav = document.querySelector('.sidebar-nav') || document.querySelector('.sidebar');
+    if (!sidebarNav) return;
+
+    // Restore saved scroll position
+    const savedScroll = sessionStorage.getItem('campushub_sidebar_scroll');
+    if (savedScroll !== null) {
+        sidebarNav.scrollTop = parseInt(savedScroll, 10);
+    } else {
+        const activeLink = sidebarNav.querySelector('.nav-link.active');
+        if (activeLink) {
+            const rect = activeLink.getBoundingClientRect();
+            const navRect = sidebarNav.getBoundingClientRect();
+            if (rect.bottom > navRect.bottom || rect.top < navRect.top) {
+                activeLink.scrollIntoView({ block: 'nearest' });
+            }
+        }
+    }
+
+    // Save scroll position on scroll and before navigation
+    sidebarNav.addEventListener('scroll', () => {
+        sessionStorage.setItem('campushub_sidebar_scroll', sidebarNav.scrollTop);
+    }, { passive: true });
+
+    document.querySelectorAll('.sidebar-nav .nav-link').forEach(link => {
+        link.addEventListener('click', () => {
+            sessionStorage.setItem('campushub_sidebar_scroll', sidebarNav.scrollTop);
+        });
+    });
 }
 
 function toggleSidebar() {
