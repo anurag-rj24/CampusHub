@@ -1,0 +1,77 @@
+{% extends 'base.html' %}
+
+{% block title %}Faculty Credentials & Document Vault | CampusHub{% endblock %}
+{% block page_title %}📄 Faculty Credentials, Degrees & Document Vault{% endblock %}
+
+{% block content %}
+<div class="grid-2" style="margin-bottom: 24px;">
+    <!-- Upload Document Form -->
+    <div class="glass-card">
+        <div class="card-header">
+            <h3 class="card-title">📤 Upload Degree / Official Certificate</h3>
+        </div>
+        <form method="POST" action="{{ url_for('faculty_documents') }}">
+            <div class="form-group" style="margin-bottom: 14px;">
+                <label class="form-label">Document Category</label>
+                <select name="doc_type" class="form-control">
+                    <option value="DEGREE">Doctoral / Master's / Bachelor's Degree</option>
+                    <option value="APPOINTMENT_LETTER">University Appointment / Regularization Letter</option>
+                    <option value="RESEARCH_PAPER">Research Publication / Patent Grant</option>
+                    <option value="FDP_CERTIFICATE">Faculty Development / AICTE Training Certificate</option>
+                    <option value="KYC">National Identity / Passport / Aadhaar Verification</option>
+                </select>
+            </div>
+            <div class="form-group" style="margin-bottom: 14px;">
+                <label class="form-label">Document Title / Award Description</label>
+                <input type="text" name="title" class="form-control" placeholder="e.g. Ph.D. Degree Certificate in Computer Science & AI" required>
+            </div>
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 14px;">
+                <div class="form-group">
+                    <label class="form-label">Issuing Authority / University</label>
+                    <input type="text" name="issuing_authority" class="form-control" value="University Chancellor & Board of Governors" required>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Year of Issue</label>
+                    <input type="text" name="issue_year" class="form-control" value="2020" required>
+                </div>
+            </div>
+            <div class="form-group" style="margin-bottom: 18px;">
+                <label class="form-label">Cloud Document / PDF Repository Link</label>
+                <input type="text" name="file_url" class="form-control" placeholder="https://vault.campushub.edu/docs/faculty-01-phd.pdf" value="https://vault.campushub.edu/docs/phd-certificate.pdf" required>
+            </div>
+            <button type="submit" class="btn btn-primary" style="width: 100%;">
+                <span>🔒 Upload & Seal in Institutional Vault</span>
+            </button>
+        </form>
+    </div>
+
+    <!-- Verified Documents Vault -->
+    <div class="glass-card">
+        <div class="card-header">
+            <h3 class="card-title">🛡️ Official Verified Documents ({{ documents|length }})</h3>
+        </div>
+        <div style="display: flex; flex-direction: column; gap: 14px;">
+            {% for doc in documents %}
+            <div style="padding: 16px; background: rgba(255,255,255,0.02); border: 1px solid var(--border-color); border-radius: var(--radius-md);">
+                <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 4px;">
+                    <div>
+                        <span class="badge badge-primary">{{ doc.doc_type }}</span>
+                        <h4 style="margin: 6px 0 2px; font-size: 0.98rem; color: var(--text-primary);">{{ doc.title }}</h4>
+                    </div>
+                    <span class="badge badge-success">{{ doc.verification_status }}</span>
+                </div>
+                <div style="font-size: 0.82rem; color: var(--text-secondary); margin: 6px 0 10px;">
+                    Issued by: <strong>{{ doc.issuing_authority }}</strong> • Year: {{ doc.issue_year }}
+                </div>
+                <div style="display: flex; justify-content: space-between; align-items: center; font-size: 0.75rem; color: var(--text-muted);">
+                    <span>Vault ID: CH-DOC-{{ doc.doc_id }}</span>
+                    <a href="{{ doc.file_url or '#' }}" target="_blank" class="btn btn-secondary btn-sm">👁️ Preview Certificate</a>
+                </div>
+            </div>
+            {% else %}
+            <p style="color: var(--text-muted); text-align: center; padding: 24px;">No documents in vault. Upload your credentials.</p>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+{% endblock %}

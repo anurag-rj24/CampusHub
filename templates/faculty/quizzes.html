@@ -1,0 +1,109 @@
+{% extends 'base.html' %}
+
+{% block title %}Quizzes & Online Unit Tests | CampusHub{% endblock %}
+{% block page_title %}📝 Quizzes & Unit Test Management{% endblock %}
+
+{% block content %}
+<div class="grid-2" style="margin-bottom: 24px;">
+    <!-- Create / Schedule Quiz Form -->
+    <div class="glass-card">
+        <div class="card-header">
+            <h3 class="card-title">➕ Arrange New Quiz / Unit Test</h3>
+        </div>
+        <form method="POST" action="{{ url_for('faculty_quizzes') }}">
+            <div class="form-group" style="margin-bottom: 14px;">
+                <label class="form-label">Subject</label>
+                <select name="subject_id" class="form-control" required>
+                    {% for s in subjects %}
+                    <option value="{{ s.subject_id }}">{{ s.subject_code }} - {{ s.subject_name }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="form-group" style="margin-bottom: 14px;">
+                <label class="form-label">Quiz / Test Title</label>
+                <input type="text" name="title" class="form-control" placeholder="e.g. Unit 2: Heuristic Search & Constraint Satisfaction" required>
+            </div>
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 14px;">
+                <div class="form-group">
+                    <label class="form-label">Scheduled Date</label>
+                    <input type="date" name="scheduled_date" class="form-control" value="{{ now.strftime('%Y-%m-%d') }}" required>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Duration (Minutes)</label>
+                    <input type="number" name="duration_minutes" class="form-control" value="30" min="10" max="180" required>
+                </div>
+            </div>
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 14px;">
+                <div class="form-group">
+                    <label class="form-label">Total Questions</label>
+                    <input type="number" name="total_questions" class="form-control" value="15" min="1" max="100" required>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Max Marks</label>
+                    <input type="number" step="1" name="max_marks" class="form-control" value="20" min="5" max="100" required>
+                </div>
+            </div>
+            <div class="form-group" style="margin-bottom: 14px;">
+                <label class="form-label">Assessment Link / Portal URL (Optional)</label>
+                <input type="url" name="quiz_link" class="form-control" placeholder="https://quiz.campushub.edu/test-id-102">
+            </div>
+            <div class="form-group" style="margin-bottom: 18px;">
+                <label class="form-label">Instructions / Notes</label>
+                <textarea name="instructions" rows="2" class="form-control" placeholder="e.g. Negative marking 0.25 for incorrect responses..."></textarea>
+            </div>
+            <button type="submit" class="btn btn-primary" style="width: 100%;">
+                <span>🚀 Publish & Schedule Assessment</span>
+            </button>
+        </form>
+    </div>
+
+    <!-- Active Assessments & Past Quizzes -->
+    <div class="glass-card">
+        <div class="card-header">
+            <h3 class="card-title">📋 Arranged Quizzes & Status ({{ quizzes|length }})</h3>
+        </div>
+        <div style="display: flex; flex-direction: column; gap: 12px;">
+            {% for q in quizzes %}
+            <div style="padding: 16px; background: rgba(255,255,255,0.02); border: 1px solid var(--border-color); border-radius: var(--radius-md);">
+                <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 6px;">
+                    <div>
+                        <span class="badge badge-primary" style="font-size: 0.75rem;">{{ q.subject_code }}</span>
+                        <strong style="color: var(--text-primary); font-size: 0.95rem; margin-left: 6px;">{{ q.title }}</strong>
+                    </div>
+                    <span class="badge {% if q.status == 'SCHEDULED' %}badge-warning{% elif q.status == 'ACTIVE' %}badge-success{% else %}badge-secondary{% endif %}">
+                        {{ q.status }}
+                    </span>
+                </div>
+                <div style="font-size: 0.82rem; color: var(--text-secondary); display: flex; gap: 14px; flex-wrap: wrap; margin-bottom: 10px;">
+                    <span>📅 Date: <strong>{{ q.scheduled_date }}</strong></span>
+                    <span>⏱️ Duration: <strong>{{ q.duration_minutes }}m</strong></span>
+                    <span>❓ Qs: <strong>{{ q.total_questions }}</strong></span>
+                    <span>🎯 Marks: <strong>{{ q.max_marks }}M</strong></span>
+                </div>
+                {% if q.instructions %}
+                <p style="font-size: 0.8rem; color: var(--text-muted); margin: 0 0 10px;">{{ q.instructions }}</p>
+                {% endif %}
+                <div style="display: flex; gap: 8px; justify-content: flex-end;">
+                    {% if q.quiz_link %}
+                    <a href="{{ q.quiz_link }}" target="_blank" class="btn btn-secondary btn-sm">🔗 Open Quiz</a>
+                    {% endif %}
+                    {% if q.status == 'SCHEDULED' %}
+                    <form method="POST" action="{{ url_for('faculty_quiz_update_status', quiz_id=q.quiz_id) }}" style="display: inline;">
+                        <input type="hidden" name="status" value="ACTIVE">
+                        <button type="submit" class="btn btn-primary btn-sm">Start Test Now</button>
+                    </form>
+                    {% elif q.status == 'ACTIVE' %}
+                    <form method="POST" action="{{ url_for('faculty_quiz_update_status', quiz_id=q.quiz_id) }}" style="display: inline;">
+                        <input type="hidden" name="status" value="COMPLETED">
+                        <button type="submit" class="btn btn-secondary btn-sm">Close / End Test</button>
+                    </form>
+                    {% endif %}
+                </div>
+            </div>
+            {% else %}
+            <p style="color: var(--text-muted); text-align: center; padding: 24px;">No quizzes created yet. Fill in the form to arrange a test.</p>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -86,21 +86,57 @@
                     </a>
 
                 {% elif current_user.role == 'FACULTY' %}
-                    <div class="menu-section-label">Faculty Portal</div>
+                    <div class="menu-section-label">Academic Overview</div>
                     <a href="{{ url_for('faculty_dashboard') }}" class="nav-link {% if request.path == '/faculty' or request.path == '/faculty/dashboard' %}active{% endif %}">
                         <span class="icon">📊</span> Dashboard
                     </a>
-                    <a href="{{ url_for('faculty_profile') }}" class="nav-link {% if request.path == '/faculty/profile' %}active{% endif %}">
-                        <span class="icon">👤</span> Faculty Profile
+                    <a href="{{ url_for('faculty_timetable') }}" class="nav-link {% if request.path == '/faculty/timetable' %}active{% endif %}">
+                        <span class="icon">⏰</span> My Timetable
                     </a>
+                    <a href="{{ url_for('faculty_classes') }}" class="nav-link {% if request.path == '/faculty/classes' %}active{% endif %}">
+                        <span class="icon">📚</span> Classes & Subjects
+                    </a>
+                    <a href="{{ url_for('faculty_students') }}" class="nav-link {% if request.path == '/faculty/students' %}active{% endif %}">
+                        <span class="icon">👥</span> Student Directory
+                    </a>
+
+                    <div class="menu-section-label">Teaching & Assessment</div>
                     <a href="{{ url_for('faculty_attendance') }}" class="nav-link {% if request.path == '/faculty/attendance' %}active{% endif %}">
                         <span class="icon">✅</span> Mark Attendance
                     </a>
                     <a href="{{ url_for('faculty_grading') }}" class="nav-link {% if request.path == '/faculty/grading' %}active{% endif %}">
-                        <span class="icon">🎯</span> Marks & Grading
+                        <span class="icon">🎯</span> Marks & LCA 1/2/3
                     </a>
+                    <a href="{{ url_for('faculty_quizzes') }}" class="nav-link {% if request.path == '/faculty/quizzes' %}active{% endif %}">
+                        <span class="icon">📝</span> Quizzes & Tests
+                    </a>
+                    <a href="{{ url_for('faculty_online_classes') }}" class="nav-link {% if request.path == '/faculty/online-classes' %}active{% endif %}">
+                        <span class="icon">🎥</span> Online Live Classes
+                    </a>
+                    <a href="{{ url_for('faculty_materials') }}" class="nav-link {% if request.path == '/faculty/materials' %}active{% endif %}">
+                        <span class="icon">📖</span> Study Materials
+                    </a>
+
+                    <div class="menu-section-label">Requests & Communication</div>
                     <a href="{{ url_for('faculty_leaves') }}" class="nav-link {% if request.path == '/faculty/leaves' %}active{% endif %}">
-                        <span class="icon">📬</span> Leave Approvals
+                        <span class="icon">📬</span> Leaves & Approvals
+                    </a>
+                    <a href="{{ url_for('faculty_calendar') }}" class="nav-link {% if request.path == '/faculty/calendar' %}active{% endif %}">
+                        <span class="icon">📅</span> Academic Calendar
+                    </a>
+                    <a href="{{ url_for('faculty_announcements') }}" class="nav-link {% if request.path == '/faculty/announcements' %}active{% endif %}">
+                        <span class="icon">📢</span> Announcements
+                    </a>
+
+                    <div class="menu-section-label">Personal & Administration</div>
+                    <a href="{{ url_for('faculty_profile') }}" class="nav-link {% if request.path == '/faculty/profile' %}active{% endif %}">
+                        <span class="icon">👤</span> Faculty Profile
+                    </a>
+                    <a href="{{ url_for('faculty_documents') }}" class="nav-link {% if request.path == '/faculty/documents' %}active{% endif %}">
+                        <span class="icon">📄</span> Documents & Vault
+                    </a>
+                    <a href="{{ url_for('faculty_support') }}" class="nav-link {% if request.path == '/faculty/support' %}active{% endif %}">
+                        <span class="icon">🛠️</span> Tasks & Support
                     </a>
 
                 {% elif current_user.role == 'ADMIN' %}

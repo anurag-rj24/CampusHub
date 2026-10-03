@@ -1,0 +1,138 @@
+{% extends 'base.html' %}
+
+{% block title %}Student Management Directory | CampusHub{% endblock %}
+{% block page_title %}👥 Student Management & Mentoring Directory{% endblock %}
+
+{% block content %}
+<!-- Search & Filter Controls -->
+<div class="glass-card" style="margin-bottom: 24px; padding: 18px 24px;">
+    <form method="GET" action="{{ url_for('faculty_students') }}" style="display: flex; gap: 14px; align-items: center; flex-wrap: wrap;">
+        <div style="flex: 1; min-width: 260px;">
+            <input type="text" name="q" value="{{ search_q }}" placeholder="🔍 Search by Student Name, PRN, Roll No, or Email..." class="form-control" style="width: 100%;">
+        </div>
+        <div style="display: flex; gap: 10px;">
+            <button type="submit" class="btn btn-primary">Search Roster</button>
+            {% if search_q %}
+            <a href="{{ url_for('faculty_students') }}" class="btn btn-secondary">Clear</a>
+            {% endif %}
+        </div>
+    </form>
+</div>
+
+<!-- Student Roster Table -->
+<div class="glass-card">
+    <div class="card-header" style="display: flex; justify-content: space-between; align-items: center;">
+        <h3 class="card-title">📋 Active Student Directory ({{ students|length }} Students)</h3>
+        <span class="badge badge-primary">Institutional PRN Enrolled</span>
+    </div>
+
+    <div class="table-responsive">
+        <table class="table">
+            <thead>
+                <tr>
+                    <th>PRN / Roll No</th>
+                    <th>Student Name</th>
+                    <th>Department</th>
+                    <th>Attendance %</th>
+                    <th>LCA-1 (10M)</th>
+                    <th>LCA-2 (10M)</th>
+                    <th>LCA-3 (10M)</th>
+                    <th>Total Score</th>
+                    <th>Mentoring Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for s in students %}
+                <tr>
+                    <td>
+                        <strong style="color: var(--primary);">{{ s.prn }}</strong>
+                        <div style="font-size: 0.75rem; color: var(--text-muted);">{{ s.enrollment_number or '2024-CSE-00' ~ s.student_id }}</div>
+                    </td>
+                    <td>
+                        <div style="font-weight: 600; color: var(--text-primary);">{{ s.first_name }} {{ s.last_name }}</div>
+                        <div style="font-size: 0.75rem; color: var(--text-muted);">{{ s.email }}</div>
+                    </td>
+                    <td>
+                        <span class="badge badge-secondary">{{ s.department_code or 'CSE' }}</span>
+                    </td>
+                    <td>
+                        <div style="display: flex; align-items: center; gap: 6px;">
+                            <strong style="color: {% if s.attendance_pct >= 75 %}#10b981{% else %}#ef4444{% endif %};">
+                                {{ s.attendance_pct }}%
+                            </strong>
+                            {% if s.attendance_pct < 75 %}
+                            <span title="Attendance Shortage" style="font-size: 0.8rem;">⚠️</span>
+                            {% endif %}
+                        </div>
+                    </td>
+                    <td>
+                        <span style="font-weight: 600; color: var(--text-primary);">{{ s.cca1 if s.cca1 is not none else '-' }}</span>
+                    </td>
+                    <td>
+                        <span style="font-weight: 600; color: var(--text-primary);">{{ s.cca2 if s.cca2 is not none else '-' }}</span>
+                    </td>
+                    <td>
+                        <span style="font-weight: 600; color: var(--text-primary);">{{ s.cca3 if s.cca3 is not none else '-' }}</span>
+                    </td>
+                    <td>
+                        <strong style="color: var(--primary);">{{ s.calculated_total if s.calculated_total is not none else '-' }}</strong> / 100
+                    </td>
+                    <td>
+                        <button type="button" class="btn btn-secondary btn-sm" onclick="openFeedbackModal('{{ s.student_id }}', '{{ s.first_name }} {{ s.last_name }}', '{{ s.prn }}')">
+                            💬 Mentoring Note
+                        </button>
+                    </td>
+                </tr>
+                {% else %}
+                <tr>
+                    <td colspan="9" style="text-align: center; color: var(--text-muted); padding: 24px;">No students found matching your criteria.</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<!-- Mentoring Feedback Modal -->
+<div id="feedbackModal" style="display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.7); z-index: 9999; justify-content: center; align-items: center; padding: 20px;">
+    <div class="glass-card" style="width: 100%; max-width: 520px; background: var(--bg-card); border: 1px solid var(--border-color); box-shadow: 0 20px 40px rgba(0,0,0,0.5);">
+        <div class="card-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
+            <h3 class="card-title" id="modalStudentTitle">💬 Academic Mentoring & Advising Note</h3>
+            <button type="button" class="btn btn-secondary btn-sm" onclick="closeFeedbackModal()">✕</button>
+        </div>
+        <form method="POST" action="{{ url_for('faculty_student_feedback') }}">
+            <input type="hidden" name="student_id" id="modalStudentId">
+            <div style="margin-bottom: 14px;">
+                <label style="display: block; font-size: 0.85rem; margin-bottom: 6px; color: var(--text-secondary);">Observation / Status Category</label>
+                <select name="status_flag" class="form-control" style="width: 100%;">
+                    <option value="NORMAL">✅ Good Academic Standing</option>
+                    <option value="ATTENDANCE_WARNING">⚠️ Attendance Shortage Warning</option>
+                    <option value="LAB_ASSESSMENT_NEED">🧪 Lab Assessment Remedial Required</option>
+                    <option value="COUNSELING_REFERRAL">🤝 Referred to Department Counselor</option>
+                </select>
+            </div>
+            <div style="margin-bottom: 18px;">
+                <label style="display: block; font-size: 0.85rem; margin-bottom: 6px; color: var(--text-secondary);">Faculty Mentoring Note / Advising Remarks</label>
+                <textarea name="feedback" rows="4" class="form-control" style="width: 100%;" placeholder="Enter academic feedback, project guidance, or advisory remarks..." required></textarea>
+            </div>
+            <div style="display: flex; justify-content: flex-end; gap: 10px;">
+                <button type="button" class="btn btn-secondary" onclick="closeFeedbackModal()">Cancel</button>
+                <button type="submit" class="btn btn-primary">Save Mentoring Record</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+function openFeedbackModal(studentId, studentName, prn) {
+    document.getElementById('modalStudentId').value = studentId;
+    document.getElementById('modalStudentTitle').innerText = '💬 Advising Note for ' + studentName + ' (' + prn + ')';
+    const modal = document.getElementById('feedbackModal');
+    modal.style.display = 'flex';
+}
+
+function closeFeedbackModal() {
+    document.getElementById('feedbackModal').style.display = 'none';
+}
+</script>
+{% endblock %}

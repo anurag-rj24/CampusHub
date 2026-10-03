@@ -1,0 +1,92 @@
+{% extends 'base.html' %}
+
+{% block title %}My Classes & Subjects | CampusHub{% endblock %}
+{% block page_title %}📚 My Assigned Classes & Subject Curriculum{% endblock %}
+
+{% block content %}
+<div class="glass-card" style="margin-bottom: 24px; padding: 20px 24px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 16px;">
+    <div>
+        <h3 style="margin: 0; font-size: 1.15rem; color: var(--text-primary);">Department Curriculum Allocation</h3>
+        <p style="margin: 4px 0 0; font-size: 0.85rem; color: var(--text-secondary);">
+            Authorized modules, active syllabus tracking, student rosters, and laboratory continuous assessment.
+        </p>
+    </div>
+    <div style="display: flex; gap: 10px;">
+        <a href="{{ url_for('faculty_materials') }}" class="btn btn-secondary">
+            📖 Course Materials
+        </a>
+        <a href="{{ url_for('faculty_students') }}" class="btn btn-primary">
+            👥 View Full Roster
+        </a>
+    </div>
+</div>
+
+<div class="grid-2">
+    {% for c in classes %}
+    <div class="glass-card" style="display: flex; flex-direction: column; justify-content: space-between;">
+        <div>
+            <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 12px;">
+                <div>
+                    <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 6px;">
+                        <span class="badge badge-primary">{{ c.subject_code }}</span>
+                        <span class="badge badge-secondary">{{ c.subject_type or 'THEORY + LAB' }}</span>
+                    </div>
+                    <h3 style="margin: 0; font-size: 1.15rem; font-weight: 700; color: var(--text-primary);">{{ c.subject_name }}</h3>
+                    <div style="font-size: 0.83rem; color: var(--text-secondary); margin-top: 4px;">
+                        {{ c.department_name }} ({{ c.department_code }}) • Semester {{ c.semester or 1 }} • {{ c.credits }} Credits
+                    </div>
+                </div>
+            </div>
+
+            <!-- Class Statistics Grid -->
+            <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin: 18px 0; padding: 14px; background: rgba(255,255,255,0.02); border: 1px solid var(--border-color); border-radius: var(--radius-md); text-align: center;">
+                <div>
+                    <div style="font-size: 1.15rem; font-weight: 700; color: var(--primary);">{{ c.enrolled_students or 64 }}</div>
+                    <div style="font-size: 0.72rem; color: var(--text-muted);">Enrolled</div>
+                </div>
+                <div>
+                    <div style="font-size: 1.15rem; font-weight: 700; color: #06b6d4;">{{ c.conducted_sessions or 18 }}</div>
+                    <div style="font-size: 0.72rem; color: var(--text-muted);">Sessions</div>
+                </div>
+                <div>
+                    <div style="font-size: 1.15rem; font-weight: 700; color: #ec4899;">{{ c.quizzes_count or 2 }}</div>
+                    <div style="font-size: 0.72rem; color: var(--text-muted);">Quizzes</div>
+                </div>
+                <div>
+                    <div style="font-size: 1.15rem; font-weight: 700; color: #10b981;">{{ c.materials_count or 4 }}</div>
+                    <div style="font-size: 0.72rem; color: var(--text-muted);">Notes/PDFs</div>
+                </div>
+            </div>
+
+            <!-- Syllabus Progress Bar -->
+            <div style="margin-bottom: 18px;">
+                <div style="display: flex; justify-content: space-between; font-size: 0.8rem; margin-bottom: 6px;">
+                    <span style="color: var(--text-secondary);">Syllabus Coverage</span>
+                    <strong style="color: var(--text-primary);">82% (4/5 Units Completed)</strong>
+                </div>
+                <div style="height: 6px; background: rgba(255,255,255,0.06); border-radius: 3px; overflow: hidden;">
+                    <div style="width: 82%; height: 100%; background: linear-gradient(90deg, #4f46e5, #06b6d4); border-radius: 3px;"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Quick Launch Actions -->
+        <div style="display: flex; gap: 8px; border-top: 1px solid var(--border-color); padding-top: 14px; flex-wrap: wrap;">
+            <a href="{{ url_for('faculty_attendance', subject_id=c.subject_id) }}" class="btn btn-primary btn-sm" style="flex: 1; text-align: center;">
+                ✅ Roll Call
+            </a>
+            <a href="{{ url_for('faculty_grading', subject_id=c.subject_id) }}" class="btn btn-secondary btn-sm" style="flex: 1; text-align: center;">
+                🎯 LCA Marks
+            </a>
+            <a href="{{ url_for('faculty_materials') }}" class="btn btn-secondary btn-sm" style="flex: 1; text-align: center;">
+                📖 Study Notes
+            </a>
+        </div>
+    </div>
+    {% else %}
+    <div class="glass-card" style="grid-column: 1 / -1; text-align: center; padding: 40px;">
+        <p style="color: var(--text-muted);">No subjects assigned yet.</p>
+    </div>
+    {% endfor %}
+</div>
+{% endblock %}

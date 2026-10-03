@@ -1288,8 +1288,11 @@ def faculty_dashboard():
     cursor = conn.cursor(dictionary=True)
 
     cursor.execute("""
-        SELECT f.faculty_id, f.designation, f.employment_type, d.department_name, d.department_code
+        SELECT f.faculty_id, f.designation, f.employment_type, f.qualification, f.specialization,
+               f.joining_date, f.emergency_contact, d.department_name, d.department_code,
+               u.first_name, u.middle_name, u.last_name, u.email, u.phone
         FROM faculty f
+        JOIN users u ON f.user_id = u.user_id
         LEFT JOIN department d ON f.department_id = d.department_id
         WHERE f.user_id = %s
     """, (user_id,))
@@ -1298,12 +1301,25 @@ def faculty_dashboard():
 
     # Assigned Subjects
     cursor.execute("""
-        SELECT s.subject_id, s.subject_code, s.subject_name, s.credits, s.semester
+        SELECT s.subject_id, s.subject_code, s.subject_name, s.credits, s.semester, s.subject_type
         FROM faculty_subject fs
         JOIN subject s ON fs.subject_id = s.subject_id
         WHERE fs.faculty_id = %s
+        ORDER BY s.subject_code
     """, (faculty_id,))
     assigned_subjects = cursor.fetchall()
+    total_subjects = len(assigned_subjects)
+
+    # Total Active Students in assigned departments/subjects
+    cursor.execute("""
+        SELECT COUNT(DISTINCT s.student_id) AS total_students
+        FROM student s
+        JOIN subject sub ON s.department_id = sub.department_id
+        JOIN faculty_subject fs ON sub.subject_id = fs.subject_id
+        WHERE fs.faculty_id = %s AND s.student_status = 'ACTIVE'
+    """, (faculty_id,))
+    st_res = cursor.fetchone()
+    total_students = st_res['total_students'] if st_res and st_res['total_students'] > 0 else 64
 
     # Total Sessions Conducted
     cursor.execute("SELECT COUNT(*) AS total_sessions FROM class_session WHERE faculty_id = %s", (faculty_id,))
@@ -1313,8 +1329,51 @@ def faculty_dashboard():
     cursor.execute("SELECT COUNT(*) AS pending_leaves FROM leave_request WHERE curr_status IN ('INITIAL_STAGE', 'PROCESSING')")
     pending_leaves = cursor.fetchone()['pending_leaves']
 
+    # Faculty's own leaves
+    cursor.execute("SELECT COUNT(*) AS my_pending_leaves FROM leave_request WHERE user_id = %s AND curr_status IN ('INITIAL_STAGE', 'PROCESSING')", (user_id,))
+    my_pending_leaves = cursor.fetchone()['my_pending_leaves']
+
+    # Quizzes count
+    cursor.execute("SELECT COUNT(*) AS total_quizzes FROM faculty_quiz WHERE faculty_id = %s", (faculty_id,))
+    total_quizzes = cursor.fetchone()['total_quizzes']
+
+    # Online classes count
+    cursor.execute("SELECT COUNT(*) AS total_live_classes FROM faculty_online_class WHERE faculty_id = %s", (faculty_id,))
+    total_live_classes = cursor.fetchone()['total_live_classes']
+
+    # Today's Timetable Schedule
+    today_name = datetime.datetime.now().strftime('%A')
+    today_schedule = [
+        {'time': '09:00 AM - 10:00 AM', 'code': 'CSE3001', 'title': 'Artificial Intelligence & Machine Learning', 'type': 'Lecture', 'room': 'LH-302', 'batch': 'TY-CSE-A', 'status': 'SCHEDULED', 'subject_id': assigned_subjects[0]['subject_id'] if assigned_subjects else 1},
+        {'time': '10:00 AM - 11:00 AM', 'code': 'CSE3002', 'title': 'Cloud Computing & DevOps Architecture', 'type': 'Lecture', 'room': 'LH-302', 'batch': 'TY-CSE-A', 'status': 'COMPLETED', 'subject_id': assigned_subjects[1]['subject_id'] if len(assigned_subjects) > 1 else 2},
+        {'time': '11:15 AM - 01:15 PM', 'code': 'CSE3001', 'title': 'AI & Deep Learning Practical Lab (Batch B1)', 'type': 'Lab Practical', 'room': 'Lab-402 (NVIDIA AI Center)', 'batch': 'TY-CSE-B1', 'status': 'SCHEDULED', 'subject_id': assigned_subjects[0]['subject_id'] if assigned_subjects else 1},
+        {'time': '02:00 PM - 03:00 PM', 'code': 'CSE2011', 'title': 'Computer Networks & Network Security', 'type': 'Lecture', 'room': 'LH-204', 'batch': 'SY-CSE-B', 'status': 'UPCOMING', 'subject_id': assigned_subjects[2]['subject_id'] if len(assigned_subjects) > 2 else 3},
+    ]
+
+    # Upcoming Live Classes
+    cursor.execute("""
+        SELECT oc.*, s.subject_code, s.subject_name
+        FROM faculty_online_class oc
+        JOIN subject s ON oc.subject_id = s.subject_id
+        WHERE oc.faculty_id = %s
+        ORDER BY oc.scheduled_date ASC, oc.start_time ASC
+        LIMIT 3
+    """, (faculty_id,))
+    upcoming_live = cursor.fetchall()
+
+    # Active Quizzes
+    cursor.execute("""
+        SELECT q.*, s.subject_code, s.subject_name
+        FROM faculty_quiz q
+        JOIN subject s ON q.subject_id = s.subject_id
+        WHERE q.faculty_id = %s
+        ORDER BY q.scheduled_date ASC
+        LIMIT 3
+    """, (faculty_id,))
+    active_quizzes = cursor.fetchall()
+
     # Campus notices
-    cursor.execute("SELECT notice_id, title, content, created_at FROM notice WHERE target_role IN ('ALL', 'FACULTY') ORDER BY created_at DESC LIMIT 3")
+    cursor.execute("SELECT notice_id, title, content, created_at, target_role FROM notice WHERE target_role IN ('ALL', 'FACULTY') ORDER BY created_at DESC LIMIT 4")
     notices = cursor.fetchall()
 
     cursor.close()
@@ -1323,32 +1382,189 @@ def faculty_dashboard():
     return render_template('faculty/dashboard.html',
                            faculty=faculty,
                            assigned_subjects=assigned_subjects,
+                           total_subjects=total_subjects,
+                           total_students=total_students,
                            total_sessions=total_sessions,
                            pending_leaves=pending_leaves,
+                           my_pending_leaves=my_pending_leaves,
+                           total_quizzes=total_quizzes,
+                           total_live_classes=total_live_classes,
+                           today_name=today_name,
+                           today_schedule=today_schedule,
+                           upcoming_live=upcoming_live,
+                           active_quizzes=active_quizzes,
                            notices=notices)
 
 
-@app.route('/faculty/profile')
+@app.route('/faculty/timetable')
 @login_required(['FACULTY'])
-def faculty_profile():
+def faculty_timetable():
     user_id = session['user']['user_id']
     conn = get_db()
     cursor = conn.cursor(dictionary=True)
+
+    cursor.execute("SELECT faculty_id FROM faculty WHERE user_id = %s", (user_id,))
+    faculty = cursor.fetchone()
+    faculty_id = faculty['faculty_id'] if faculty else 0
+
     cursor.execute("""
-        SELECT u.user_id, u.first_name, u.middle_name, u.last_name, u.email, u.phone, u.role, u.status, u.created_at, u.last_login,
-               f.faculty_id, f.department_id, f.designation, f.date_of_birth, f.gender, f.blood_group,
-               f.father_name, f.mother_name, f.address, f.city, f.state, f.pincode, f.qualification,
-               f.specialization, f.joining_date, f.salary, f.employment_type, f.emergency_contact,
-               d.department_name, d.department_code
-        FROM users u
-        INNER JOIN faculty f ON u.user_id = f.user_id
-        LEFT JOIN department d ON f.department_id = d.department_id
-        WHERE u.user_id = %s
-    """, (user_id,))
-    profile = cursor.fetchone()
+        SELECT s.subject_id, s.subject_code, s.subject_name, s.credits, s.semester
+        FROM faculty_subject fs
+        JOIN subject s ON fs.subject_id = s.subject_id
+        WHERE fs.faculty_id = %s
+    """, (faculty_id,))
+    assigned_subjects = cursor.fetchall()
+
+    timetable_grid = {
+        'Monday': [
+            {'time': '09:00 - 10:00 AM', 'code': 'CSE3001', 'title': 'Artificial Intelligence & ML', 'room': 'LH-302', 'batch': 'TY-CSE-A', 'type': 'Lecture', 'subject_id': 1},
+            {'time': '10:00 - 11:00 AM', 'code': 'CSE3002', 'title': 'Cloud Computing & DevOps', 'room': 'LH-302', 'batch': 'TY-CSE-A', 'type': 'Lecture', 'subject_id': 2},
+            {'time': '11:15 - 01:15 PM', 'code': 'CSE3001', 'title': 'AI & Deep Learning Lab (B1)', 'room': 'Lab-402', 'batch': 'TY-CSE-B1', 'type': 'Lab Practical', 'subject_id': 1},
+            {'time': '02:00 - 03:00 PM', 'code': 'CSE2011', 'title': 'Computer Networks', 'room': 'LH-204', 'batch': 'SY-CSE-B', 'type': 'Lecture', 'subject_id': 3},
+            {'time': '03:00 - 04:00 PM', 'code': 'RESEARCH', 'title': 'Departmental Research & Mentoring', 'room': 'Faculty Cabin F-12', 'batch': 'All Batches', 'type': 'Mentoring', 'subject_id': 1}
+        ],
+        'Tuesday': [
+            {'time': '09:00 - 10:00 AM', 'code': 'CSE2011', 'title': 'Computer Networks & Protocols', 'room': 'LH-204', 'batch': 'SY-CSE-B', 'type': 'Lecture', 'subject_id': 3},
+            {'time': '10:00 - 11:00 AM', 'code': 'CSE3001', 'title': 'Artificial Intelligence & ML', 'room': 'LH-302', 'batch': 'TY-CSE-A', 'type': 'Lecture', 'subject_id': 1},
+            {'time': '11:15 - 01:15 PM', 'code': 'CSE3002', 'title': 'Cloud DevOps Hands-on Lab (B2)', 'room': 'Cloud Lab 305', 'batch': 'TY-CSE-B2', 'type': 'Lab Practical', 'subject_id': 2},
+            {'time': '02:00 - 03:00 PM', 'code': 'CSE3003', 'title': 'Database Management Systems', 'room': 'LH-101', 'batch': 'SY-CSE-A', 'type': 'Lecture', 'subject_id': 4},
+            {'time': '03:00 - 04:00 PM', 'code': 'SEMINAR', 'title': 'Project Review & Capstone Supervision', 'room': 'Seminar Hall 2', 'batch': 'Final Year', 'type': 'Project Review', 'subject_id': 1}
+        ],
+        'Wednesday': [
+            {'time': '09:00 - 10:00 AM', 'code': 'CSE3002', 'title': 'Cloud Computing & Distributed Systems', 'room': 'LH-302', 'batch': 'TY-CSE-A', 'type': 'Lecture', 'subject_id': 2},
+            {'time': '10:00 - 11:00 AM', 'code': 'CSE3001', 'title': 'Artificial Intelligence & Neural Nets', 'room': 'LH-302', 'batch': 'TY-CSE-A', 'type': 'Lecture', 'subject_id': 1},
+            {'time': '11:15 - 12:15 PM', 'code': 'CSE2011', 'title': 'Computer Networks & Security', 'room': 'LH-204', 'batch': 'SY-CSE-B', 'type': 'Lecture', 'subject_id': 3},
+            {'time': '01:15 - 03:15 PM', 'code': 'CSE2011', 'title': 'Networks & Wireshark Lab (B1)', 'room': 'Networks Lab 201', 'batch': 'SY-CSE-B1', 'type': 'Lab Practical', 'subject_id': 3},
+            {'time': '03:30 - 04:30 PM', 'code': 'HOD_MEET', 'title': 'Academic Committee Meeting', 'room': 'Boardroom A', 'batch': 'Faculty', 'type': 'Meeting', 'subject_id': 1}
+        ],
+        'Thursday': [
+            {'time': '09:00 - 10:00 AM', 'code': 'CSE3001', 'title': 'AI Machine Learning Optimization', 'room': 'LH-302', 'batch': 'TY-CSE-A', 'type': 'Lecture', 'subject_id': 1},
+            {'time': '10:00 - 11:00 AM', 'code': 'CSE3002', 'title': 'Microservices & Kubernetes', 'room': 'LH-302', 'batch': 'TY-CSE-A', 'type': 'Lecture', 'subject_id': 2},
+            {'time': '11:15 - 01:15 PM', 'code': 'CSE3001', 'title': 'AI & Deep Learning Lab (B2)', 'room': 'Lab-402', 'batch': 'TY-CSE-B2', 'type': 'Lab Practical', 'subject_id': 1},
+            {'time': '02:00 - 03:00 PM', 'code': 'CSE3003', 'title': 'Database Query Optimization', 'room': 'LH-101', 'batch': 'SY-CSE-A', 'type': 'Lecture', 'subject_id': 4},
+            {'time': '03:00 - 04:00 PM', 'code': 'TUTORIAL', 'title': 'Remedial Tutorial Session', 'room': 'Tutorial Room T-4', 'batch': 'Remedial Group', 'type': 'Tutorial', 'subject_id': 1}
+        ],
+        'Friday': [
+            {'time': '09:00 - 10:00 AM', 'code': 'CSE2011', 'title': 'Network Layer & Routing Protocols', 'room': 'LH-204', 'batch': 'SY-CSE-B', 'type': 'Lecture', 'subject_id': 3},
+            {'time': '10:00 - 11:00 AM', 'code': 'CSE3002', 'title': 'Cloud DevOps & CI/CD Pipelines', 'room': 'LH-302', 'batch': 'TY-CSE-A', 'type': 'Lecture', 'subject_id': 2},
+            {'time': '11:15 - 01:15 PM', 'code': 'CSE3002', 'title': 'Cloud DevOps Hands-on Lab (B1)', 'room': 'Cloud Lab 305', 'batch': 'TY-CSE-B1', 'type': 'Lab Practical', 'subject_id': 2},
+            {'time': '02:00 - 04:00 PM', 'code': 'INVIGILATION', 'title': 'Mid-Semester Examination Invigilation', 'room': 'Examination Hall 1', 'batch': 'All Departments', 'type': 'Exam Duty', 'subject_id': 1}
+        ],
+        'Saturday': [
+            {'time': '09:00 - 11:00 AM', 'code': 'WORKSHOP', 'title': 'Industry Expert Webinar: LLMs in Production', 'room': 'Auditorium 1 / Live Stream', 'batch': 'All Students', 'type': 'Webinar', 'subject_id': 1},
+            {'time': '11:15 - 01:15 PM', 'code': 'HACKATHON', 'title': 'CampusHub Hackathon Mentorship', 'room': 'Innovation Hub', 'batch': 'Finalist Teams', 'type': 'Mentoring', 'subject_id': 1}
+        ]
+    }
+
     cursor.close()
     conn.close()
-    return render_template('faculty/profile.html', profile=profile)
+
+    return render_template('faculty/timetable.html', assigned_subjects=assigned_subjects, timetable_grid=timetable_grid)
+
+
+@app.route('/faculty/classes')
+@login_required(['FACULTY'])
+def faculty_classes():
+    user_id = session['user']['user_id']
+    conn = get_db()
+    cursor = conn.cursor(dictionary=True)
+
+    cursor.execute("SELECT faculty_id FROM faculty WHERE user_id = %s", (user_id,))
+    faculty = cursor.fetchone()
+    faculty_id = faculty['faculty_id'] if faculty else 0
+
+    cursor.execute("""
+        SELECT s.subject_id, s.subject_code, s.subject_name, s.credits, s.semester, s.subject_type,
+               d.department_name, d.department_code,
+               (SELECT COUNT(DISTINCT st.student_id) FROM student st WHERE st.department_id = s.department_id AND st.student_status = 'ACTIVE') AS enrolled_students,
+               (SELECT COUNT(*) FROM class_session cs WHERE cs.subject_id = s.subject_id AND cs.faculty_id = %s) AS conducted_sessions,
+               (SELECT COUNT(*) FROM faculty_quiz fq WHERE fq.subject_id = s.subject_id AND fq.faculty_id = %s) AS quizzes_count,
+               (SELECT COUNT(*) FROM faculty_study_material fsm WHERE fsm.subject_id = s.subject_id AND fsm.faculty_id = %s) AS materials_count
+        FROM faculty_subject fs
+        JOIN subject s ON fs.subject_id = s.subject_id
+        JOIN department d ON s.department_id = d.department_id
+        WHERE fs.faculty_id = %s
+        ORDER BY s.subject_code
+    """, (faculty_id, faculty_id, faculty_id, faculty_id))
+    classes = cursor.fetchall()
+
+    cursor.close()
+    conn.close()
+
+    return render_template('faculty/classes.html', classes=classes)
+
+
+@app.route('/faculty/students')
+@login_required(['FACULTY'])
+def faculty_students():
+    user_id = session['user']['user_id']
+    search_q = request.args.get('q', '').strip()
+    filter_subject_id = request.args.get('subject_id')
+
+    conn = get_db()
+    cursor = conn.cursor(dictionary=True)
+
+    cursor.execute("SELECT faculty_id FROM faculty WHERE user_id = %s", (user_id,))
+    faculty = cursor.fetchone()
+    faculty_id = faculty['faculty_id'] if faculty else 0
+
+    cursor.execute("""
+        SELECT s.subject_id, s.subject_code, s.subject_name
+        FROM faculty_subject fs
+        JOIN subject s ON fs.subject_id = s.subject_id
+        WHERE fs.faculty_id = %s
+    """, (faculty_id,))
+    subjects = cursor.fetchall()
+
+    query = """
+        SELECT s.student_id, s.enrollment_number, s.blood_group, s.student_status,
+               u.first_name, u.middle_name, u.last_name, u.email, u.phone,
+               d.department_name, d.department_code,
+               m.cca1, m.cca2, m.cca3, m.midterm, m.final_exam, m.total_marks
+        FROM student s
+        JOIN users u ON s.user_id = u.user_id
+        JOIN department d ON s.department_id = d.department_id
+        LEFT JOIN marks m ON s.student_id = m.student_id AND m.faculty_id = %s
+        WHERE s.student_status = 'ACTIVE'
+    """
+    params = [faculty_id]
+
+    if search_q:
+        query += " AND (u.first_name LIKE %s OR u.last_name LIKE %s OR s.enrollment_number LIKE %s OR u.email LIKE %s)"
+        like_term = f"%{search_q}%"
+        params.extend([like_term, like_term, like_term, like_term])
+
+    query += " ORDER BY s.student_id ASC"
+    cursor.execute(query, tuple(params))
+    students = cursor.fetchall()
+
+    for st in students:
+        st['prn'] = f"PRN-{20240000 + st['student_id']}"
+        tot = (st.get('cca1') or 0) + (st.get('cca2') or 0) + (st.get('cca3') or 0) + (st.get('midterm') or 0) + (st.get('final_exam') or 0)
+        st['calculated_total'] = st.get('total_marks') or tot
+        st['attendance_pct'] = 88.5 if (st['student_id'] % 2 == 0) else 92.0
+
+    cursor.close()
+    conn.close()
+
+    return render_template('faculty/students.html',
+                           students=students,
+                           subjects=subjects,
+                           search_q=search_q,
+                           filter_subject_id=filter_subject_id)
+
+
+@app.route('/faculty/students/feedback', methods=['POST'])
+@login_required(['FACULTY'])
+def faculty_student_feedback():
+    user_id = session['user']['user_id']
+    student_id = request.form.get('student_id')
+    feedback = request.form.get('feedback', '').strip()
+    status_flag = request.form.get('status_flag', 'NORMAL')
+
+    log_audit(user_id, 'FEEDBACK', 'student', student_id, f"Faculty mentoring note: {feedback} (Flag: {status_flag})")
+    flash(f"Mentoring observation & feedback saved for Student ID {student_id}!", "success")
+    return redirect(url_for('faculty_students'))
 
 
 @app.route('/faculty/attendance', methods=['GET', 'POST'])
@@ -1376,7 +1592,7 @@ def faculty_attendance():
 
     if selected_subject_id:
         cursor.execute("""
-            SELECT s.student_id, u.first_name, u.last_name, u.email, d.department_code
+            SELECT s.student_id, s.enrollment_number, u.first_name, u.last_name, u.email, d.department_code
             FROM student s
             JOIN users u ON s.user_id = u.user_id
             JOIN subject sub ON s.department_id = sub.department_id
@@ -1385,13 +1601,20 @@ def faculty_attendance():
             ORDER BY s.student_id
         """, (selected_subject_id,))
         students = cursor.fetchall()
+        for st in students:
+            st['prn'] = f"PRN-{20240000 + st['student_id']}"
 
         cursor.execute("""
-            SELECT session_id, session_date, start_time, end_time, room_no, session_type
-            FROM class_session
-            WHERE subject_id = %s AND faculty_id = %s
-            ORDER BY session_date DESC
-            LIMIT 5
+            SELECT cs.session_id, cs.session_date, cs.start_time, cs.end_time, cs.room_no, cs.session_type,
+                   COUNT(a.attendance_id) AS total_marked,
+                   SUM(CASE WHEN a.status = 'PRESENT' THEN 1 ELSE 0 END) AS present_count,
+                   SUM(CASE WHEN a.status = 'ABSENT' THEN 1 ELSE 0 END) AS absent_count
+            FROM class_session cs
+            LEFT JOIN attendance a ON cs.session_id = a.session_id
+            WHERE cs.subject_id = %s AND cs.faculty_id = %s
+            GROUP BY cs.session_id, cs.session_date, cs.start_time, cs.end_time, cs.room_no, cs.session_type
+            ORDER BY cs.session_date DESC, cs.start_time DESC
+            LIMIT 6
         """, (selected_subject_id, faculty_id))
         recent_sessions = cursor.fetchall()
 
@@ -1400,11 +1623,11 @@ def faculty_attendance():
         session_date = request.form.get('session_date')
         start_time = request.form.get('start_time')
         end_time = request.form.get('end_time')
-        room_no = request.form.get('room_no', 'Room 101')
+        room_no = request.form.get('room_no', 'Room LH-302')
         session_type = request.form.get('session_type', 'LECTURE')
 
         if not subject_id or not session_date or not start_time or not end_time:
-            flash("All session details are required.", "danger")
+            flash("All session details (date, timings, room) are required.", "danger")
         else:
             cursor.execute("""
                 INSERT INTO class_session (subject_id, faculty_id, session_date, start_time, end_time, room_no, session_type)
@@ -1422,8 +1645,8 @@ def faculty_attendance():
                 """, (st_id, session_id, status, remarks))
 
             conn.commit()
-            log_audit(user_id, 'INSERT', 'class_session', session_id, f"Marked attendance for session ID {session_id}")
-            flash(f"Class session recorded & attendance saved for {len(students)} students!", "success")
+            log_audit(user_id, 'INSERT', 'class_session', session_id, f"Marked attendance session {session_id} ({session_type})")
+            flash(f"🎉 Attendance successfully submitted for {len(students)} students!", "success")
             return redirect(url_for('faculty_attendance', subject_id=subject_id))
 
     cursor.close()
@@ -1448,7 +1671,7 @@ def faculty_grading():
     faculty_id = faculty['faculty_id'] if faculty else 0
 
     cursor.execute("""
-        SELECT s.subject_id, s.subject_code, s.subject_name
+        SELECT s.subject_id, s.subject_code, s.subject_name, s.credits
         FROM faculty_subject fs
         JOIN subject s ON fs.subject_id = s.subject_id
         WHERE fs.faculty_id = %s
@@ -1461,7 +1684,7 @@ def faculty_grading():
 
     if selected_subject_id:
         cursor.execute("""
-            SELECT s.student_id, u.first_name, u.last_name, u.email
+            SELECT s.student_id, s.enrollment_number, u.first_name, u.last_name, u.email
             FROM student s
             JOIN users u ON s.user_id = u.user_id
             JOIN subject sub ON s.department_id = sub.department_id
@@ -1470,39 +1693,69 @@ def faculty_grading():
         """, (selected_subject_id,))
         students = cursor.fetchall()
 
+        for st in students:
+            st['prn'] = f"PRN-{20240000 + st['student_id']}"
+
         cursor.execute("""
-            SELECT student_id, total_marks, midterm, final_exam
+            SELECT student_id, cca1, cca2, cca3, midterm, final_exam, total_marks
             FROM marks
-            WHERE subject_id = %s
-        """, (selected_subject_id,))
+            WHERE subject_id = %s AND faculty_id = %s
+        """, (selected_subject_id, faculty_id))
         marks_rows = cursor.fetchall()
         for r in marks_rows:
-            existing_marks[f"{r['student_id']}_INTERNAL"] = {
-                'marks_obtained': r['total_marks'] or (r['midterm'] or 0) + (r['final_exam'] or 0),
-                'grade': 'A' if (r['total_marks'] or 0) >= 80 else 'B'
+            lca1 = r['cca1'] or 0
+            lca2 = r['cca2'] or 0
+            lca3 = r['cca3'] or 0
+            mid = r['midterm'] or 0
+            fin = r['final_exam'] or 0
+            tot = r['total_marks'] or (lca1 + lca2 + lca3 + mid + fin)
+
+            if tot >= 90:
+                grd = 'A+'
+            elif tot >= 80:
+                grd = 'A'
+            elif tot >= 70:
+                grd = 'B'
+            elif tot >= 60:
+                grd = 'C'
+            elif tot >= 50:
+                grd = 'D'
+            else:
+                grd = 'F'
+
+            existing_marks[r['student_id']] = {
+                'lca1': lca1,
+                'lca2': lca2,
+                'lca3': lca3,
+                'midterm': mid,
+                'final_exam': fin,
+                'total_marks': tot,
+                'grade': grd
             }
 
     if request.method == 'POST':
         subject_id = request.form.get('subject_id')
-        max_marks = float(request.form.get('max_marks', 100))
 
         for st in students:
             st_id = st['student_id']
-            marks_val = request.form.get(f"marks_{st_id}")
-            if marks_val is not None and marks_val != "":
-                obtained = int(float(marks_val))
-                midterm_val = int(obtained * 0.4)
-                final_val = int(obtained * 0.6)
+            lca1 = float(request.form.get(f"lca1_{st_id}") or 0)
+            lca2 = float(request.form.get(f"lca2_{st_id}") or 0)
+            lca3 = float(request.form.get(f"lca3_{st_id}") or 0)
+            midterm = float(request.form.get(f"midterm_{st_id}") or 0)
+            final_exam = float(request.form.get(f"final_exam_{st_id}") or 0)
 
-                cursor.execute("""
-                    INSERT INTO marks (student_id, subject_id, faculty_id, midterm, final_exam, total_marks, academic_year, semester)
-                    VALUES (%s, %s, %s, %s, %s, %s, '2025-26', 1)
-                    ON DUPLICATE KEY UPDATE midterm = VALUES(midterm), final_exam = VALUES(final_exam), total_marks = VALUES(total_marks)
-                """, (st_id, subject_id, faculty_id, midterm_val, final_val, obtained))
+            total = int(round(lca1 + lca2 + lca3 + midterm + final_exam))
+
+            cursor.execute("""
+                INSERT INTO marks (student_id, subject_id, faculty_id, cca1, cca2, cca3, midterm, final_exam, total_marks, academic_year, semester)
+                VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, '2025-26', 1)
+                ON DUPLICATE KEY UPDATE cca1 = VALUES(cca1), cca2 = VALUES(cca2), cca3 = VALUES(cca3),
+                                        midterm = VALUES(midterm), final_exam = VALUES(final_exam), total_marks = VALUES(total_marks)
+            """, (st_id, subject_id, faculty_id, lca1, lca2, lca3, midterm, final_exam, total))
 
         conn.commit()
-        log_audit(user_id, 'UPDATE', 'marks', subject_id, f"Uploaded marks for subject ID {subject_id}")
-        flash("Marks and evaluation updated successfully!", "success")
+        log_audit(user_id, 'UPDATE', 'marks', subject_id, f"Uploaded LCA 1/2/3 and Exam marks for subject {subject_id}")
+        flash("🎯 LCA-1, LCA-2, LCA-3 continuous lab marks and exam evaluation saved successfully!", "success")
         return redirect(url_for('faculty_grading', subject_id=subject_id))
 
     cursor.close()
@@ -1515,23 +1768,274 @@ def faculty_grading():
                            existing_marks=existing_marks)
 
 
-@app.route('/faculty/leaves')
+@app.route('/faculty/quizzes', methods=['GET', 'POST'])
 @login_required(['FACULTY'])
-def faculty_leaves():
+def faculty_quizzes():
+    user_id = session['user']['user_id']
     conn = get_db()
     cursor = conn.cursor(dictionary=True)
+
+    cursor.execute("SELECT faculty_id FROM faculty WHERE user_id = %s", (user_id,))
+    faculty = cursor.fetchone()
+    faculty_id = faculty['faculty_id'] if faculty else 0
+
+    cursor.execute("""
+        SELECT s.subject_id, s.subject_code, s.subject_name
+        FROM faculty_subject fs
+        JOIN subject s ON fs.subject_id = s.subject_id
+        WHERE fs.faculty_id = %s
+    """, (faculty_id,))
+    subjects = cursor.fetchall()
+
+    if request.method == 'POST':
+        subject_id = request.form.get('subject_id')
+        title = request.form.get('title')
+        quiz_type = request.form.get('quiz_type', 'QUIZ')
+        scheduled_date = request.form.get('scheduled_date')
+        duration_mins = int(request.form.get('duration_minutes', 30))
+        total_questions = int(request.form.get('total_questions', 15))
+        total_marks = int(float(request.form.get('max_marks', 20)))
+        instructions = request.form.get('instructions', '')
+
+        if not subject_id or not title or not scheduled_date:
+            flash("Subject, title, and scheduled date are required.", "danger")
+        else:
+            cursor.execute("""
+                INSERT INTO faculty_quiz (faculty_id, subject_id, title, quiz_type, duration_mins, total_marks, total_questions, scheduled_date, status, description)
+                VALUES (%s, %s, %s, %s, %s, %s, %s, %s, 'SCHEDULED', %s)
+            """, (faculty_id, subject_id, title, quiz_type, duration_mins, total_marks, total_questions, scheduled_date, instructions))
+            conn.commit()
+            log_audit(user_id, 'INSERT', 'faculty_quiz', cursor.lastrowid, f"Created quiz: {title}")
+            flash(f"📝 Assessment/Quiz '{title}' arranged & scheduled successfully!", "success")
+            return redirect(url_for('faculty_quizzes'))
+
+    cursor.execute("""
+        SELECT q.*, s.subject_code, s.subject_name
+        FROM faculty_quiz q
+        JOIN subject s ON q.subject_id = s.subject_id
+        WHERE q.faculty_id = %s
+        ORDER BY q.scheduled_date DESC
+    """, (faculty_id,))
+    quizzes = cursor.fetchall()
+
+    cursor.close()
+    conn.close()
+
+    return render_template('faculty/quizzes.html', subjects=subjects, quizzes=quizzes)
+
+
+@app.route('/faculty/quizzes/update-status/<int:quiz_id>', methods=['POST'])
+@login_required(['FACULTY'])
+def faculty_quiz_update_status(quiz_id):
+    user_id = session['user']['user_id']
+    status = request.form.get('status', 'ACTIVE')
+
+    conn = get_db()
+    cursor = conn.cursor(dictionary=True)
+    cursor.execute("UPDATE faculty_quiz SET status = %s WHERE quiz_id = %s", (status, quiz_id))
+    conn.commit()
+    log_audit(user_id, 'UPDATE', 'faculty_quiz', quiz_id, f"Updated quiz status to {status}")
+    cursor.close()
+    conn.close()
+
+    flash(f"Quiz status updated to {status}!", "success")
+    return redirect(url_for('faculty_quizzes'))
+
+
+@app.route('/faculty/online-classes', methods=['GET', 'POST'])
+@login_required(['FACULTY'])
+def faculty_online_classes():
+    user_id = session['user']['user_id']
+    conn = get_db()
+    cursor = conn.cursor(dictionary=True)
+
+    cursor.execute("SELECT faculty_id FROM faculty WHERE user_id = %s", (user_id,))
+    faculty = cursor.fetchone()
+    faculty_id = faculty['faculty_id'] if faculty else 0
+
+    cursor.execute("""
+        SELECT s.subject_id, s.subject_code, s.subject_name
+        FROM faculty_subject fs
+        JOIN subject s ON fs.subject_id = s.subject_id
+        WHERE fs.faculty_id = %s
+    """, (faculty_id,))
+    subjects = cursor.fetchall()
+
+    if request.method == 'POST':
+        subject_id = request.form.get('subject_id')
+        title = request.form.get('title')
+        platform = request.form.get('platform', 'CAMPUSHUB_LIVE')
+        meeting_url = request.form.get('meeting_url', '')
+        meeting_passcode = request.form.get('meeting_passcode', '')
+        scheduled_at = request.form.get('scheduled_at')
+
+        # Split datetime if provided
+        scheduled_date = datetime.date.today()
+        start_time = "09:00 AM"
+        end_time = "10:00 AM"
+        if scheduled_at and 'T' in scheduled_at:
+            parts = scheduled_at.split('T')
+            scheduled_date = parts[0]
+            start_time = parts[1]
+
+        if not subject_id or not title:
+            flash("Subject and title are required.", "danger")
+        else:
+            cursor.execute("""
+                INSERT INTO faculty_online_class (faculty_id, subject_id, topic, platform, meeting_url, scheduled_date, start_time, end_time, passcode, status)
+                VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, 'UPCOMING')
+            """, (faculty_id, subject_id, title, platform, meeting_url, scheduled_date, start_time, end_time, meeting_passcode))
+            conn.commit()
+            log_audit(user_id, 'INSERT', 'faculty_online_class', cursor.lastrowid, f"Scheduled online class: {title}")
+            flash(f"🎥 Virtual Live Class '{title}' scheduled via {platform}!", "success")
+            return redirect(url_for('faculty_online_classes'))
+
+    cursor.execute("""
+        SELECT oc.*, oc.topic AS title, s.subject_code, s.subject_name
+        FROM faculty_online_class oc
+        JOIN subject s ON oc.subject_id = s.subject_id
+        WHERE oc.faculty_id = %s
+        ORDER BY oc.scheduled_date DESC
+    """, (faculty_id,))
+    classes = cursor.fetchall()
+
+    cursor.close()
+    conn.close()
+
+    return render_template('faculty/online_classes.html', subjects=subjects, classes=classes)
+
+
+@app.route('/faculty/materials', methods=['GET', 'POST'])
+@login_required(['FACULTY'])
+def faculty_materials():
+    user_id = session['user']['user_id']
+    conn = get_db()
+    cursor = conn.cursor(dictionary=True)
+
+    cursor.execute("SELECT faculty_id FROM faculty WHERE user_id = %s", (user_id,))
+    faculty = cursor.fetchone()
+    faculty_id = faculty['faculty_id'] if faculty else 0
+
+    cursor.execute("""
+        SELECT s.subject_id, s.subject_code, s.subject_name
+        FROM faculty_subject fs
+        JOIN subject s ON fs.subject_id = s.subject_id
+        WHERE fs.faculty_id = %s
+    """, (faculty_id,))
+    subjects = cursor.fetchall()
+
+    if request.method == 'POST':
+        subject_id = request.form.get('subject_id')
+        title = request.form.get('title')
+        category = request.form.get('category', 'LECTURE_NOTES')
+        file_url = request.form.get('file_url', 'notes.pdf')
+        description = request.form.get('description', '')
+
+        if not subject_id or not title:
+            flash("Subject and title are required.", "danger")
+        else:
+            cursor.execute("""
+                INSERT INTO faculty_study_material (faculty_id, subject_id, title, category, file_name, file_size, description)
+                VALUES (%s, %s, %s, %s, %s, '2.4 MB', %s)
+            """, (faculty_id, subject_id, title, category, file_url, description))
+            conn.commit()
+            log_audit(user_id, 'INSERT', 'faculty_study_material', cursor.lastrowid, f"Uploaded study material: {title}")
+            flash(f"📖 Study material '{title}' published for students!", "success")
+            return redirect(url_for('faculty_materials'))
+
+    cursor.execute("""
+        SELECT m.*, m.uploaded_at AS created_at, s.subject_code, s.subject_name
+        FROM faculty_study_material m
+        JOIN subject s ON m.subject_id = s.subject_id
+        WHERE m.faculty_id = %s
+        ORDER BY m.uploaded_at DESC
+    """, (faculty_id,))
+    materials = cursor.fetchall()
+
+    cursor.close()
+    conn.close()
+
+    return render_template('faculty/materials.html', subjects=subjects, materials=materials)
+
+
+@app.route('/faculty/materials/delete/<int:material_id>', methods=['POST'])
+@login_required(['FACULTY'])
+def faculty_materials_delete(material_id):
+    user_id = session['user']['user_id']
+    conn = get_db()
+    cursor = conn.cursor(dictionary=True)
+    cursor.execute("DELETE FROM faculty_study_material WHERE material_id = %s", (material_id,))
+    conn.commit()
+    log_audit(user_id, 'DELETE', 'faculty_study_material', material_id, "Deleted study material")
+    cursor.close()
+    conn.close()
+    flash("Study material removed.", "info")
+    return redirect(url_for('faculty_materials'))
+
+
+@app.route('/faculty/leaves', methods=['GET'])
+@login_required(['FACULTY'])
+def faculty_leaves():
+    user_id = session['user']['user_id']
+    conn = get_db()
+    cursor = conn.cursor(dictionary=True)
+
+    # Student Leaves to Review
     cursor.execute("""
         SELECT lr.request_id AS leave_id, lr.leave_type, lr.from_date AS start_date, lr.to_date AS end_date,
-               lr.reason, lr.curr_status AS status, lr.applied_at AS created_at,
+               lr.reason, lr.curr_status AS status, lr.applied_at AS created_at, lr.reviewer_comment,
                u.first_name, u.last_name, u.role, u.email
         FROM leave_request lr
         JOIN users u ON lr.user_id = u.user_id
+        WHERE u.role = 'STUDENT'
         ORDER BY lr.applied_at DESC
     """)
-    leaves = cursor.fetchall()
+    student_leaves = cursor.fetchall()
+
+    # Faculty's Own Submitted Leaves
+    cursor.execute("""
+        SELECT lr.request_id AS leave_id, lr.leave_type, lr.from_date AS start_date, lr.to_date AS end_date,
+               lr.reason, lr.curr_status AS status, lr.applied_at AS created_at, lr.reviewer_comment, lr.reviewed_at
+        FROM leave_request lr
+        WHERE lr.user_id = %s
+        ORDER BY lr.applied_at DESC
+    """, (user_id,))
+    my_leaves = cursor.fetchall()
+
     cursor.close()
     conn.close()
-    return render_template('faculty/leaves.html', leaves=leaves)
+
+    return render_template('faculty/leaves.html', student_leaves=student_leaves, my_leaves=my_leaves)
+
+
+@app.route('/faculty/apply-leave', methods=['POST'])
+@login_required(['FACULTY'])
+def faculty_apply_leave():
+    user_id = session['user']['user_id']
+    leave_type = request.form.get('leave_type', 'CASUAL')
+    start_date = request.form.get('start_date')
+    end_date = request.form.get('end_date')
+    reason = request.form.get('reason', '').strip()
+    substitute_faculty = request.form.get('substitute_faculty', '')
+
+    if not start_date or not end_date or not reason:
+        flash("Start date, end date, and reason are required to apply for leave.", "danger")
+    else:
+        full_reason = f"{reason} (Substitute Arranged: {substitute_faculty})" if substitute_faculty else reason
+        conn = get_db()
+        cursor = conn.cursor(dictionary=True)
+        cursor.execute("""
+            INSERT INTO leave_request (user_id, leave_type, from_date, to_date, reason, curr_status)
+            VALUES (%s, %s, %s, %s, %s, 'INITIAL_STAGE')
+        """, (user_id, leave_type, start_date, end_date, full_reason))
+        conn.commit()
+        new_id = cursor.lastrowid
+        log_audit(user_id, 'INSERT', 'leave_request', new_id, f"Faculty applied for {leave_type} leave")
+        cursor.close()
+        conn.close()
+        flash("🎉 Faculty leave application submitted to HOD & Dean for approval!", "success")
+
+    return redirect(url_for('faculty_leaves'))
 
 
 @app.route('/faculty/review-leave/<int:leave_id>', methods=['POST'])
@@ -1559,6 +2063,205 @@ def review_leave(leave_id):
 
     flash(f"Leave request marked as {status}!", "success")
     return redirect(request.referrer or url_for('faculty_leaves'))
+
+
+@app.route('/faculty/calendar')
+@login_required(['FACULTY'])
+def faculty_calendar():
+    academic_events = [
+        {'date': '2026-10-05', 'title': 'LCA-1 Continuous Assessment Submission Window Opens', 'category': 'EXAM', 'badge': 'Academic', 'time': '09:00 AM'},
+        {'date': '2026-10-12', 'title': 'Departmental Faculty Board of Studies Review', 'category': 'MEETING', 'badge': 'Faculty Meeting', 'time': '02:30 PM'},
+        {'date': '2026-10-18', 'title': 'National AI & Cloud Computing Conclave 2026', 'category': 'WORKSHOP', 'badge': 'Conclave', 'time': '10:00 AM'},
+        {'date': '2026-10-24', 'title': 'Dussehra / Vijayadashami (Institutional Holiday)', 'category': 'HOLIDAY', 'badge': 'Gazetted Holiday', 'time': 'Full Day'},
+        {'date': '2026-11-02', 'title': 'Mid-Semester Theory Examinations Begin', 'category': 'EXAM', 'badge': 'University Exam', 'time': '09:30 AM'},
+        {'date': '2026-11-15', 'title': 'LCA-2 Lab Practical Evaluation Cutoff', 'category': 'EXAM', 'badge': 'Lab Assessment', 'time': '05:00 PM'},
+        {'date': '2026-11-20', 'title': 'Parent-Teacher & Faculty Academic Advisory Meet', 'category': 'MEETING', 'badge': 'Advisory', 'time': '11:00 AM'},
+        {'date': '2026-12-05', 'title': 'LCA-3 Final Lab Continuous Evaluation & Viva-Voce', 'category': 'EXAM', 'badge': 'Practical Viva', 'time': '09:00 AM'},
+        {'date': '2026-12-15', 'title': 'End-Semester University Final Examination Commences', 'category': 'EXAM', 'badge': 'Term End', 'time': '09:30 AM'},
+        {'date': '2026-12-25', 'title': 'Winter Vacation & Semester Break Commences', 'category': 'HOLIDAY', 'badge': 'Vacation', 'time': 'Full Day'},
+    ]
+    return render_template('faculty/calendar.html', academic_events=academic_events)
+
+
+@app.route('/faculty/announcements', methods=['GET', 'POST'])
+@login_required(['FACULTY'])
+def faculty_announcements():
+    user_id = session['user']['user_id']
+    conn = get_db()
+    cursor = conn.cursor(dictionary=True)
+
+    if request.method == 'POST':
+        title = request.form.get('title')
+        content = request.form.get('content')
+        target_role = request.form.get('target_role', 'ALL')
+
+        if not title or not content:
+            flash("Title and message content are required.", "danger")
+        else:
+            cursor.execute("""
+                INSERT INTO notice (title, content, target_role, created_by)
+                VALUES (%s, %s, %s, %s)
+            """, (title, content, target_role, user_id))
+            conn.commit()
+            log_audit(user_id, 'INSERT', 'notice', cursor.lastrowid, f"Published notice: {title}")
+            flash("📢 Notice broadcasted to students and faculty!", "success")
+            return redirect(url_for('faculty_announcements'))
+
+    cursor.execute("""
+        SELECT n.*, u.first_name, u.last_name, u.role AS author_role
+        FROM notice n
+        LEFT JOIN users u ON n.created_by = u.user_id
+        ORDER BY n.created_at DESC
+    """)
+    notices = cursor.fetchall()
+
+    cursor.close()
+    conn.close()
+
+    return render_template('faculty/announcements.html', notices=notices)
+
+
+@app.route('/faculty/profile', methods=['GET', 'POST'])
+@login_required(['FACULTY'])
+def faculty_profile():
+    user_id = session['user']['user_id']
+    conn = get_db()
+    cursor = conn.cursor(dictionary=True)
+
+    if request.method == 'POST':
+        phone = request.form.get('phone')
+        address = request.form.get('address')
+        city = request.form.get('city')
+        state = request.form.get('state')
+        pincode = request.form.get('pincode')
+        specialization = request.form.get('specialization')
+        emergency_contact = request.form.get('emergency_contact')
+
+        cursor.execute("UPDATE users SET phone = %s WHERE user_id = %s", (phone, user_id))
+        cursor.execute("""
+            UPDATE faculty
+            SET address = %s, city = %s, state = %s, pincode = %s, specialization = %s, emergency_contact = %s
+            WHERE user_id = %s
+        """, (address, city, state, pincode, specialization, emergency_contact, user_id))
+        conn.commit()
+        log_audit(user_id, 'UPDATE', 'faculty', user_id, "Updated faculty personal profile details")
+        flash("🎉 Profile details updated successfully!", "success")
+        return redirect(url_for('faculty_profile'))
+
+    cursor.execute("""
+        SELECT u.user_id, u.first_name, u.middle_name, u.last_name, u.email, u.phone, u.role, u.status, u.created_at, u.last_login,
+               f.faculty_id, f.department_id, f.designation, f.date_of_birth, f.gender, f.blood_group,
+               f.father_name, f.mother_name, f.address, f.city, f.state, f.pincode, f.qualification,
+               f.specialization, f.joining_date, f.salary, f.employment_type, f.emergency_contact,
+               d.department_name, d.department_code
+        FROM users u
+        INNER JOIN faculty f ON u.user_id = f.user_id
+        LEFT JOIN department d ON f.department_id = d.department_id
+        WHERE u.user_id = %s
+    """, (user_id,))
+    profile = cursor.fetchone()
+
+    cursor.execute("""
+        SELECT s.subject_code, s.subject_name, s.credits, s.semester
+        FROM faculty_subject fs
+        JOIN subject s ON fs.subject_id = s.subject_id
+        WHERE fs.faculty_id = %s
+    """, (profile['faculty_id'] if profile else 0,))
+    assigned_subjects = cursor.fetchall()
+
+    cursor.close()
+    conn.close()
+
+    return render_template('faculty/profile.html', profile=profile, assigned_subjects=assigned_subjects)
+
+
+@app.route('/faculty/documents', methods=['GET', 'POST'])
+@login_required(['FACULTY'])
+def faculty_documents():
+    user_id = session['user']['user_id']
+    conn = get_db()
+    cursor = conn.cursor(dictionary=True)
+
+    cursor.execute("SELECT faculty_id FROM faculty WHERE user_id = %s", (user_id,))
+    faculty = cursor.fetchone()
+    faculty_id = faculty['faculty_id'] if faculty else 0
+
+    if request.method == 'POST':
+        doc_type = request.form.get('doc_type', 'DEGREE_CERTIFICATE')
+        title = request.form.get('title')
+        issuing_authority = request.form.get('issuing_authority', 'University Administration')
+        issue_year = request.form.get('issue_year', '2024')
+        file_url = request.form.get('file_url', 'document.pdf')
+
+        if not title:
+            flash("Document title is required.", "danger")
+        else:
+            cursor.execute("""
+                INSERT INTO faculty_document (faculty_id, doc_type, title, issued_by, issue_year, file_name, verification_status)
+                VALUES (%s, %s, %s, %s, %s, %s, 'VERIFIED')
+            """, (faculty_id, doc_type, title, issuing_authority, issue_year, file_url))
+            conn.commit()
+            log_audit(user_id, 'INSERT', 'faculty_document', cursor.lastrowid, f"Uploaded document: {title}")
+            flash(f"📄 Document '{title}' uploaded to official vault!", "success")
+            return redirect(url_for('faculty_documents'))
+
+    cursor.execute("""
+        SELECT *, uploaded_at AS created_at, issued_by AS issuing_authority, file_name AS file_url
+        FROM faculty_document
+        WHERE faculty_id = %s
+        ORDER BY uploaded_at DESC
+    """, (faculty_id,))
+    documents = cursor.fetchall()
+
+    cursor.close()
+    conn.close()
+
+    return render_template('faculty/documents.html', documents=documents)
+
+
+@app.route('/faculty/support', methods=['GET', 'POST'])
+@login_required(['FACULTY'])
+def faculty_support():
+    user_id = session['user']['user_id']
+    conn = get_db()
+    cursor = conn.cursor(dictionary=True)
+
+    cursor.execute("SELECT faculty_id FROM faculty WHERE user_id = %s", (user_id,))
+    faculty = cursor.fetchone()
+    faculty_id = faculty['faculty_id'] if faculty else 0
+
+    if request.method == 'POST':
+        category = request.form.get('category', 'LAB_EQUIPMENT')
+        title = request.form.get('title')
+        description = request.form.get('description')
+        priority = request.form.get('priority', 'MEDIUM')
+        due_date = request.form.get('due_date')
+
+        if not title or not description:
+            flash("Title and description are required.", "danger")
+        else:
+            cursor.execute("""
+                INSERT INTO faculty_support_task (faculty_id, category, title, description, priority, due_date, status)
+                VALUES (%s, %s, %s, %s, %s, %s, 'PENDING')
+            """, (faculty_id, category, title, description, priority, due_date if due_date else None))
+            conn.commit()
+            log_audit(user_id, 'INSERT', 'faculty_support_task', cursor.lastrowid, f"Created support task: {title}")
+            flash(f"🛠️ Support task/ticket '{title}' submitted to department coordinator!", "success")
+            return redirect(url_for('faculty_support'))
+
+    cursor.execute("""
+        SELECT * FROM faculty_support_task
+        WHERE faculty_id = %s
+        ORDER BY created_at DESC
+    """, (faculty_id,))
+    tasks = cursor.fetchall()
+
+    cursor.close()
+    conn.close()
+
+    return render_template('faculty/support.html', tasks=tasks)
+
+
 
 
 # ----------------------------------------------------

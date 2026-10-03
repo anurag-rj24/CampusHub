@@ -1,0 +1,84 @@
+{% extends 'base.html' %}
+
+{% block title %}Study Materials & Lecture Notes | CampusHub{% endblock %}
+{% block page_title %}📖 Course Study Materials, Notes & Lab Manuals{% endblock %}
+
+{% block content %}
+<div class="grid-2" style="margin-bottom: 24px;">
+    <!-- Upload Material Form -->
+    <div class="glass-card">
+        <div class="card-header">
+            <h3 class="card-title">📤 Upload Teaching Resource</h3>
+        </div>
+        <form method="POST" action="{{ url_for('faculty_materials') }}">
+            <div class="form-group" style="margin-bottom: 14px;">
+                <label class="form-label">Subject</label>
+                <select name="subject_id" class="form-control" required>
+                    {% for s in subjects %}
+                    <option value="{{ s.subject_id }}">{{ s.subject_code }} - {{ s.subject_name }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="form-group" style="margin-bottom: 14px;">
+                <label class="form-label">Material Title</label>
+                <input type="text" name="title" class="form-control" placeholder="e.g. Unit 3: Bayesian Networks & Probabilistic Reasoning" required>
+            </div>
+            <div class="form-group" style="margin-bottom: 14px;">
+                <label class="form-label">Resource Category</label>
+                <select name="category" class="form-control">
+                    <option value="LECTURE_NOTE">Lecture Notes (PDF / Doc)</option>
+                    <option value="LAB_MANUAL">Laboratory Practical Manual</option>
+                    <option value="SLIDES">Presentation Slides (PPTX / PDF)</option>
+                    <option value="QUESTION_BANK">Question Bank & Sample Papers</option>
+                    <option value="SYLLABUS">Syllabus & Course Objectives</option>
+                </select>
+            </div>
+            <div class="form-group" style="margin-bottom: 14px;">
+                <label class="form-label">File / Cloud Drive URL</label>
+                <input type="text" name="file_url" class="form-control" placeholder="https://docs.campushub.edu/cse3001/unit3.pdf" value="https://drive.google.com/campushub/notes-cse3001.pdf" required>
+            </div>
+            <div class="form-group" style="margin-bottom: 18px;">
+                <label class="form-label">Brief Description & Reading Guidelines</label>
+                <textarea name="description" rows="3" class="form-control" placeholder="Key topics covered, recommended textbook chapters..."></textarea>
+            </div>
+            <button type="submit" class="btn btn-primary" style="width: 100%;">
+                <span>💾 Publish Resource to Student Portal</span>
+            </button>
+        </form>
+    </div>
+
+    <!-- Uploaded Materials Repository -->
+    <div class="glass-card">
+        <div class="card-header">
+            <h3 class="card-title">📚 Published Course Materials ({{ materials|length }})</h3>
+        </div>
+        <div style="display: flex; flex-direction: column; gap: 14px;">
+            {% for m in materials %}
+            <div style="padding: 16px; background: rgba(255,255,255,0.02); border: 1px solid var(--border-color); border-radius: var(--radius-md);">
+                <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 4px;">
+                    <div>
+                        <span class="badge badge-primary">{{ m.subject_code }}</span>
+                        <span class="badge badge-secondary">{{ m.category }}</span>
+                        <h4 style="margin: 6px 0 2px; font-size: 0.98rem; color: var(--text-primary);">{{ m.title }}</h4>
+                    </div>
+                </div>
+                {% if m.description %}
+                <p style="font-size: 0.82rem; color: var(--text-secondary); margin: 6px 0 10px;">{{ m.description }}</p>
+                {% endif %}
+                <div style="display: flex; justify-content: space-between; align-items: center; font-size: 0.75rem; color: var(--text-muted);">
+                    <span>Uploaded: {{ m.created_at.strftime('%d %b %Y') if m.created_at else 'Recent' }}</span>
+                    <div style="display: flex; gap: 8px;">
+                        <a href="{{ m.file_url or '#' }}" target="_blank" class="btn btn-secondary btn-sm">📥 View/Download</a>
+                        <form method="POST" action="{{ url_for('faculty_materials_delete', material_id=m.material_id) }}" onsubmit="return confirm('Remove this material?');" style="display: inline;">
+                            <button type="submit" class="btn btn-secondary btn-sm" style="color: #ef4444;">🗑️</button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+            {% else %}
+            <p style="color: var(--text-muted); text-align: center; padding: 24px;">No study materials published yet.</p>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+{% endblock %}

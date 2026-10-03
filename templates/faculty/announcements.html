@@ -1,0 +1,60 @@
+{% extends 'base.html' %}
+
+{% block title %}Faculty Announcements & Circulars | CampusHub{% endblock %}
+{% block page_title %}📢 Faculty & Department Announcements Hub{% endblock %}
+
+{% block content %}
+<div class="grid-2" style="margin-bottom: 24px;">
+    <!-- Create Announcement Form -->
+    <div class="glass-card">
+        <div class="card-header">
+            <h3 class="card-title">📢 Broadcast Notice / Circular</h3>
+        </div>
+        <form method="POST" action="{{ url_for('faculty_announcements') }}">
+            <div class="form-group" style="margin-bottom: 14px;">
+                <label class="form-label">Notice Title</label>
+                <input type="text" name="title" class="form-control" placeholder="e.g. Schedule for LCA-1 Lab Evaluation & Submission Window" required>
+            </div>
+            <div class="form-group" style="margin-bottom: 14px;">
+                <label class="form-label">Target Audience</label>
+                <select name="target_role" class="form-control">
+                    <option value="ALL">All Campus (Students & Faculty)</option>
+                    <option value="STUDENT">Students Only</option>
+                    <option value="FACULTY">Faculty & Department Staff</option>
+                </select>
+            </div>
+            <div class="form-group" style="margin-bottom: 18px;">
+                <label class="form-label">Announcement Content</label>
+                <textarea name="content" rows="4" class="form-control" placeholder="Type notice content, examination rules, or instructions..." required></textarea>
+            </div>
+            <button type="submit" class="btn btn-primary" style="width: 100%;">
+                <span>🚀 Broadcast Announcement</span>
+            </button>
+        </form>
+    </div>
+
+    <!-- Notices Feed -->
+    <div class="glass-card">
+        <div class="card-header">
+            <h3 class="card-title">📜 Active Notices & Circulars ({{ notices|length }})</h3>
+        </div>
+        <div style="display: flex; flex-direction: column; gap: 14px;">
+            {% for n in notices %}
+            <div style="padding: 16px; background: rgba(255,255,255,0.02); border: 1px solid var(--border-color); border-radius: var(--radius-md); border-left: 3px solid var(--primary);">
+                <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 6px;">
+                    <h4 style="margin: 0; font-size: 1rem; color: var(--text-primary);">{{ n.title }}</h4>
+                    <span class="badge badge-secondary" style="font-size: 0.72rem;">{{ n.target_role }}</span>
+                </div>
+                <p style="font-size: 0.85rem; color: var(--text-secondary); margin: 6px 0 10px; line-height: 1.5;">{{ n.content }}</p>
+                <div style="font-size: 0.75rem; color: var(--text-muted); display: flex; justify-content: space-between;">
+                    <span>Posted by: {{ n.first_name }} {{ n.last_name }} ({{ n.author_role }})</span>
+                    <span>{{ n.created_at.strftime('%d %b %Y, %I:%M %p') if n.created_at else 'Recent' }}</span>
+                </div>
+            </div>
+            {% else %}
+            <p style="color: var(--text-muted); text-align: center; padding: 24px;">No notices currently posted.</p>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+{% endblock %}

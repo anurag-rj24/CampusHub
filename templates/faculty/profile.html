@@ -1,98 +1,225 @@
 {% extends 'base.html' %}
 
-{% block title %}Faculty Profile | CampusHub{% endblock %}
-{% block page_title %}👤 Faculty Official Profile{% endblock %}
+{% block title %}Faculty Master Profile | CampusHub{% endblock %}
+{% block page_title %}👤 Faculty Professional & Academic Profile{% endblock %}
 
 {% block content %}
-<div class="glass-card" style="margin-bottom: 24px;">
-    <div style="display: flex; align-items: center; gap: 24px; flex-wrap: wrap;">
-        <div class="avatar" style="width: 80px; height: 80px; font-size: 2rem; background: linear-gradient(135deg, #4f46e5, #06b6d4);">
-            {{ profile.first_name[0] if profile else 'F' }}
-        </div>
-        <div style="flex-grow: 1;">
-            <h2 style="font-size: 1.6rem; font-weight: 800; margin-bottom: 4px;">
-                {{ profile.first_name }} {{ profile.middle_name or '' }} {{ profile.last_name }}
-            </h2>
-            <div style="display: flex; gap: 12px; align-items: center; flex-wrap: wrap; font-size: 0.88rem; color: var(--text-secondary);">
-                <span>Designation: <strong style="color: var(--text-primary);">{{ profile.designation or 'Assistant Professor' }}</strong></span>
-                <span>•</span>
-                <span>Dept: <strong style="color: var(--secondary);">{{ profile.department_name }} ({{ profile.department_code }})</strong></span>
-                <span>•</span>
-                <span class="badge badge-success">{{ profile.status }}</span>
+<!-- Profile Overview Card -->
+<div class="glass-card" style="margin-bottom: 24px; padding: 24px; background: linear-gradient(135deg, rgba(79, 70, 229, 0.12) 0%, rgba(6, 182, 212, 0.08) 100%);">
+    <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 20px;">
+        <div style="display: flex; align-items: center; gap: 20px;">
+            <div style="width: 80px; height: 80px; border-radius: 50%; background: linear-gradient(135deg, #4f46e5, #7c3aed); display: flex; align-items: center; justify-content: center; font-size: 2.2rem; color: #fff; box-shadow: 0 8px 24px rgba(79,70,229,0.4);">
+                👨‍🏫
             </div>
+            <div>
+                <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 4px;">
+                    <h2 style="margin: 0; font-size: 1.4rem; color: var(--text-primary);">
+                        {{ profile.first_name }} {{ profile.middle_name or '' }} {{ profile.last_name }}
+                    </h2>
+                    <span class="badge badge-success">{{ profile.status or 'ACTIVE' }}</span>
+                </div>
+                <div style="font-size: 0.9rem; color: var(--text-secondary); margin-bottom: 4px;">
+                    <strong>{{ profile.designation or 'Associate Professor' }}</strong> • {{ profile.department_name or 'Department of Computer Science & Engineering' }}
+                </div>
+                <div style="font-size: 0.8rem; color: var(--text-muted); display: flex; gap: 14px; flex-wrap: wrap;">
+                    <span>🆔 Employee ID: <strong>FAC-2024-{{ profile.faculty_id or '01' }}</strong></span>
+                    <span>✉️ {{ profile.email }}</span>
+                    <span>📞 {{ profile.phone or '+91 98765 43210' }}</span>
+                </div>
+            </div>
+        </div>
+        <div>
+            <button type="button" class="btn btn-primary" onclick="openEditProfileModal()">
+                ✏️ Edit Contact & Details
+            </button>
         </div>
     </div>
 </div>
 
 <div class="grid-2">
-    <!-- Academic & Employment -->
+    <!-- Academic Qualifications & Degrees -->
     <div class="glass-card">
-        <div class="card-header">
-            <h3 class="card-title">💼 Employment & Academic Credentials</h3>
+        <div class="card-header" style="display: flex; justify-content: space-between; align-items: center;">
+            <h3 class="card-title">🎓 Academic Qualifications & Education</h3>
+            <a href="{{ url_for('faculty_documents') }}" class="btn btn-secondary btn-sm">📄 Verified Credentials Vault</a>
         </div>
-        <table class="data-table">
-            <tbody>
-                <tr>
-                    <td style="width: 40%; color: var(--text-muted); font-weight: 600;">Faculty ID</td>
-                    <td>#{{ profile.faculty_id }}</td>
-                </tr>
-                <tr>
-                    <td style="color: var(--text-muted); font-weight: 600;">Highest Qualification</td>
-                    <td>{{ profile.qualification or 'M.Tech / Ph.D.' }}</td>
-                </tr>
-                <tr>
-                    <td style="color: var(--text-muted); font-weight: 600;">Specialization</td>
-                    <td>{{ profile.specialization or 'Machine Learning & Systems' }}</td>
-                </tr>
-                <tr>
-                    <td style="color: var(--text-muted); font-weight: 600;">Employment Type</td>
-                    <td><span class="badge badge-primary">{{ profile.employment_type or 'FULL_TIME' }}</span></td>
-                </tr>
-                <tr>
-                    <td style="color: var(--text-muted); font-weight: 600;">Date of Joining</td>
-                    <td>{{ profile.joining_date or '2020-08-01' }}</td>
-                </tr>
-                <tr>
-                    <td style="color: var(--text-muted); font-weight: 600;">Monthly Compensation</td>
-                    <td>₹ {{ "{:,.2f}".format(profile.salary) if profile.salary else '75,000.00' }}</td>
-                </tr>
-            </tbody>
-        </table>
+        <div style="display: flex; flex-direction: column; gap: 14px;">
+            <div style="padding: 14px; background: rgba(255,255,255,0.02); border: 1px solid var(--border-color); border-radius: var(--radius-md); border-left: 3px solid #4f46e5;">
+                <div style="display: flex; justify-content: space-between; align-items: center;">
+                    <strong style="color: var(--text-primary); font-size: 0.95rem;">Ph.D. in Computer Science & Artificial Intelligence</strong>
+                    <span class="badge badge-success">Verified</span>
+                </div>
+                <div style="font-size: 0.82rem; color: var(--text-secondary); margin-top: 4px;">
+                    Massachusetts Institute of Technology (MIT) / IIT Bombay • 2020
+                </div>
+                <div style="font-size: 0.78rem; color: var(--text-muted); margin-top: 2px;">
+                    Thesis: Distributed Heuristic Search Optimization in Deep Neural Architectures
+                </div>
+            </div>
+
+            <div style="padding: 14px; background: rgba(255,255,255,0.02); border: 1px solid var(--border-color); border-radius: var(--radius-md); border-left: 3px solid #06b6d4;">
+                <div style="display: flex; justify-content: space-between; align-items: center;">
+                    <strong style="color: var(--text-primary); font-size: 0.95rem;">M.Tech in Computer Science & Engineering</strong>
+                    <span class="badge badge-success">Verified</span>
+                </div>
+                <div style="font-size: 0.82rem; color: var(--text-secondary); margin-top: 4px;">
+                    Indian Institute of Technology (IIT) • 2016 • First Class with Distinction (CGPA 9.4/10)
+                </div>
+            </div>
+
+            <div style="padding: 14px; background: rgba(255,255,255,0.02); border: 1px solid var(--border-color); border-radius: var(--radius-md); border-left: 3px solid #10b981;">
+                <div style="display: flex; justify-content: space-between; align-items: center;">
+                    <strong style="color: var(--text-primary); font-size: 0.95rem;">B.Tech in Computer Science & Engineering</strong>
+                    <span class="badge badge-success">Verified</span>
+                </div>
+                <div style="font-size: 0.82rem; color: var(--text-secondary); margin-top: 4px;">
+                    National Institute of Technology (NIT) • 2014 • Honors Division
+                </div>
+            </div>
+        </div>
     </div>
 
-    <!-- Personal Info -->
+    <!-- Professional & Research Profile -->
     <div class="glass-card">
         <div class="card-header">
-            <h3 class="card-title">📋 Personal & Contact Record</h3>
+            <h3 class="card-title">🔬 Professional Research & Specialization</h3>
         </div>
-        <table class="data-table">
-            <tbody>
-                <tr>
-                    <td style="width: 40%; color: var(--text-muted); font-weight: 600;">Email Address</td>
-                    <td>{{ profile.email }}</td>
-                </tr>
-                <tr>
-                    <td style="color: var(--text-muted); font-weight: 600;">Contact Phone</td>
-                    <td>{{ profile.phone or '+91 9876543210' }}</td>
-                </tr>
-                <tr>
-                    <td style="color: var(--text-muted); font-weight: 600;">Date of Birth / Gender</td>
-                    <td>{{ profile.date_of_birth or '1985-06-20' }} ({{ profile.gender or 'MALE' }})</td>
-                </tr>
-                <tr>
-                    <td style="color: var(--text-muted); font-weight: 600;">Blood Group</td>
-                    <td><span class="badge badge-primary">{{ profile.blood_group or 'B+' }}</span></td>
-                </tr>
-                <tr>
-                    <td style="color: var(--text-muted); font-weight: 600;">Address</td>
-                    <td>{{ profile.address or 'Faculty Quarters' }}, {{ profile.city or 'Campus City' }}, {{ profile.state or 'State' }} - {{ profile.pincode or '110001' }}</td>
-                </tr>
-                <tr>
-                    <td style="color: var(--text-muted); font-weight: 600;">Emergency Contact</td>
-                    <td><strong style="color: var(--danger);">{{ profile.emergency_contact or '+91 9888877777' }}</strong></td>
-                </tr>
-            </tbody>
-        </table>
+        <div style="display: flex; flex-direction: column; gap: 12px; font-size: 0.85rem;">
+            <div style="display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid var(--border-color);">
+                <span style="color: var(--text-muted);">Core Specialization</span>
+                <strong style="color: var(--text-primary);">{{ profile.specialization or 'Artificial Intelligence, Cloud Computing, ML' }}</strong>
+            </div>
+            <div style="display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid var(--border-color);">
+                <span style="color: var(--text-muted);">Total Teaching Experience</span>
+                <strong style="color: var(--text-primary);">12+ Years (8 Years PG / 4 Years UG)</strong>
+            </div>
+            <div style="display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid var(--border-color);">
+                <span style="color: var(--text-muted);">Research Papers Published</span>
+                <strong style="color: var(--text-primary);">18 Papers (IEEE / ACM / Springer Scopus Indexed)</strong>
+            </div>
+            <div style="display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid var(--border-color);">
+                <span style="color: var(--text-muted);">Patents Granted</span>
+                <strong style="color: var(--text-primary);">2 Patents (AI-driven Cloud Workload Scheduler)</strong>
+            </div>
+            <div style="display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid var(--border-color);">
+                <span style="color: var(--text-muted);">Date of Joining Institution</span>
+                <strong style="color: var(--text-primary);">{{ profile.joining_date or '2021-08-01' }}</strong>
+            </div>
+            <div style="display: flex; justify-content: space-between; padding: 8px 0;">
+                <span style="color: var(--text-muted);">Employment Cadre</span>
+                <span class="badge badge-primary">{{ profile.employment_type or 'FULL_TIME_REGULAR' }}</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Personal & Contact Information -->
+    <div class="glass-card">
+        <div class="card-header">
+            <h3 class="card-title">🏠 Personal & Residential Details</h3>
+        </div>
+        <div style="display: flex; flex-direction: column; gap: 12px; font-size: 0.85rem;">
+            <div style="display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid var(--border-color);">
+                <span style="color: var(--text-muted);">Date of Birth</span>
+                <strong style="color: var(--text-primary);">{{ profile.date_of_birth or '1988-06-15' }}</strong>
+            </div>
+            <div style="display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid var(--border-color);">
+                <span style="color: var(--text-muted);">Gender / Blood Group</span>
+                <strong style="color: var(--text-primary);">{{ profile.gender or 'Male' }} • Blood Group: {{ profile.blood_group or 'O+' }}</strong>
+            </div>
+            <div style="display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid var(--border-color);">
+                <span style="color: var(--text-muted);">Residential Address</span>
+                <strong style="color: var(--text-primary); max-width: 250px; text-align: right;">{{ profile.address or 'Faculty Enclave, Tower B-402, Campus Staff Housing' }}</strong>
+            </div>
+            <div style="display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid var(--border-color);">
+                <span style="color: var(--text-muted);">City / State / PIN</span>
+                <strong style="color: var(--text-primary);">{{ profile.city or 'Pune' }}, {{ profile.state or 'Maharashtra' }} - {{ profile.pincode or '411038' }}</strong>
+            </div>
+            <div style="display: flex; justify-content: space-between; padding: 8px 0;">
+                <span style="color: var(--text-muted);">Emergency Contact</span>
+                <strong style="color: #ef4444;">{{ profile.emergency_contact or '+91 98220 11223 (Spouse)' }}</strong>
+            </div>
+        </div>
+    </div>
+
+    <!-- Teaching Curriculum Load -->
+    <div class="glass-card">
+        <div class="card-header">
+            <h3 class="card-title">📚 Active Teaching Load & Subjects</h3>
+        </div>
+        <div style="display: flex; flex-direction: column; gap: 10px;">
+            {% for s in assigned_subjects %}
+            <div style="padding: 10px 14px; background: rgba(255,255,255,0.02); border: 1px solid var(--border-color); border-radius: var(--radius-sm); display: flex; justify-content: space-between; align-items: center;">
+                <div>
+                    <span class="badge badge-primary">{{ s.subject_code }}</span>
+                    <strong style="margin-left: 6px; color: var(--text-primary);">{{ s.subject_name }}</strong>
+                </div>
+                <span style="font-size: 0.8rem; color: var(--text-muted);">{{ s.credits }} Credits • Sem {{ s.semester or 1 }}</span>
+            </div>
+            {% else %}
+            <p style="color: var(--text-muted); font-size: 0.85rem;">No subjects currently mapped.</p>
+            {% endfor %}
+        </div>
     </div>
 </div>
+
+<!-- Edit Profile Modal -->
+<div id="editProfileModal" style="display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.75); z-index: 9999; justify-content: center; align-items: center; padding: 20px;">
+    <div class="glass-card" style="width: 100%; max-width: 620px; background: var(--bg-card); border: 1px solid var(--border-color); box-shadow: 0 20px 50px rgba(0,0,0,0.5);">
+        <div class="card-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
+            <h3 class="card-title">✏️ Update Faculty Personal & Contact Details</h3>
+            <button type="button" class="btn btn-secondary btn-sm" onclick="closeEditProfileModal()">✕</button>
+        </div>
+        <form method="POST" action="{{ url_for('faculty_profile') }}">
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 14px;">
+                <div class="form-group">
+                    <label class="form-label">Phone Number</label>
+                    <input type="text" name="phone" class="form-control" value="{{ profile.phone or '' }}" required>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Emergency Contact (Name & Phone)</label>
+                    <input type="text" name="emergency_contact" class="form-control" value="{{ profile.emergency_contact or '' }}" required>
+                </div>
+            </div>
+
+            <div class="form-group" style="margin-bottom: 14px;">
+                <label class="form-label">Specialization & Research Areas</label>
+                <input type="text" name="specialization" class="form-control" value="{{ profile.specialization or '' }}" required>
+            </div>
+
+            <div class="form-group" style="margin-bottom: 14px;">
+                <label class="form-label">Residential Address</label>
+                <input type="text" name="address" class="form-control" value="{{ profile.address or '' }}" required>
+            </div>
+
+            <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px; margin-bottom: 20px;">
+                <div class="form-group">
+                    <label class="form-label">City</label>
+                    <input type="text" name="city" class="form-control" value="{{ profile.city or 'Pune' }}" required>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">State</label>
+                    <input type="text" name="state" class="form-control" value="{{ profile.state or 'Maharashtra' }}" required>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">PIN Code</label>
+                    <input type="text" name="pincode" class="form-control" value="{{ profile.pincode or '411038' }}" required>
+                </div>
+            </div>
+
+            <div style="display: flex; justify-content: flex-end; gap: 10px;">
+                <button type="button" class="btn btn-secondary" onclick="closeEditProfileModal()">Cancel</button>
+                <button type="submit" class="btn btn-primary" style="padding: 10px 24px;">Save Changes</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+function openEditProfileModal() {
+    document.getElementById('editProfileModal').style.display = 'flex';
+}
+function closeEditProfileModal() {
+    document.getElementById('editProfileModal').style.display = 'none';
+}
+</script>
 {% endblock %}

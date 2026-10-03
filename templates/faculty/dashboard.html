@@ -1,112 +1,229 @@
 {% extends 'base.html' %}
 
-{% block title %}Faculty Dashboard | CampusHub{% endblock %}
+{% block title %}Faculty Command Center | CampusHub{% endblock %}
 {% block page_title %}👨‍🏫 Faculty Command Center{% endblock %}
 
 {% block content %}
-<div class="kpi-grid">
-    <div class="kpi-card" style="--card-accent: #4f46e5; --icon-bg: rgba(79, 70, 229, 0.15); --icon-color: #4f46e5;">
-        <div class="kpi-icon-wrap">📚</div>
-        <div class="kpi-info">
-            <span class="kpi-label">Assigned Subjects</span>
-            <span class="kpi-value">{{ assigned_subjects|length }}</span>
-            <span class="kpi-meta">Active Curriculum Modules</span>
+<!-- Faculty Header Banner -->
+<div class="glass-card" style="margin-bottom: 24px; padding: 22px 28px; background: linear-gradient(135deg, rgba(79, 70, 229, 0.15) 0%, rgba(147, 51, 234, 0.1) 100%); border-left: 4px solid var(--primary);">
+    <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 16px;">
+        <div style="display: flex; align-items: center; gap: 18px;">
+            <div style="width: 56px; height: 56px; border-radius: 50%; background: linear-gradient(135deg, #4f46e5, #7c3aed); display: flex; align-items: center; justify-content: center; font-size: 1.6rem; color: #fff; box-shadow: 0 4px 14px rgba(79,70,229,0.35);">
+                👨‍🏫
+            </div>
+            <div>
+                <h2 style="margin: 0; font-size: 1.35rem; font-weight: 700; color: var(--text-primary);">
+                    Welcome back, {{ faculty.first_name or current_user.first_name }} {{ faculty.last_name or current_user.last_name }}
+                </h2>
+                <div style="display: flex; gap: 12px; margin-top: 4px; font-size: 0.85rem; color: var(--text-secondary); flex-wrap: wrap;">
+                    <span>🏛️ <strong>{{ faculty.department_name or 'Computer Science & Engineering' }}</strong></span>
+                    <span>•</span>
+                    <span>🎖️ <strong>{{ faculty.designation or 'Associate Professor' }}</strong></span>
+                    <span>•</span>
+                    <span>🆔 <strong>FAC-2024-{{ faculty.faculty_id or '01' }}</strong></span>
+                    <span>•</span>
+                    <span>🎓 <strong>{{ faculty.qualification or 'Ph.D. in Computer Science' }}</strong></span>
+                </div>
+            </div>
         </div>
-    </div>
-
-    <div class="kpi-card" style="--card-accent: #06b6d4; --icon-bg: rgba(6, 182, 212, 0.15); --icon-color: #06b6d4;">
-        <div class="kpi-icon-wrap">📅</div>
-        <div class="kpi-info">
-            <span class="kpi-label">Conducted Sessions</span>
-            <span class="kpi-value">{{ total_sessions }}</span>
-            <span class="kpi-meta">Recorded Class Sessions</span>
-        </div>
-    </div>
-
-    <div class="kpi-card" style="--card-accent: #f59e0b; --icon-bg: rgba(245, 158, 11, 0.15); --icon-color: #f59e0b;">
-        <div class="kpi-icon-wrap">📬</div>
-        <div class="kpi-info">
-            <span class="kpi-label">Pending Leaves</span>
-            <span class="kpi-value">{{ pending_leaves }}</span>
-            <span class="kpi-meta">Student Requests in Inbox</span>
-        </div>
-    </div>
-
-    <div class="kpi-card" style="--card-accent: #10b981; --icon-bg: rgba(16, 185, 129, 0.15); --icon-color: #10b981;">
-        <div class="kpi-icon-wrap">🏛️</div>
-        <div class="kpi-info">
-            <span class="kpi-label">Department</span>
-            <span class="kpi-value" style="font-size: 1.3rem;">{{ faculty.department_code or 'CSE' }}</span>
-            <span class="kpi-meta">{{ faculty.department_name or 'Computer Science' }}</span>
+        <div style="display: flex; gap: 10px;">
+            <a href="{{ url_for('faculty_attendance') }}" class="btn btn-primary" style="box-shadow: 0 4px 12px rgba(79,70,229,0.3);">
+                ⚡ Take Roll Call
+            </a>
+            <a href="{{ url_for('faculty_grading') }}" class="btn btn-secondary">
+                🎯 Enter LCA Marks
+            </a>
         </div>
     </div>
 </div>
 
+<!-- KPI Summary Cards (Clickable) -->
+<div class="kpi-grid">
+    <a href="{{ url_for('faculty_classes') }}" class="kpi-card" style="text-decoration: none; color: inherit; --card-accent: #4f46e5; --icon-bg: rgba(79, 70, 229, 0.15); --icon-color: #4f46e5;">
+        <div class="kpi-icon-wrap">📚</div>
+        <div class="kpi-info">
+            <span class="kpi-label">Assigned Subjects</span>
+            <span class="kpi-value">{{ total_subjects }}</span>
+            <span class="kpi-meta">Click to view Course Rosters</span>
+        </div>
+    </a>
+
+    <a href="{{ url_for('faculty_students') }}" class="kpi-card" style="text-decoration: none; color: inherit; --card-accent: #06b6d4; --icon-bg: rgba(6, 182, 212, 0.15); --icon-color: #06b6d4;">
+        <div class="kpi-icon-wrap">👥</div>
+        <div class="kpi-info">
+            <span class="kpi-label">Enrolled Students</span>
+            <span class="kpi-value">{{ total_students }}</span>
+            <span class="kpi-meta">Across All Batches & Labs</span>
+        </div>
+    </a>
+
+    <a href="{{ url_for('faculty_timetable') }}" class="kpi-card" style="text-decoration: none; color: inherit; --card-accent: #10b981; --icon-bg: rgba(16, 185, 129, 0.15); --icon-color: #10b981;">
+        <div class="kpi-icon-wrap">⏰</div>
+        <div class="kpi-info">
+            <span class="kpi-label">Classes Today</span>
+            <span class="kpi-value">{{ today_schedule|length }}</span>
+            <span class="kpi-meta">{{ today_name }} Schedule</span>
+        </div>
+    </a>
+
+    <a href="{{ url_for('faculty_leaves') }}" class="kpi-card" style="text-decoration: none; color: inherit; --card-accent: #f59e0b; --icon-bg: rgba(245, 158, 11, 0.15); --icon-color: #f59e0b;">
+        <div class="kpi-icon-wrap">📬</div>
+        <div class="kpi-info">
+            <span class="kpi-label">Leave Approvals</span>
+            <span class="kpi-value">{{ pending_leaves }}</span>
+            <span class="kpi-meta">Pending Student Inbox</span>
+        </div>
+    </a>
+
+    <a href="{{ url_for('faculty_quizzes') }}" class="kpi-card" style="text-decoration: none; color: inherit; --card-accent: #ec4899; --icon-bg: rgba(236, 72, 153, 0.15); --icon-color: #ec4899;">
+        <div class="kpi-icon-wrap">📝</div>
+        <div class="kpi-info">
+            <span class="kpi-label">Active Quizzes</span>
+            <span class="kpi-value">{{ total_quizzes }}</span>
+            <span class="kpi-meta">Scheduled Unit Assessments</span>
+        </div>
+    </a>
+
+    <a href="{{ url_for('faculty_online_classes') }}" class="kpi-card" style="text-decoration: none; color: inherit; --card-accent: #8b5cf6; --icon-bg: rgba(139, 92, 246, 0.15); --icon-color: #8b5cf6;">
+        <div class="kpi-icon-wrap">🎥</div>
+        <div class="kpi-info">
+            <span class="kpi-label">Live Classes</span>
+            <span class="kpi-value">{{ total_live_classes }}</span>
+            <span class="kpi-meta">Virtual Classrooms</span>
+        </div>
+    </a>
+</div>
+
+<!-- Main Row: Today's Timetable + Quick Actions & Live Classes -->
 <div class="grid-2" style="margin-top: 24px;">
-    <!-- Assigned Subjects Quick Launcher -->
+    <!-- Today's Live Schedule -->
     <div class="glass-card">
-        <div class="card-header">
-            <h3 class="card-title">📖 Assigned Subjects & Teaching Batches</h3>
+        <div class="card-header" style="display: flex; justify-content: space-between; align-items: center;">
+            <h3 class="card-title">⏰ Today's Lecture & Lab Schedule ({{ today_name }})</h3>
+            <a href="{{ url_for('faculty_timetable') }}" class="btn btn-secondary btn-sm">Full Timetable ↗</a>
         </div>
 
         <div style="display: flex; flex-direction: column; gap: 12px;">
-            {% for s in assigned_subjects %}
-            <div style="display: flex; justify-content: space-between; align-items: center; padding: 14px; background: rgba(255,255,255,0.03); border: 1px solid var(--border-color); border-radius: var(--radius-md);">
+            {% for item in today_schedule %}
+            <div style="display: flex; justify-content: space-between; align-items: center; padding: 14px 16px; background: rgba(255,255,255,0.03); border: 1px solid var(--border-color); border-radius: var(--radius-md); transition: all 0.2s ease;">
                 <div>
                     <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 4px;">
-                        <span class="badge badge-primary">{{ s.subject_code }}</span>
-                        <strong>{{ s.subject_name }}</strong>
+                        <span class="badge {% if item.type == 'Lab Practical' %}badge-warning{% else %}badge-primary{% endif %}">{{ item.code }}</span>
+                        <strong style="color: var(--text-primary);">{{ item.title }}</strong>
                     </div>
-                    <div style="font-size: 0.8rem; color: var(--text-muted);">
-                        Credits: {{ s.credits }} | Semester: Sem {{ s.semester or 1 }}
+                    <div style="font-size: 0.82rem; color: var(--text-secondary); display: flex; gap: 12px; flex-wrap: wrap;">
+                        <span>⏱️ <strong>{{ item.time }}</strong></span>
+                        <span>📍 <strong>{{ item.room }}</strong></span>
+                        <span>👥 <strong>{{ item.batch }}</strong></span>
                     </div>
                 </div>
-                <div style="display: flex; gap: 8px;">
-                    <a href="{{ url_for('faculty_attendance', subject_id=s.subject_id) }}" class="btn btn-primary btn-sm">Take Roll Call</a>
-                    <a href="{{ url_for('faculty_grading', subject_id=s.subject_id) }}" class="btn btn-secondary btn-sm">Enter Grades</a>
+                <div style="display: flex; align-items: center; gap: 8px;">
+                    <a href="{{ url_for('faculty_attendance', subject_id=item.subject_id) }}" class="btn btn-primary btn-sm" title="Mark Attendance for this session">
+                        ✅ Attendance
+                    </a>
                 </div>
             </div>
-            {% else %}
-            <p style="color: var(--text-muted);">No subjects currently assigned to your profile.</p>
             {% endfor %}
         </div>
     </div>
 
-    <!-- Quick Actions & Notices -->
+    <!-- Quick Action Hub & Live Assessments -->
     <div class="glass-card">
         <div class="card-header">
             <h3 class="card-title">⚡ Faculty Quick Action Hub</h3>
         </div>
 
-        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 20px;">
-            <a href="{{ url_for('faculty_attendance') }}" class="btn btn-primary" style="padding: 16px 12px; flex-direction: column; gap: 6px;">
-                <span style="font-size: 1.5rem;">✅</span>
-                <span>Mark Attendance</span>
+        <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-bottom: 20px;">
+            <a href="{{ url_for('faculty_attendance') }}" class="btn btn-secondary" style="padding: 14px 10px; flex-direction: column; gap: 6px; text-align: center;">
+                <span style="font-size: 1.4rem;">✅</span>
+                <span style="font-size: 0.8rem; font-weight: 600;">Attendance</span>
             </a>
-            <a href="{{ url_for('faculty_grading') }}" class="btn btn-secondary" style="padding: 16px 12px; flex-direction: column; gap: 6px;">
-                <span style="font-size: 1.5rem;">🎯</span>
-                <span>Upload Marks</span>
+            <a href="{{ url_for('faculty_grading') }}" class="btn btn-secondary" style="padding: 14px 10px; flex-direction: column; gap: 6px; text-align: center;">
+                <span style="font-size: 1.4rem;">🎯</span>
+                <span style="font-size: 0.8rem; font-weight: 600;">LCA 1/2/3</span>
             </a>
-            <a href="{{ url_for('faculty_leaves') }}" class="btn btn-secondary" style="padding: 16px 12px; flex-direction: column; gap: 6px;">
-                <span style="font-size: 1.5rem;">📬</span>
-                <span>Review Leaves</span>
+            <a href="{{ url_for('faculty_quizzes') }}" class="btn btn-secondary" style="padding: 14px 10px; flex-direction: column; gap: 6px; text-align: center;">
+                <span style="font-size: 1.4rem;">📝</span>
+                <span style="font-size: 0.8rem; font-weight: 600;">Quiz Setup</span>
             </a>
-            <a href="{{ url_for('faculty_profile') }}" class="btn btn-secondary" style="padding: 16px 12px; flex-direction: column; gap: 6px;">
-                <span style="font-size: 1.5rem;">👤</span>
-                <span>Profile Info</span>
+            <a href="{{ url_for('faculty_online_classes') }}" class="btn btn-secondary" style="padding: 14px 10px; flex-direction: column; gap: 6px; text-align: center;">
+                <span style="font-size: 1.4rem;">🎥</span>
+                <span style="font-size: 0.8rem; font-weight: 600;">Live Class</span>
+            </a>
+            <a href="{{ url_for('faculty_materials') }}" class="btn btn-secondary" style="padding: 14px 10px; flex-direction: column; gap: 6px; text-align: center;">
+                <span style="font-size: 1.4rem;">📖</span>
+                <span style="font-size: 0.8rem; font-weight: 600;">Study Notes</span>
+            </a>
+            <a href="{{ url_for('faculty_leaves') }}" class="btn btn-secondary" style="padding: 14px 10px; flex-direction: column; gap: 6px; text-align: center;">
+                <span style="font-size: 1.4rem;">📬</span>
+                <span style="font-size: 0.8rem; font-weight: 600;">Leaves</span>
             </a>
         </div>
 
-        <div class="card-header" style="margin-top: 10px; margin-bottom: 12px;">
-            <h4 style="font-size: 0.95rem;">📢 Faculty Notices</h4>
+        <div class="card-header" style="padding-top: 10px; margin-bottom: 12px; display: flex; justify-content: space-between; align-items: center;">
+            <h4 style="font-size: 0.95rem; margin: 0; color: var(--text-primary);">📢 Department Circulars & Notices</h4>
+            <a href="{{ url_for('faculty_announcements') }}" class="btn btn-secondary btn-sm" style="font-size: 0.75rem;">View All</a>
         </div>
         <div style="display: flex; flex-direction: column; gap: 10px;">
             {% for n in notices %}
-            <div style="font-size: 0.85rem; padding: 8px 12px; background: rgba(0,0,0,0.15); border-radius: var(--radius-sm);">
-                <strong>{{ n.title }}</strong>: <span style="color: var(--text-secondary);">{{ n.content }}</span>
+            <div style="font-size: 0.85rem; padding: 10px 14px; background: rgba(0,0,0,0.15); border-left: 3px solid var(--primary); border-radius: var(--radius-sm);">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2px;">
+                    <strong style="color: var(--text-primary);">{{ n.title }}</strong>
+                    <span style="font-size: 0.75rem; color: var(--text-muted);">{{ n.created_at.strftime('%d %b') if n.created_at else 'Recent' }}</span>
+                </div>
+                <div style="color: var(--text-secondary); font-size: 0.8rem; line-height: 1.4;">{{ n.content }}</div>
             </div>
             {% else %}
             <p style="color: var(--text-muted); font-size: 0.82rem;">No notices posted.</p>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+
+<!-- Secondary Row: Active Quizzes & Upcoming Live Classes -->
+<div class="grid-2" style="margin-top: 24px;">
+    <!-- Active Quizzes -->
+    <div class="glass-card">
+        <div class="card-header" style="display: flex; justify-content: space-between; align-items: center;">
+            <h3 class="card-title">📝 Active Quizzes & Assessments</h3>
+            <a href="{{ url_for('faculty_quizzes') }}" class="btn btn-secondary btn-sm">+ Create Quiz</a>
+        </div>
+        <div style="display: flex; flex-direction: column; gap: 10px;">
+            {% for q in active_quizzes %}
+            <div style="padding: 12px 14px; background: rgba(255,255,255,0.02); border: 1px solid var(--border-color); border-radius: var(--radius-sm); display: flex; justify-content: space-between; align-items: center;">
+                <div>
+                    <div style="font-weight: 600; color: var(--text-primary); margin-bottom: 2px;">{{ q.title }}</div>
+                    <div style="font-size: 0.78rem; color: var(--text-muted);">
+                        {{ q.subject_code }} • Date: {{ q.scheduled_date }} • Duration: {{ q.duration_minutes }}m • Max: {{ q.max_marks }}M
+                    </div>
+                </div>
+                <span class="badge {% if q.status == 'ACTIVE' %}badge-success{% else %}badge-warning{% endif %}">{{ q.status }}</span>
+            </div>
+            {% else %}
+            <p style="color: var(--text-muted); font-size: 0.85rem; padding: 12px;">No active quizzes. <a href="{{ url_for('faculty_quizzes') }}">Schedule one now</a>.</p>
+            {% endfor %}
+        </div>
+    </div>
+
+    <!-- Upcoming Virtual Classes -->
+    <div class="glass-card">
+        <div class="card-header" style="display: flex; justify-content: space-between; align-items: center;">
+            <h3 class="card-title">🎥 Scheduled Online Virtual Classes</h3>
+            <a href="{{ url_for('faculty_online_classes') }}" class="btn btn-secondary btn-sm">+ Schedule Session</a>
+        </div>
+        <div style="display: flex; flex-direction: column; gap: 10px;">
+            {% for oc in upcoming_live %}
+            <div style="padding: 12px 14px; background: rgba(255,255,255,0.02); border: 1px solid var(--border-color); border-radius: var(--radius-sm); display: flex; justify-content: space-between; align-items: center;">
+                <div>
+                    <div style="font-weight: 600; color: var(--text-primary); margin-bottom: 2px;">{{ oc.title }}</div>
+                    <div style="font-size: 0.78rem; color: var(--text-muted);">
+                        {{ oc.subject_code }} • Platform: {{ oc.platform }} • Timing: {{ oc.scheduled_at }}
+                    </div>
+                </div>
+                <a href="{{ oc.meeting_url or '#' }}" target="_blank" class="btn btn-primary btn-sm">Join Class 🚀</a>
+            </div>
+            {% else %}
+            <p style="color: var(--text-muted); font-size: 0.85rem; padding: 12px;">No virtual classes scheduled.</p>
             {% endfor %}
         </div>
     </div>

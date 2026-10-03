@@ -1,0 +1,84 @@
+{% extends 'base.html' %}
+
+{% block title %}Faculty Tasks & Support Desk | CampusHub{% endblock %}
+{% block page_title %}🛠️ Faculty Tasks, Service Requests & Support Desk{% endblock %}
+
+{% block content %}
+<div class="grid-2" style="margin-bottom: 24px;">
+    <!-- Create Support Task Form -->
+    <div class="glass-card">
+        <div class="card-header">
+            <h3 class="card-title">➕ Raise Task / Laboratory Support Request</h3>
+        </div>
+        <form method="POST" action="{{ url_for('faculty_support') }}">
+            <div class="form-group" style="margin-bottom: 14px;">
+                <label class="form-label">Task / Request Category</label>
+                <select name="category" class="form-control">
+                    <option value="LAB_MAINTENANCE">Laboratory & Hardware Maintenance (AI/Cloud Labs)</option>
+                    <option value="IT_SUPPORT">Classroom Projector / Network / Smartboard Issue</option>
+                    <option value="EXAM_DUTY">Examination Invigilation / Paper Evaluation</option>
+                    <option value="SYLLABUS_REPORT">Syllabus Completion & Compliance Report</option>
+                    <option value="ACADEMIC_REFERRAL">Student Remedial & Academic Referral</option>
+                </select>
+            </div>
+            <div class="form-group" style="margin-bottom: 14px;">
+                <label class="form-label">Task / Ticket Title</label>
+                <input type="text" name="title" class="form-control" placeholder="e.g. NVIDIA GPU Driver Update in Lab-402" required>
+            </div>
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 14px;">
+                <div class="form-group">
+                    <label class="form-label">Priority</label>
+                    <select name="priority" class="form-control">
+                        <option value="HIGH">🔴 High Priority</option>
+                        <option value="MEDIUM" selected>🟡 Medium Priority</option>
+                        <option value="LOW">🟢 Low Priority</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Target Completion Date</label>
+                    <input type="date" name="due_date" class="form-control" value="{{ now.strftime('%Y-%m-%d') }}">
+                </div>
+            </div>
+            <div class="form-group" style="margin-bottom: 18px;">
+                <label class="form-label">Task Description & Requirements</label>
+                <textarea name="description" rows="3" class="form-control" placeholder="Detailed description of required service or task..." required></textarea>
+            </div>
+            <button type="submit" class="btn btn-primary" style="width: 100%;">
+                <span>🛠️ Submit Ticket to Department Coordinator</span>
+            </button>
+        </form>
+    </div>
+
+    <!-- Active Tasks & Tickets List -->
+    <div class="glass-card">
+        <div class="card-header">
+            <h3 class="card-title">📋 Tracked Support Tasks & Workload ({{ tasks|length }})</h3>
+        </div>
+        <div style="display: flex; flex-direction: column; gap: 14px;">
+            {% for t in tasks %}
+            <div style="padding: 16px; background: rgba(255,255,255,0.02); border: 1px solid var(--border-color); border-radius: var(--radius-md);">
+                <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 4px;">
+                    <div>
+                        <span class="badge {% if t.priority == 'HIGH' %}badge-danger{% elif t.priority == 'MEDIUM' %}badge-warning{% else %}badge-primary{% endif %}">
+                            {{ t.priority }}
+                        </span>
+                        <span class="badge badge-secondary" style="margin-left: 4px;">{{ t.category }}</span>
+                        <h4 style="margin: 6px 0 2px; font-size: 0.98rem; color: var(--text-primary);">{{ t.title }}</h4>
+                    </div>
+                    <span class="badge {% if t.status == 'COMPLETED' %}badge-success{% elif t.status == 'IN_PROGRESS' %}badge-primary{% else %}badge-warning{% endif %}">
+                        {{ t.status }}
+                    </span>
+                </div>
+                <p style="font-size: 0.82rem; color: var(--text-secondary); margin: 6px 0 10px;">{{ t.description }}</p>
+                <div style="font-size: 0.75rem; color: var(--text-muted); display: flex; justify-content: space-between;">
+                    <span>Ticket #{{ t.task_id }}</span>
+                    <span>Due: {{ t.due_date if t.due_date else 'Standard SLA' }}</span>
+                </div>
+            </div>
+            {% else %}
+            <p style="color: var(--text-muted); text-align: center; padding: 24px;">No support tickets raised.</p>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+{% endblock %}

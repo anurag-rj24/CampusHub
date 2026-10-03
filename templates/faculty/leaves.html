@@ -1,74 +1,219 @@
 {% extends 'base.html' %}
 
-{% block title %}Leave Approval Inbox | CampusHub{% endblock %}
-{% block page_title %}📬 Student & Staff Leave Approvals{% endblock %}
+{% block title %}Leave Management & Approvals | CampusHub{% endblock %}
+{% block page_title %}📬 Leave Management & Faculty Self-Service Requests{% endblock %}
 
 {% block content %}
-<div class="glass-card">
-    <div class="card-header">
-        <h3 class="card-title">📋 Pending & Historical Leave Applications</h3>
-        <span class="badge badge-primary">Official Review Portal</span>
-    </div>
-
-    <div class="table-responsive">
-        <table class="data-table">
-            <thead>
-                <tr>
-                    <th>Leave ID</th>
-                    <th>Applicant</th>
-                    <th>Role</th>
-                    <th>Leave Type</th>
-                    <th>Duration</th>
-                    <th>Reason</th>
-                    <th>Status</th>
-                    <th>Decision Action</th>
-                </tr>
-            </thead>
-            <tbody>
-                {% for l in leaves %}
-                <tr>
-                    <td>#{{ l.leave_id }}</td>
-                    <td>
-                        <strong>{{ l.first_name }} {{ l.last_name }}</strong><br>
-                        <span style="color: var(--text-muted); font-size: 0.78rem;">{{ l.email }}</span>
-                    </td>
-                    <td><span class="badge badge-secondary">{{ l.role }}</span></td>
-                    <td><span class="badge badge-primary">{{ l.leave_type }}</span></td>
-                    <td>{{ l.start_date }} → {{ l.end_date }}</td>
-                    <td style="max-width: 200px; font-size: 0.85rem;">{{ l.reason }}</td>
-                    <td>
-                        <span class="badge {% if l.status == 'APPROVED' %}badge-success{% elif l.status == 'REJECTED' %}badge-danger{% else %}badge-warning{% endif %}">
-                            {{ l.status }}
-                        </span>
-                    </td>
-                    <td>
-                        {% if l.status == 'PENDING' %}
-                        <div style="display: flex; gap: 6px;">
-                            <form method="POST" action="{{ url_for('review_leave', leave_id=l.leave_id) }}">
-                                <input type="hidden" name="status" value="APPROVED">
-                                <input type="hidden" name="remarks" value="Approved by Faculty Reviewer">
-                                <button type="submit" class="btn btn-success btn-sm">Approve</button>
-                            </form>
-                            <form method="POST" action="{{ url_for('review_leave', leave_id=l.leave_id) }}">
-                                <input type="hidden" name="status" value="REJECTED">
-                                <input type="hidden" name="remarks" value="Attendance requirement not satisfied">
-                                <button type="submit" class="btn btn-danger btn-sm">Reject</button>
-                            </form>
-                        </div>
-                        {% else %}
-                        <span style="color: var(--text-muted); font-size: 0.8rem;">Completed</span>
-                        {% endif %}
-                    </td>
-                </tr>
-                {% else %}
-                <tr>
-                    <td colspan="8" style="text-align: center; color: var(--text-muted); padding: 30px;">
-                        No leave requests found in inbox.
-                    </td>
-                </tr>
-                {% endfor %}
-            </tbody>
-        </table>
+<!-- Section Navigation Tabs -->
+<div class="glass-card" style="margin-bottom: 24px; padding: 12px 20px;">
+    <div style="display: flex; gap: 10px; justify-content: space-between; align-items: center; flex-wrap: wrap;">
+        <div style="display: flex; gap: 8px;" id="leaveTabs">
+            <button type="button" class="btn btn-primary" onclick="switchLeaveTab('review')" id="tabBtnReview">
+                📥 Student Leave Approvals ({{ student_leaves|length }})
+            </button>
+            <button type="button" class="btn btn-secondary" onclick="switchLeaveTab('myleaves')" id="tabBtnMyLeaves">
+                📋 My Leave Applications ({{ my_leaves|length }})
+            </button>
+        </div>
+        <button type="button" class="btn btn-primary" onclick="switchLeaveTab('apply')" id="tabBtnApply">
+            ➕ Apply For Faculty Leave
+        </button>
     </div>
 </div>
+
+<!-- Tab 1: Review Student Leaves -->
+<div id="viewReview" class="leave-view-pane">
+    <div class="glass-card">
+        <div class="card-header" style="display: flex; justify-content: space-between; align-items: center;">
+            <h3 class="card-title">📥 Student Leave Requests Inbox</h3>
+            <span class="badge badge-primary">Department Review Roster</span>
+        </div>
+
+        <div class="table-responsive">
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th>Leave ID</th>
+                        <th>Student Details</th>
+                        <th>Leave Type</th>
+                        <th>Duration & Dates</th>
+                        <th>Reason / Justification</th>
+                        <th>Status</th>
+                        <th>Decision Action</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for l in student_leaves %}
+                    <tr>
+                        <td><strong>#{{ l.leave_id }}</strong></td>
+                        <td>
+                            <div style="font-weight: 600; color: var(--text-primary);">{{ l.first_name }} {{ l.last_name }}</div>
+                            <div style="font-size: 0.75rem; color: var(--text-muted);">{{ l.email }}</div>
+                        </td>
+                        <td><span class="badge badge-primary">{{ l.leave_type }}</span></td>
+                        <td>
+                            <div style="font-size: 0.85rem; font-weight: 600;">{{ l.start_date }} → {{ l.end_date }}</div>
+                            <div style="font-size: 0.75rem; color: var(--text-muted);">Applied: {{ l.created_at.strftime('%d %b %Y') if l.created_at else 'Recent' }}</div>
+                        </td>
+                        <td style="max-width: 240px; font-size: 0.82rem; color: var(--text-secondary);">{{ l.reason }}</td>
+                        <td>
+                            <span class="badge {% if l.status == 'APPROVED' %}badge-success{% elif l.status == 'REJECTED' %}badge-danger{% else %}badge-warning{% endif %}">
+                                {{ l.status }}
+                            </span>
+                        </td>
+                        <td>
+                            {% if l.status in ['INITIAL_STAGE', 'PROCESSING', 'PENDING'] %}
+                            <div style="display: flex; gap: 6px;">
+                                <form method="POST" action="{{ url_for('review_leave', leave_id=l.leave_id) }}">
+                                    <input type="hidden" name="status" value="APPROVED">
+                                    <input type="hidden" name="remarks" value="Approved by Course Faculty Coordinator">
+                                    <button type="submit" class="btn btn-success btn-sm">Approve</button>
+                                </form>
+                                <form method="POST" action="{{ url_for('review_leave', leave_id=l.leave_id) }}">
+                                    <input type="hidden" name="status" value="REJECTED">
+                                    <input type="hidden" name="remarks" value="Lab practical requirements not met">
+                                    <button type="submit" class="btn btn-danger btn-sm">Reject</button>
+                                </form>
+                            </div>
+                            {% else %}
+                            <span style="color: var(--text-muted); font-size: 0.8rem;">Reviewed</span>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% else %}
+                    <tr>
+                        <td colspan="7" style="text-align: center; color: var(--text-muted); padding: 30px;">
+                            No pending student leave requests in inbox.
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<!-- Tab 2: My Faculty Leaves History -->
+<div id="viewMyLeaves" class="leave-view-pane" style="display: none;">
+    <div class="glass-card">
+        <div class="card-header" style="display: flex; justify-content: space-between; align-items: center;">
+            <h3 class="card-title">📋 My Submitted Faculty Leave Applications</h3>
+            <button type="button" class="btn btn-primary btn-sm" onclick="switchLeaveTab('apply')">+ New Leave Request</button>
+        </div>
+
+        <div class="table-responsive">
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th>Leave ID</th>
+                        <th>Leave Category</th>
+                        <th>From Date</th>
+                        <th>To Date</th>
+                        <th>Reason & Substitute Info</th>
+                        <th>Status</th>
+                        <th>Approver Feedback</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for ml in my_leaves %}
+                    <tr>
+                        <td><strong>#{{ ml.leave_id }}</strong></td>
+                        <td><span class="badge badge-primary">{{ ml.leave_type }}</span></td>
+                        <td>{{ ml.start_date }}</td>
+                        <td>{{ ml.end_date }}</td>
+                        <td style="max-width: 250px; font-size: 0.85rem;">{{ ml.reason }}</td>
+                        <td>
+                            <span class="badge {% if ml.status == 'APPROVED' %}badge-success{% elif ml.status == 'REJECTED' %}badge-danger{% else %}badge-warning{% endif %}">
+                                {{ ml.status }}
+                            </span>
+                        </td>
+                        <td style="font-size: 0.8rem; color: var(--text-secondary);">
+                            {{ ml.reviewer_comment or 'Pending HOD review' }}
+                        </td>
+                    </tr>
+                    {% else %}
+                    <tr>
+                        <td colspan="7" style="text-align: center; color: var(--text-muted); padding: 30px;">
+                            You have not submitted any leave applications yet.
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<!-- Tab 3: Apply Faculty Leave Form -->
+<div id="viewApply" class="leave-view-pane" style="display: none;">
+    <div class="glass-card" style="max-width: 680px; margin: 0 auto;">
+        <div class="card-header">
+            <h3 class="card-title">📝 Apply For Faculty Leave (Academic Staff)</h3>
+        </div>
+        <form method="POST" action="{{ url_for('faculty_apply_leave') }}">
+            <div class="form-group" style="margin-bottom: 16px;">
+                <label class="form-label">Leave Category</label>
+                <select name="leave_type" class="form-control" required>
+                    <option value="CASUAL">Casual Leave (CL)</option>
+                    <option value="MEDICAL">Medical Leave (ML / Sick Leave)</option>
+                    <option value="EARNED">Earned Leave (EL)</option>
+                    <option value="ON_DUTY">On-Duty Leave (Conference / FDP / University Exam Duty)</option>
+                    <option value="STUDY">Study / Research Sabbatical Leave</option>
+                </select>
+            </div>
+
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 16px;">
+                <div class="form-group">
+                    <label class="form-label">Start Date</label>
+                    <input type="date" name="start_date" class="form-control" value="{{ now.strftime('%Y-%m-%d') }}" required>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">End Date</label>
+                    <input type="date" name="end_date" class="form-control" value="{{ now.strftime('%Y-%m-%d') }}" required>
+                </div>
+            </div>
+
+            <div class="form-group" style="margin-bottom: 16px;">
+                <label class="form-label">Arranged Substitute Faculty (For Scheduled Lectures/Labs)</label>
+                <input type="text" name="substitute_faculty" class="form-control" placeholder="e.g. Prof. Rajesh Sharma (Covering CSE3001 Lab on Thursday)">
+            </div>
+
+            <div class="form-group" style="margin-bottom: 20px;">
+                <label class="form-label">Reason / Justification for Leave</label>
+                <textarea name="reason" rows="3" class="form-control" placeholder="Provide detailed reason for absence..." required></textarea>
+            </div>
+
+            <div style="display: flex; justify-content: flex-end; gap: 10px;">
+                <button type="button" class="btn btn-secondary" onclick="switchLeaveTab('review')">Cancel</button>
+                <button type="submit" class="btn btn-primary" style="padding: 10px 24px;">Submit Leave Request</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+function switchLeaveTab(tab) {
+    document.querySelectorAll('.leave-view-pane').forEach(el => el.style.display = 'none');
+    document.getElementById('tabBtnReview').classList.remove('btn-primary');
+    document.getElementById('tabBtnReview').classList.add('btn-secondary');
+    document.getElementById('tabBtnMyLeaves').classList.remove('btn-primary');
+    document.getElementById('tabBtnMyLeaves').classList.add('btn-secondary');
+    document.getElementById('tabBtnApply').classList.remove('btn-primary');
+    document.getElementById('tabBtnApply').classList.add('btn-secondary');
+
+    if (tab === 'review') {
+        document.getElementById('viewReview').style.display = 'block';
+        document.getElementById('tabBtnReview').classList.add('btn-primary');
+        document.getElementById('tabBtnReview').classList.remove('btn-secondary');
+    } else if (tab === 'myleaves') {
+        document.getElementById('viewMyLeaves').style.display = 'block';
+        document.getElementById('tabBtnMyLeaves').classList.add('btn-primary');
+        document.getElementById('tabBtnMyLeaves').classList.remove('btn-secondary');
+    } else if (tab === 'apply') {
+        document.getElementById('viewApply').style.display = 'block';
+        document.getElementById('tabBtnApply').classList.add('btn-primary');
+        document.getElementById('tabBtnApply').classList.remove('btn-secondary');
+    }
+}
+</script>
 {% endblock %}

@@ -1,0 +1,94 @@
+{% extends 'base.html' %}
+
+{% block title %}Live Online Classes | CampusHub{% endblock %}
+{% block page_title %}🎥 Live Virtual Classroom & Video Sessions{% endblock %}
+
+{% block content %}
+<div class="grid-2" style="margin-bottom: 24px;">
+    <!-- Schedule Live Class Form -->
+    <div class="glass-card">
+        <div class="card-header">
+            <h3 class="card-title">➕ Schedule Virtual Live Lecture</h3>
+        </div>
+        <form method="POST" action="{{ url_for('faculty_online_classes') }}">
+            <div class="form-group" style="margin-bottom: 14px;">
+                <label class="form-label">Subject</label>
+                <select name="subject_id" class="form-control" required>
+                    {% for s in subjects %}
+                    <option value="{{ s.subject_id }}">{{ s.subject_code }} - {{ s.subject_name }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="form-group" style="margin-bottom: 14px;">
+                <label class="form-label">Lecture Topic / Title</label>
+                <input type="text" name="title" class="form-control" placeholder="e.g. Deep Learning: Backpropagation Algorithm & Loss Optimization" required>
+            </div>
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 14px;">
+                <div class="form-group">
+                    <label class="form-label">Platform</label>
+                    <select name="platform" class="form-control">
+                        <option value="CAMPUSHUB_LIVE">CampusHub Live (WebRTC)</option>
+                        <option value="GOOGLE_MEET">Google Meet</option>
+                        <option value="ZOOM">Zoom Meeting</option>
+                        <option value="MS_TEAMS">Microsoft Teams</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Duration (Minutes)</label>
+                    <input type="number" name="duration_minutes" class="form-control" value="60" min="15" max="240" required>
+                </div>
+            </div>
+            <div class="form-group" style="margin-bottom: 14px;">
+                <label class="form-label">Scheduled Date & Start Time</label>
+                <input type="datetime-local" name="scheduled_at" class="form-control" required>
+            </div>
+            <div class="form-group" style="margin-bottom: 14px;">
+                <label class="form-label">Meeting URL / Link</label>
+                <input type="url" name="meeting_url" class="form-control" placeholder="https://meet.google.com/xyz-abc-def" value="https://meet.google.com/abc-def-xyz">
+            </div>
+            <div class="form-group" style="margin-bottom: 18px;">
+                <label class="form-label">Passcode / Meeting PIN (Optional)</label>
+                <input type="text" name="meeting_passcode" class="form-control" placeholder="e.g. AI2026">
+            </div>
+            <button type="submit" class="btn btn-primary" style="width: 100%;">
+                <span>🎥 Schedule Live Session & Notify Students</span>
+            </button>
+        </form>
+    </div>
+
+    <!-- Scheduled Live Classes List -->
+    <div class="glass-card">
+        <div class="card-header">
+            <h3 class="card-title">📡 Virtual Classrooms ({{ classes|length }})</h3>
+        </div>
+        <div style="display: flex; flex-direction: column; gap: 14px;">
+            {% for c in classes %}
+            <div style="padding: 16px; background: rgba(255,255,255,0.02); border: 1px solid var(--border-color); border-radius: var(--radius-md);">
+                <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 6px;">
+                    <div>
+                        <span class="badge badge-primary">{{ c.subject_code }}</span>
+                        <span class="badge badge-secondary">{{ c.platform }}</span>
+                        <h4 style="margin: 6px 0 2px; font-size: 1rem; color: var(--text-primary);">{{ c.title }}</h4>
+                    </div>
+                    <span class="badge badge-success">{{ c.status }}</span>
+                </div>
+                <div style="font-size: 0.82rem; color: var(--text-secondary); display: flex; gap: 14px; flex-wrap: wrap; margin-bottom: 12px;">
+                    <span>⏱️ Time: <strong>{{ c.scheduled_at }}</strong></span>
+                    <span>⌛ Duration: <strong>{{ c.duration_minutes }}m</strong></span>
+                    {% if c.meeting_passcode %}
+                    <span>🔑 PIN: <strong>{{ c.meeting_passcode }}</strong></span>
+                    {% endif %}
+                </div>
+                <div style="display: flex; justify-content: flex-end; gap: 8px;">
+                    <a href="{{ c.meeting_url or '#' }}" target="_blank" class="btn btn-primary btn-sm" style="box-shadow: 0 4px 12px rgba(79,70,229,0.3);">
+                        🚀 Start / Join Class
+                    </a>
+                </div>
+            </div>
+            {% else %}
+            <p style="color: var(--text-muted); text-align: center; padding: 24px;">No live virtual classes scheduled.</p>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+{% endblock %}

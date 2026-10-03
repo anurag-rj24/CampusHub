@@ -1,0 +1,102 @@
+{% extends 'base.html' %}
+
+{% block title %}Faculty Timetable & Schedule | CampusHub{% endblock %}
+{% block page_title %}⏰ Faculty Weekly Timetable & Room Allocations{% endblock %}
+
+{% block content %}
+<div class="glass-card" style="margin-bottom: 24px; padding: 20px 24px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 16px;">
+    <div>
+        <h3 style="margin: 0; font-size: 1.15rem; color: var(--text-primary);">📅 Academic Year 2025-26 (Odd Semester Master Schedule)</h3>
+        <p style="margin: 4px 0 0; font-size: 0.85rem; color: var(--text-secondary);">
+            Assigned Teaching Load: <strong>16 Hours / Week</strong> (Lectures: 8h, Practical Labs: 6h, Mentoring & Remedial: 2h)
+        </p>
+    </div>
+    <div style="display: flex; gap: 10px;">
+        <button onclick="window.print()" class="btn btn-secondary">
+            🖨️ Print Timetable
+        </button>
+        <a href="{{ url_for('faculty_attendance') }}" class="btn btn-primary">
+            ⚡ 1-Click Roll Call
+        </a>
+    </div>
+</div>
+
+<!-- Day Selector Navigation Tabs -->
+<div class="glass-card" style="margin-bottom: 20px; padding: 12px 18px;">
+    <div style="display: flex; gap: 8px; overflow-x: auto;" id="dayTabs">
+        {% for day, slots in timetable_grid.items() %}
+        <button type="button" class="btn {% if loop.first %}btn-primary{% else %}btn-secondary{% endif %}" onclick="switchDay('{{ day }}')" id="tab-{{ day }}" style="white-space: nowrap; font-size: 0.85rem; padding: 8px 16px;">
+            {{ day }} <span style="opacity: 0.7; font-size: 0.75rem;">({{ slots|length }} sessions)</span>
+        </button>
+        {% endfor %}
+    </div>
+</div>
+
+<!-- Day Schedule Cards -->
+{% for day, slots in timetable_grid.items() %}
+<div class="day-schedule-block" id="schedule-{{ day }}" style="{% if not loop.first %}display: none;{% endif %}">
+    <div class="glass-card">
+        <div class="card-header" style="display: flex; justify-content: space-between; align-items: center;">
+            <h3 class="card-title">📖 {{ day }} Schedule & Classroom Details</h3>
+            <span class="badge badge-primary">{{ slots|length }} Total Periods Scheduled</span>
+        </div>
+
+        <div style="display: flex; flex-direction: column; gap: 14px;">
+            {% for slot in slots %}
+            <div style="display: flex; justify-content: space-between; align-items: center; padding: 16px 20px; background: rgba(255,255,255,0.02); border: 1px solid var(--border-color); border-radius: var(--radius-md); flex-wrap: wrap; gap: 14px; transition: transform 0.15s ease;">
+                <div style="display: flex; align-items: center; gap: 16px;">
+                    <div style="min-width: 140px; padding: 8px 12px; background: rgba(79, 70, 229, 0.12); border-left: 3px solid var(--primary); border-radius: var(--radius-sm); text-align: center;">
+                        <span style="font-weight: 700; color: var(--primary); font-size: 0.9rem;">{{ slot.time }}</span>
+                    </div>
+                    <div>
+                        <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 4px;">
+                            <span class="badge {% if slot.type == 'Lab Practical' %}badge-warning{% elif slot.type == 'Meeting' %}badge-danger{% else %}badge-primary{% endif %}">
+                                {{ slot.type }}
+                            </span>
+                            <span style="font-weight: 700; color: var(--text-primary); font-size: 1rem;">{{ slot.title }}</span>
+                            <span style="font-size: 0.8rem; color: var(--text-muted);">({{ slot.code }})</span>
+                        </div>
+                        <div style="display: flex; gap: 16px; font-size: 0.83rem; color: var(--text-secondary); flex-wrap: wrap;">
+                            <span>📍 Room/Venue: <strong style="color: var(--text-primary);">{{ slot.room }}</strong></span>
+                            <span>👥 Student Group: <strong style="color: var(--text-primary);">{{ slot.batch }}</strong></span>
+                        </div>
+                    </div>
+                </div>
+
+                <div style="display: flex; gap: 8px; align-items: center;">
+                    {% if slot.type in ['Lecture', 'Lab Practical', 'Tutorial'] %}
+                    <a href="{{ url_for('faculty_attendance', subject_id=slot.subject_id) }}" class="btn btn-primary btn-sm">
+                        ✅ Roll Call
+                    </a>
+                    <a href="{{ url_for('faculty_grading', subject_id=slot.subject_id) }}" class="btn btn-secondary btn-sm">
+                        🎯 LCA Marks
+                    </a>
+                    {% else %}
+                    <span class="badge badge-secondary" style="font-size: 0.8rem; padding: 6px 12px;">Institutional Duty</span>
+                    {% endif %}
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+{% endfor %}
+
+<script>
+function switchDay(day) {
+    document.querySelectorAll('.day-schedule-block').forEach(el => el.style.display = 'none');
+    document.querySelectorAll('#dayTabs button').forEach(b => {
+        b.classList.remove('btn-primary');
+        b.classList.add('btn-secondary');
+    });
+
+    const targetBlock = document.getElementById('schedule-' + day);
+    const targetTab = document.getElementById('tab-' + day);
+    if (targetBlock) targetBlock.style.display = 'block';
+    if (targetTab) {
+        targetTab.classList.remove('btn-secondary');
+        targetTab.classList.add('btn-primary');
+    }
+}
+</script>
+{% endblock %}

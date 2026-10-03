@@ -1,0 +1,50 @@
+{% extends 'base.html' %}
+
+{% block title %}Academic Calendar & Key Dates | CampusHub{% endblock %}
+{% block page_title %}📅 Academic Events, Examination Deadlines & Calendar{% endblock %}
+
+{% block content %}
+<div class="glass-card" style="margin-bottom: 24px; padding: 20px 24px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 16px;">
+    <div>
+        <h3 style="margin: 0; font-size: 1.15rem; color: var(--text-primary);">Semester Milestones & Institutional Schedule (2025-26)</h3>
+        <p style="margin: 4px 0 0; font-size: 0.85rem; color: var(--text-secondary);">
+            Central University Calendar: LCA cutoff dates, Midterm/End-sem theory exams, Board of Studies meets, and Gazetted holidays.
+        </p>
+    </div>
+    <div style="display: flex; gap: 10px;">
+        <button onclick="window.print()" class="btn btn-secondary">🖨️ Export PDF</button>
+    </div>
+</div>
+
+<div class="glass-card">
+    <div class="card-header" style="display: flex; justify-content: space-between; align-items: center;">
+        <h3 class="card-title">📌 Upcoming Academic Milestones</h3>
+        <span class="badge badge-primary">Odd Semester 2025-26</span>
+    </div>
+
+    <div style="display: flex; flex-direction: column; gap: 14px;">
+        {% for ev in academic_events %}
+        <div style="display: flex; align-items: center; justify-content: space-between; padding: 16px 20px; background: rgba(255,255,255,0.02); border: 1px solid var(--border-color); border-radius: var(--radius-md); flex-wrap: wrap; gap: 14px;">
+            <div style="display: flex; align-items: center; gap: 16px;">
+                <div style="min-width: 130px; padding: 8px 12px; background: rgba(79, 70, 229, 0.12); border-left: 3px solid var(--primary); border-radius: var(--radius-sm); text-align: center;">
+                    <span style="font-weight: 700; color: var(--primary); font-size: 0.9rem;">{{ ev.date }}</span>
+                    <div style="font-size: 0.75rem; color: var(--text-muted);">{{ ev.time }}</div>
+                </div>
+                <div>
+                    <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 4px;">
+                        <span class="badge {% if ev.category == 'EXAM' %}badge-danger{% elif ev.category == 'HOLIDAY' %}badge-success{% elif ev.category == 'MEETING' %}badge-warning{% else %}badge-primary{% endif %}">
+                            {{ ev.badge }}
+                        </span>
+                        <strong style="color: var(--text-primary); font-size: 1rem;">{{ ev.title }}</strong>
+                    </div>
+                    <div style="font-size: 0.82rem; color: var(--text-secondary);">
+                        University Academic Registry Circular No. 2026/AR-{{ loop.index }}
+                    </div>
+                </div>
+            </div>
+            <span class="badge badge-secondary" style="font-size: 0.8rem; padding: 6px 12px;">Official Schedule</span>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+{% endblock %}
