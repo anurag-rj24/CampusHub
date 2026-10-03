@@ -188,6 +188,12 @@
                     </a>
                 </div>
             </header>
+            {% else %}
+            <div style="position: absolute; top: 20px; right: 24px; z-index: 99;">
+                <button class="theme-toggle-btn" onclick="toggleTheme()" title="Toggle Dark/Light Mode">
+                    <span id="theme-icon">☀️</span>
+                </button>
+            </div>
             {% endif %}
 
             <div class="page-body">
