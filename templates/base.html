@@ -155,7 +155,9 @@
                     <div class="avatar">{{ current_user.first_name[0] }}</div>
                     <div class="user-info">
                         <div class="user-name">{{ current_user.full_name }}</div>
-                        <div class="user-role">{{ current_user.role }}</div>
+                        <div class="user-role">
+                            {{ current_user.role }}{% if current_user.prn %} • <span style="color: var(--primary); font-weight: 700;">{{ current_user.prn }}</span>{% endif %}
+                        </div>
                     </div>
                 </div>
                 <a href="{{ url_for('logout') }}" title="Logout" style="color: var(--danger); text-decoration: none; font-size: 1.1rem; padding: 6px;">🚪</a>

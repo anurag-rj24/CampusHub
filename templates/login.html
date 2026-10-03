@@ -72,11 +72,14 @@
                     </div>
                 </div>
 
-                <div class="auth-options">
+                <div class="auth-options" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 22px; font-size: 0.85rem;">
                     <label class="checkbox-wrap">
                         <input type="checkbox" checked>
                         <span>Remember session</span>
                     </label>
+                    <a href="{{ url_for('forgot_password', role=selected_role) }}" style="color: var(--primary); text-decoration: none; font-weight: 600; font-size: 0.85rem;">
+                        Forgot Password?
+                    </a>
                 </div>
 
                 <button type="submit" class="btn btn-primary auth-submit-btn">

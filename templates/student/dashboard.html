@@ -25,8 +25,10 @@
     </div>
 
     <div style="display: flex; align-items: center; gap: 12px; flex-wrap: wrap;">
-        <span style="font-size: 0.82rem; color: var(--text-muted);">Term: <strong style="color: var(--text-primary);">Spring 2026 (Sem V)</strong></span>
-        <a href="{{ url_for('lost_found_hub') }}" class="btn btn-secondary btn-sm" style="border-color: rgba(16, 185, 129, 0.4); color: #34d399;">
+        <span style="font-size: 0.82rem; color: var(--text-muted);">
+            PRN: <strong style="color: var(--secondary); font-weight: 700;">{{ current_user.prn or 'PRN-2024-CSE-101' }}</strong> • Term: <strong style="color: var(--text-primary);">Spring 2026 (Sem V)</strong>
+        </span>
+        <a href="{{ url_for('lost_found_hub') }}" class="btn btn-secondary btn-sm" style="border-color: rgba(16, 185, 129, 0.4); color: #10b981; font-weight: 600;">
             🔍 Lost & Found (Active)
         </a>
     </div>

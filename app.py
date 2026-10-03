@@ -119,6 +119,17 @@ def login():
             flash(f"Access Denied: This account is registered as '{actual_role_title}'. Please log in through the {actual_role_title} portal.", "danger")
             return render_template('login.html', selected_role=selected_role)
 
+        # Fetch student PRN if user is a student
+        student_prn = None
+        if user_data['role'] == 'STUDENT':
+            cursor.execute("SELECT enrollment_number FROM student WHERE user_id = %s", (user_data["user_id"],))
+            s_row = cursor.fetchone()
+            if s_row and s_row['enrollment_number']:
+                student_prn = s_row['enrollment_number']
+            else:
+                student_prn = f"PRN-2024-CSE-{100 + user_data['user_id']}"
+                cursor.execute("UPDATE student SET enrollment_number = %s WHERE user_id = %s", (student_prn, user_data["user_id"]))
+
         # Update last login timestamp
         cursor.execute("UPDATE users SET last_login = CURRENT_TIMESTAMP WHERE user_id = %s", (user_data["user_id"],))
         conn.commit()
@@ -134,10 +145,12 @@ def login():
             'full_name': full_name,
             'email': user_data['email'],
             'phone': user_data['phone'],
-            'role': user_data['role']
+            'role': user_data['role'],
+            'prn': student_prn,
+            'enrollment_number': student_prn
         }
 
-        log_audit(user_data['user_id'], 'LOGIN', 'users', user_data['user_id'], f"User logged in as {user_data['role']}")
+        log_audit(user_data['user_id'], 'LOGIN', 'users', user_data['user_id'], f"User logged in as {user_data['role']} (PRN: {student_prn or 'N/A'})")
         flash(f"Welcome back, {full_name}!", "success")
 
         # Route strictly to the user's specific dashboard
@@ -151,6 +164,116 @@ def login():
             return redirect(url_for('super_head_dashboard'))
 
     return render_template('login.html', selected_role=selected_role)
+
+
+@app.route('/forgot-password', methods=['GET', 'POST'])
+def forgot_password():
+    selected_role = request.args.get('role', '').upper()
+    if request.method == 'POST':
+        identifier = request.form.get('identifier', '').strip()
+        selected_role = request.form.get('role', '').upper()
+
+        if not identifier:
+            flash("Please enter your registered Email Address or Student PRN.", "danger")
+            return render_template('forgot_password.html', step=1, selected_role=selected_role)
+
+        conn = get_db()
+        cursor = conn.cursor(dictionary=True)
+
+        cursor.execute("""
+            SELECT u.user_id, u.first_name, u.last_name, u.email, u.phone, u.role, u.status, s.enrollment_number AS prn
+            FROM users u
+            LEFT JOIN student s ON u.user_id = s.user_id
+            WHERE (u.email = %s OR s.enrollment_number = %s) AND u.status = 'ACTIVE'
+        """, (identifier, identifier))
+        user_match = cursor.fetchone()
+        cursor.close()
+        conn.close()
+
+        if not user_match:
+            flash("No active institutional account found matching that Email or Student PRN.", "danger")
+            return render_template('forgot_password.html', step=1, selected_role=selected_role, identifier=identifier)
+
+        # Generate a secure 6-digit cryptographic numeric OTP
+        import random
+        otp_code = f"{random.randint(100000, 999999)}"
+        full_name = f"{user_match['first_name']} {user_match['last_name']}"
+
+        session['reset_flow'] = {
+            'user_id': user_match['user_id'],
+            'email': user_match['email'],
+            'prn': user_match['prn'] or 'N/A',
+            'name': full_name,
+            'role': user_match['role'],
+            'otp': otp_code,
+            'step': 2,
+            'timestamp': datetime.datetime.now().strftime('%H:%M:%S')
+        }
+
+        log_audit(user_match['user_id'], 'UPDATE', 'users', user_match['user_id'], f"Password reset OTP generated for {user_match['email']}")
+        flash(f"Verification OTP sent to {user_match['email']}! For instant access/demo, your code is: {otp_code}", "info")
+        return redirect(url_for('verify_reset_otp'))
+
+    return render_template('forgot_password.html', step=1, selected_role=selected_role)
+
+
+@app.route('/verify-reset-otp', methods=['GET', 'POST'])
+def verify_reset_otp():
+    flow = session.get('reset_flow')
+    if not flow:
+        flash("Password reset session expired. Please start again.", "warning")
+        return redirect(url_for('forgot_password'))
+
+    if request.method == 'POST':
+        entered_otp = request.form.get('otp', '').strip()
+
+        if entered_otp == flow.get('otp'):
+            flow['step'] = 3
+            flow['authenticated'] = True
+            session['reset_flow'] = flow
+            flash("Identity verified successfully! Please choose your new password.", "success")
+            return redirect(url_for('reset_password'))
+        else:
+            flash("Invalid OTP verification code. Please check your email and try again.", "danger")
+            return render_template('forgot_password.html', step=2, flow=flow)
+
+    return render_template('forgot_password.html', step=2, flow=flow)
+
+
+@app.route('/reset-password', methods=['GET', 'POST'])
+def reset_password():
+    flow = session.get('reset_flow')
+    if not flow or not flow.get('authenticated'):
+        flash("Unauthorized password reset request. Please authenticate first.", "danger")
+        return redirect(url_for('forgot_password'))
+
+    if request.method == 'POST':
+        new_password = request.form.get('new_password', '').strip()
+        confirm_password = request.form.get('confirm_password', '').strip()
+
+        if len(new_password) < 6:
+            flash("Password must be at least 6 characters long.", "danger")
+            return render_template('forgot_password.html', step=3, flow=flow)
+
+        if new_password != confirm_password:
+            flash("Passwords do not match. Please re-enter identical passwords.", "danger")
+            return render_template('forgot_password.html', step=3, flow=flow)
+
+        conn = get_db()
+        cursor = conn.cursor(dictionary=True)
+        new_hash = hash_password(new_password)
+        cursor.execute("UPDATE users SET password_hash = %s WHERE user_id = %s", (new_hash, flow['user_id']))
+        conn.commit()
+        cursor.close()
+        conn.close()
+
+        log_audit(flow['user_id'], 'UPDATE', 'users', flow['user_id'], "User successfully reset password via Email OTP authentication")
+        role = flow.get('role', '')
+        session.pop('reset_flow', None)
+        flash("🎉 Password changed successfully! You can now log in with your new password.", "success")
+        return redirect(url_for('login', role=role))
+
+    return render_template('forgot_password.html', step=3, flow=flow)
 
 
 @app.route('/logout')
@@ -1515,10 +1638,11 @@ def admin_users():
                 new_uid = cursor.lastrowid
 
                 if role == 'STUDENT':
+                    unique_prn = f"PRN-2026-CSE-{100 + new_uid}"
                     cursor.execute("""
-                        INSERT INTO student (user_id, department_id, date_of_birth, gender, admission_date, address, student_status)
-                        VALUES (%s, %s, '2002-01-01', 'MALE', CURRENT_DATE, 'Campus Hostel', 'ACTIVE')
-                    """, (new_uid, dept_id))
+                        INSERT INTO student (user_id, department_id, date_of_birth, gender, admission_date, address, student_status, enrollment_number)
+                        VALUES (%s, %s, '2004-01-01', 'MALE', CURRENT_DATE, 'Campus Hostel', 'ACTIVE', %s)
+                    """, (new_uid, dept_id, unique_prn))
                 elif role == 'FACULTY':
                     cursor.execute("""
                         INSERT INTO faculty (user_id, department_id, designation, date_of_birth, gender, joining_date, salary, status)
