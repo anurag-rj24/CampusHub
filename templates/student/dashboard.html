@@ -1,216 +1,540 @@
 {% extends 'base.html' %}
 
-{% block title %}Student Enterprise Portal | CampusHub{% endblock %}
+{% block title %}Student Dashboard | CampusHub{% endblock %}
 {% block page_title %}🎓 School of Computer Science & Engineering{% endblock %}
 
 {% block content %}
-<!-- University Top Content Navigation Tabs (Matching Image) -->
-<div class="card" style="margin-bottom: 20px; padding: 10px 18px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px; background: rgba(15, 23, 42, 0.75);">
-    <div style="display: flex; gap: 8px; flex-wrap: wrap;">
-        <button class="btn btn-primary btn-sm" style="border-radius: 20px; padding: 6px 16px;">📰 News & Circulars</button>
-        <button class="btn btn-secondary btn-sm" style="border-radius: 20px; padding: 6px 16px;">🎬 Videos & Lectures</button>
-        <button class="btn btn-secondary btn-sm" style="border-radius: 20px; padding: 6px 16px;">🖼️ Gallery</button>
-        <button class="btn btn-secondary btn-sm" style="border-radius: 20px; padding: 6px 16px;">🎉 Campus Events</button>
+<!-- University Top Content Navigation Tabs -->
+<div class="content-tab-bar" style="margin-bottom: 24px;">
+    <div class="tab-btn-group">
+        <button class="btn btn-primary btn-sm tab-btn" onclick="switchContentTab('overview', this)">
+            <span>📊 Overview & Academics</span>
+        </button>
+        <button class="btn btn-secondary btn-sm tab-btn" onclick="switchContentTab('videos', this)">
+            <span>🎬 Videos & Lectures</span>
+        </button>
+        <button class="btn btn-secondary btn-sm tab-btn" onclick="switchContentTab('gallery', this)">
+            <span>🖼️ Campus Gallery</span>
+        </button>
+        <button class="btn btn-secondary btn-sm tab-btn" onclick="switchContentTab('events', this)">
+            <span>🎉 Campus Events</span>
+        </button>
+        <button class="btn btn-secondary btn-sm tab-btn" onclick="switchContentTab('notices', this)">
+            <span>📰 News & Circulars</span>
+        </button>
     </div>
 
-    <div style="display: flex; align-items: center; gap: 12px;">
-        <span style="font-size: 0.85rem; color: var(--text-muted);">Academic Term: <strong>Spring 2026 (Sem V)</strong></span>
+    <div style="display: flex; align-items: center; gap: 12px; flex-wrap: wrap;">
+        <span style="font-size: 0.82rem; color: var(--text-muted);">Term: <strong style="color: var(--text-primary);">Spring 2026 (Sem V)</strong></span>
         <a href="{{ url_for('lost_found_hub') }}" class="btn btn-secondary btn-sm" style="border-color: rgba(16, 185, 129, 0.4); color: #34d399;">
             🔍 Lost & Found (Active)
         </a>
     </div>
 </div>
 
-<!-- Primary Dashboard Matrix (Matching Portal Reference Image) -->
-<div style="display: grid; grid-template-columns: 1.3fr 1.2fr 0.9fr; gap: 20px; margin-bottom: 24px;">
+<!-- ======================================================== -->
+<!-- 1. TAB PANEL: MAIN ACADEMIC OVERVIEW                     -->
+<!-- ======================================================== -->
+<div id="panel-overview" class="content-tab-panel active">
     
-    <!-- Widget 1: My Syllabus Status Chart -->
-    <div class="card" style="display: flex; flex-direction: column; justify-content: space-between;">
-        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
-            <h3 style="font-size: 1.05rem; font-weight: 700; color: #fff; margin: 0;">
-                📈 My Syllabus Status
-            </h3>
-            <a href="{{ url_for('student_syllabus') }}" style="font-size: 0.8rem; color: var(--primary); text-decoration: none; font-weight: 600;">
-                Full Syllabus →
-            </a>
-        </div>
-        <div style="height: 220px; position: relative;">
-            <canvas id="dashSyllabusChart"></canvas>
-        </div>
-        <div style="font-size: 0.75rem; color: var(--text-muted); text-align: center; margin-top: 8px;">
-            Covered Status % across registered courses
-        </div>
-    </div>
-
-    <!-- Widget 2: My Attendance (97.19%) -->
-    <div class="card" style="display: flex; flex-direction: column; justify-content: space-between;">
-        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
-            <div>
-                <h3 style="font-size: 1.05rem; font-weight: 700; color: #fff; margin: 0;">
-                    📅 My Attendance ({{ att_pct }}%)
-                </h3>
-                <span style="font-size: 0.75rem; color: var(--text-muted);">Session 2025-26</span>
-            </div>
-            <a href="{{ url_for('student_attendance') }}" class="badge badge-success" style="text-decoration: none;">
-                Safe Zone ≥ 75%
-            </a>
-        </div>
-
-        <div style="display: flex; flex-direction: column; gap: 8px; max-height: 200px; overflow-y: auto;">
-            {% for sub in attendance_subjects %}
-            <div style="display: flex; justify-content: space-between; align-items: center; font-size: 0.8rem; padding: 6px 10px; background: rgba(255,255,255,0.02); border-radius: 6px; border-left: 2px solid {% if sub.pct >= 75 %}#10b981{% else %}#ef4444{% endif %};">
-                <div style="overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 170px;">
-                    <strong style="color: #e2e8f0;">{{ sub.subject_code }}</strong>
-                    <span style="color: var(--text-muted); display: block; font-size: 0.72rem; overflow: hidden; text-overflow: ellipsis;">{{ sub.subject_name }}</span>
-                </div>
-                <div style="display: flex; align-items: center; gap: 8px;">
-                    <strong style="color: {% if sub.pct >= 75 %}#34d399{% else %}#f87171{% endif %}; font-size: 0.85rem;">{{ sub.pct }}%</strong>
-                    <span style="font-size: 0.7rem; color: {% if sub.pct >= 75 %}#10b981{% else %}#ef4444{% endif %}; font-weight: 600;">
-                        {{ sub.status_tag }}
-                    </span>
-                </div>
-            </div>
-            {% endfor %}
-        </div>
-
-        <div style="display: flex; justify-content: space-around; font-size: 0.72rem; color: var(--text-muted); margin-top: 8px; border-top: 1px dashed var(--border-color); padding-top: 6px;">
-            <span>🟢 Eligible (≥75%)</span>
-            <span>🟡 Waiting</span>
-            <span>🔴 Not-Eligible (&lt;75%)</span>
-        </div>
-    </div>
-
-    <!-- Widget 3: My Exam (Exam on the Way) -->
-    <div class="card" style="display: flex; flex-direction: column; justify-content: space-between; text-align: center; background: radial-gradient(circle at top, rgba(99, 102, 241, 0.15) 0%, rgba(15, 23, 42, 0.8) 100%);">
-        <div>
-            <h3 style="font-size: 1.05rem; font-weight: 700; color: #fff; margin-bottom: 8px;">
-                🎯 My Exam
-            </h3>
-            <div style="font-size: 3.5rem; margin: 8px 0;">
-                🧑‍💻
-            </div>
-            <strong style="color: #fca5a5; font-size: 0.95rem; display: block; margin-bottom: 4px;">
-                Need to Study Hard, Exam is on the way!
-            </strong>
-            <p style="font-size: 0.78rem; color: var(--text-muted); margin: 0 0 12px;">
-                End-Term Theory & Lab examinations commence April 10, 2026.
-            </p>
-        </div>
-
-        <div>
-            <a href="{{ url_for('student_hall_ticket') }}" class="btn btn-primary btn-sm" style="width: 100%;">
-                <span>🎫 View & Print Hall Ticket</span>
-            </a>
-        </div>
-    </div>
-</div>
-
-<!-- Secondary Results & Backlog Row -->
-<div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 20px; margin-bottom: 24px;">
-    <!-- Result Card -->
-    <div class="card">
-        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
-            <h3 style="font-size: 1rem; font-weight: 700; color: #fff; margin: 0;">
-                🏆 My Result (Sem-IV) : <span style="color: var(--accent);">{{ sgpa }} SGPA</span>
-            </h3>
-            <span class="badge badge-success">FIRST CLASS WITH DISTINCTION</span>
-        </div>
-        <p style="font-size: 0.82rem; color: var(--text-muted); line-height: 1.4; margin-bottom: 12px;">
-            All 26 credits cleared in regular semester without ATKT. CGPA Cumulative: <strong>9.14</strong>.
-        </p>
-        <a href="{{ url_for('student_academics') }}" class="btn btn-secondary btn-sm">Full Grade Card →</a>
-    </div>
-
-    <!-- Back Subject Details Card -->
-    <div class="card">
-        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
-            <h3 style="font-size: 1rem; font-weight: 700; color: #fff; margin: 0;">
-                🛡️ Back Subject Details
-            </h3>
-            <span class="badge badge-success">0 BACKLOGS</span>
-        </div>
-        <div style="display: flex; align-items: center; gap: 10px; padding: 10px; background: rgba(16, 185, 129, 0.08); border-radius: 6px; margin-bottom: 10px;">
-            <span style="font-size: 1.5rem;">🎉</span>
-            <div style="font-size: 0.82rem; color: #34d399;">
-                <strong>Clean Academic Record!</strong> No pending backlogs or re-appear papers.
-            </div>
-        </div>
-        <span style="font-size: 0.75rem; color: var(--text-muted);">End-Term Examination Clearance Status: <strong>APPROVED</strong></span>
-    </div>
-
-    <!-- Campus Lost & Found Quick Radar -->
-    <div class="card" style="border-top: 3px solid #10b981;">
-        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
-            <h3 style="font-size: 1rem; font-weight: 700; color: #fff; margin: 0;">
-                🔍 Lost & Found Live Radar
-            </h3>
-            <a href="{{ url_for('lost_found_hub') }}" style="font-size: 0.75rem; color: var(--primary); font-weight: 600; text-decoration: none;">View All</a>
-        </div>
+    <!-- Primary Dashboard Matrix (Fluid Responsive Grid) -->
+    <div class="dash-matrix-grid" style="margin-bottom: 24px;">
         
-        <div style="display: flex; flex-direction: column; gap: 6px;">
-            {% for item in recent_lost_found %}
-            <div style="font-size: 0.78rem; padding: 6px 8px; background: rgba(255,255,255,0.02); border-radius: 4px; display: flex; justify-content: space-between; align-items: center;">
-                <span style="color: #e2e8f0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 140px;">
-                    {% if item.item_type == 'FOUND' %}🟢{% else %}🔴{% endif %} {{ item.title }}
-                </span>
-                <span style="color: #38bdf8; font-size: 0.7rem;">{{ item.location }}</span>
+        <!-- Widget 1: My Syllabus Status Chart -->
+        <div class="glass-card" style="display: flex; flex-direction: column; justify-content: space-between;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+                <h3 style="font-size: 1.05rem; font-weight: 700; color: #fff; margin: 0; display: flex; align-items: center; gap: 8px;">
+                    📈 <span>Syllabus Progress</span>
+                </h3>
+                <a href="{{ url_for('student_syllabus') }}" style="font-size: 0.8rem; color: var(--primary); text-decoration: none; font-weight: 600;">
+                    Full Syllabus →
+                </a>
             </div>
-            {% endfor %}
+            <div style="height: 220px; position: relative; width: 100%;">
+                <canvas id="dashSyllabusChart"></canvas>
+            </div>
+            <div style="font-size: 0.75rem; color: var(--text-muted); text-align: center; margin-top: 8px;">
+                Completion progress across registered semester courses
+            </div>
         </div>
-        <a href="{{ url_for('lost_found_hub') }}" class="btn btn-secondary btn-sm" style="margin-top: 10px; width: 100%;">
-            <span>📢 Report Lost or Found Item</span>
-        </a>
+
+        <!-- Widget 2: My Attendance -->
+        <div class="glass-card" style="display: flex; flex-direction: column; justify-content: space-between;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+                <div>
+                    <h3 style="font-size: 1.05rem; font-weight: 700; color: #fff; margin: 0;">
+                        📅 Attendance ({{ att_pct }}%)
+                    </h3>
+                    <span style="font-size: 0.75rem; color: var(--text-muted);">Session 2025-26</span>
+                </div>
+                <a href="{{ url_for('student_attendance') }}" class="badge badge-success" style="text-decoration: none;">
+                    Safe Zone ≥ 75%
+                </a>
+            </div>
+
+            <div style="display: flex; flex-direction: column; gap: 8px; max-height: 200px; overflow-y: auto; padding-right: 4px;">
+                {% for sub in attendance_subjects %}
+                <div style="display: flex; justify-content: space-between; align-items: center; font-size: 0.82rem; padding: 8px 12px; background: rgba(255,255,255,0.02); border-radius: var(--radius-sm); border-left: 3px solid {% if sub.pct >= 75 %}#10b981{% else %}#ef4444{% endif %};">
+                    <div style="overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 190px;">
+                        <strong style="color: #e2e8f0;">{{ sub.subject_code }}</strong>
+                        <span style="color: var(--text-muted); display: block; font-size: 0.72rem; overflow: hidden; text-overflow: ellipsis;">{{ sub.subject_name }}</span>
+                    </div>
+                    <div style="display: flex; align-items: center; gap: 8px;">
+                        <strong style="color: {% if sub.pct >= 75 %}#34d399{% else %}#f87171{% endif %}; font-size: 0.88rem;">{{ sub.pct }}%</strong>
+                        <span style="font-size: 0.7rem; color: {% if sub.pct >= 75 %}#10b981{% else %}#ef4444{% endif %}; font-weight: 600;">
+                            {{ sub.status_tag }}
+                        </span>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+
+            <div style="display: flex; justify-content: space-around; font-size: 0.72rem; color: var(--text-muted); margin-top: 8px; border-top: 1px dashed var(--border-color); padding-top: 8px;">
+                <span>🟢 Eligible (≥75%)</span>
+                <span>🟡 Warning</span>
+                <span>🔴 Ineligible (&lt;75%)</span>
+            </div>
+        </div>
+
+        <!-- Widget 3: Examination Ready -->
+        <div class="glass-card" style="display: flex; flex-direction: column; justify-content: space-between; text-align: center; background: radial-gradient(circle at top, rgba(99, 102, 241, 0.18) 0%, rgba(17, 24, 39, 0.9) 100%);">
+            <div>
+                <h3 style="font-size: 1.05rem; font-weight: 700; color: #fff; margin-bottom: 8px;">
+                    🎯 End-Term Examination
+                </h3>
+                <div style="font-size: 3.2rem; margin: 8px 0; filter: drop-shadow(0 0 12px rgba(99, 102, 241, 0.4));">
+                    🧑‍💻
+                </div>
+                <strong style="color: #fca5a5; font-size: 0.95rem; display: block; margin-bottom: 4px;">
+                    End-Term Examination Approaching!
+                </strong>
+                <p style="font-size: 0.78rem; color: var(--text-muted); margin: 0 0 12px; line-height: 1.4;">
+                    Theory & Lab practical assessments commence April 10, 2026.
+                </p>
+            </div>
+
+            <div>
+                <a href="{{ url_for('student_hall_ticket') }}" class="btn btn-primary btn-sm" style="width: 100%;">
+                    <span>🎫 View & Print Hall Ticket</span>
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Secondary Results & Clearances Row -->
+    <div class="dash-secondary-grid" style="margin-bottom: 24px;">
+        <!-- Result Card -->
+        <div class="glass-card">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+                <h3 style="font-size: 1rem; font-weight: 700; color: #fff; margin: 0;">
+                    🏆 Previous Result : <span style="color: var(--accent);">{{ sgpa }} SGPA</span>
+                </h3>
+                <span class="badge badge-success">DISTINCTION</span>
+            </div>
+            <p style="font-size: 0.82rem; color: var(--text-muted); line-height: 1.5; margin-bottom: 14px;">
+                All registered semester credits successfully cleared without backlogs. Cumulative CGPA: <strong style="color: #fff;">9.14</strong>.
+            </p>
+            <a href="{{ url_for('student_academics') }}" class="btn btn-secondary btn-sm">Full Grade Card →</a>
+        </div>
+
+        <!-- Back Subject Details Card -->
+        <div class="glass-card">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+                <h3 style="font-size: 1rem; font-weight: 700; color: #fff; margin: 0;">
+                    🛡️ Backlog Status
+                </h3>
+                <span class="badge badge-success">0 ACTIVE BACKLOGS</span>
+            </div>
+            <div style="display: flex; align-items: center; gap: 10px; padding: 10px; background: rgba(16, 185, 129, 0.08); border-radius: var(--radius-sm); margin-bottom: 10px;">
+                <span style="font-size: 1.4rem;">🎉</span>
+                <div style="font-size: 0.82rem; color: #34d399;">
+                    <strong>Clean Academic Record!</strong> No pending reappears or backlogs.
+                </div>
+            </div>
+            <span style="font-size: 0.75rem; color: var(--text-muted);">Exam Clearance Status: <strong style="color: #34d399;">ELIGIBLE</strong></span>
+        </div>
+
+        <!-- Campus Lost & Found Quick Radar -->
+        <div class="glass-card" style="border-top: 3px solid #10b981;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+                <h3 style="font-size: 1rem; font-weight: 700; color: #fff; margin: 0;">
+                    🔍 Lost & Found Live Radar
+                </h3>
+                <a href="{{ url_for('lost_found_hub') }}" style="font-size: 0.75rem; color: var(--primary); font-weight: 600; text-decoration: none;">View All</a>
+            </div>
+            
+            <div style="display: flex; flex-direction: column; gap: 6px;">
+                {% for item in recent_lost_found %}
+                <div style="font-size: 0.78rem; padding: 6px 10px; background: rgba(255,255,255,0.02); border-radius: 4px; display: flex; justify-content: space-between; align-items: center;">
+                    <span style="color: #e2e8f0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 140px;">
+                        {% if item.item_type == 'FOUND' %}🟢{% else %}🔴{% endif %} {{ item.title }}
+                    </span>
+                    <span style="color: #38bdf8; font-size: 0.7rem;">{{ item.location }}</span>
+                </div>
+                {% endfor %}
+            </div>
+            <a href="{{ url_for('lost_found_hub') }}" class="btn btn-secondary btn-sm" style="margin-top: 10px; width: 100%;">
+                <span>📢 Report Lost or Found Item</span>
+            </a>
+        </div>
+    </div>
+
+    <!-- Class Timetable & Announcements Grid -->
+    <div class="dash-schedule-grid">
+        <!-- Today's Schedule -->
+        <div class="glass-card">
+            <div class="card-header">
+                <h3 class="card-title">⏰ Today's Class & Lab Schedule</h3>
+                <a href="{{ url_for('student_schedule') }}" class="btn btn-secondary btn-sm">Full Timetable →</a>
+            </div>
+
+            <div style="display: flex; flex-direction: column; gap: 10px;">
+                {% for c in today_classes %}
+                <div style="display: flex; justify-content: space-between; align-items: center; padding: 12px 14px; background: rgba(255,255,255,0.03); border: 1px solid var(--border-color); border-radius: var(--radius-md); border-left: 3px solid {% if c.session_type == 'LAB' %}#06b6d4{% else %}#6366f1{% endif %};">
+                    <div>
+                        <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 2px;">
+                            <strong style="font-size: 0.9rem;">{{ c.subject_name }}</strong>
+                            <span class="badge {% if c.session_type == 'LAB' %}badge-secondary{% else %}badge-primary{% endif %}" style="font-size: 0.65rem; padding: 2px 6px;">{{ c.session_type }}</span>
+                        </div>
+                        <div style="font-size: 0.78rem; color: var(--text-muted);">
+                            Faculty: {{ c.faculty_name }} | Room: <strong style="color: #fff;">{{ c.room_no }}</strong>
+                        </div>
+                    </div>
+                    <div style="font-weight: 700; font-size: 0.85rem; color: var(--text-primary);">
+                        {{ c.start_time }} - {{ c.end_time }}
+                    </div>
+                </div>
+                {% else %}
+                <p style="color: var(--text-muted); font-size: 0.88rem;">No classes scheduled for today.</p>
+                {% endfor %}
+            </div>
+        </div>
+
+        <!-- Campus Notices -->
+        <div class="glass-card">
+            <div class="card-header">
+                <h3 class="card-title">📢 Official Announcements</h3>
+                <span class="badge badge-primary">Recent</span>
+            </div>
+
+            <div style="display: flex; flex-direction: column; gap: 10px;">
+                {% for n in notices %}
+                <div style="padding: 12px 14px; border-radius: var(--radius-md); background: rgba(255,255,255,0.03); border-left: 3px solid var(--primary);">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px;">
+                        <strong style="font-size: 0.88rem; color: #fff;">{{ n.title }}</strong>
+                        <span style="font-size: 0.72rem; color: var(--text-muted);">{{ n.created_at.strftime('%b %d') if n.created_at else 'Recent' }}</span>
+                    </div>
+                    <p style="font-size: 0.78rem; color: var(--text-muted); margin: 0; line-height: 1.4;">{{ n.content[:110] }}...</p>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+
+</div>
+
+<!-- ======================================================== -->
+<!-- 2. TAB PANEL: VIDEOS & LECTURES                          -->
+<!-- ======================================================== -->
+<div id="panel-videos" class="content-tab-panel">
+    <div class="filter-chips-bar">
+        <span style="font-size: 0.82rem; color: var(--text-muted); font-weight: 600; margin-right: 6px;">Filter By:</span>
+        <button class="filter-chip active" onclick="filterVideoItems('all', this)">All Lectures</button>
+        <button class="filter-chip" onclick="filterVideoItems('cs', this)">Computer Networks</button>
+        <button class="filter-chip" onclick="filterVideoItems('ai', this)">AI & Machine Learning</button>
+        <button class="filter-chip" onclick="filterVideoItems('db', this)">Database Systems</button>
+        <button class="filter-chip" onclick="filterVideoItems('web', this)">Cloud & DevOps</button>
+    </div>
+
+    <div class="videos-grid">
+        <!-- Video 1 -->
+        <div class="video-card video-card-item" data-category="cs">
+            <div class="video-thumb" onclick="playLectureVideo('Advanced Routing & BGP Protocols', 'Prof. Dr. Vikram Sharma', '48:30 min')" style="background: linear-gradient(135deg, #1e1b4b, #0f172a);">
+                <div class="video-play-badge">▶</div>
+                <span class="video-duration">48:30 min</span>
+            </div>
+            <div class="video-info">
+                <div>
+                    <span class="badge badge-primary" style="font-size: 0.68rem; margin-bottom: 6px;">Computer Networks</span>
+                    <h4 class="video-title">Advanced Routing & BGP Protocol Implementations</h4>
+                </div>
+                <div class="video-meta">
+                    <span>Prof. Dr. Vikram Sharma</span>
+                    <span style="color: var(--secondary);">Recorded • HD</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Video 2 -->
+        <div class="video-card video-card-item" data-category="ai">
+            <div class="video-thumb" onclick="playLectureVideo('Transformers & Large Language Models', 'Dr. Ananya Roy', '55:10 min')" style="background: linear-gradient(135deg, #311042, #111827);">
+                <div class="video-play-badge">▶</div>
+                <span class="video-duration">55:10 min</span>
+            </div>
+            <div class="video-info">
+                <div>
+                    <span class="badge badge-secondary" style="font-size: 0.68rem; margin-bottom: 6px;">AI & ML</span>
+                    <h4 class="video-title">Attention Mechanisms & Multi-Head Transformers</h4>
+                </div>
+                <div class="video-meta">
+                    <span>Dr. Ananya Roy</span>
+                    <span style="color: var(--secondary);">Recorded • 4K</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Video 3 -->
+        <div class="video-card video-card-item" data-category="db">
+            <div class="video-thumb" onclick="playLectureVideo('Distributed Transactions & ACID Properties', 'Prof. Rajesh Khanna', '42:15 min')" style="background: linear-gradient(135deg, #064e3b, #0f172a);">
+                <div class="video-play-badge">▶</div>
+                <span class="video-duration">42:15 min</span>
+            </div>
+            <div class="video-info">
+                <div>
+                    <span class="badge badge-success" style="font-size: 0.68rem; margin-bottom: 6px;">Database Systems</span>
+                    <h4 class="video-title">Distributed Transactions, Two-Phase Commit & Raft Consensus</h4>
+                </div>
+                <div class="video-meta">
+                    <span>Prof. Rajesh Khanna</span>
+                    <span style="color: var(--secondary);">Recorded • HD</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Video 4 -->
+        <div class="video-card video-card-item" data-category="web">
+            <div class="video-thumb" onclick="playLectureVideo('Kubernetes Cluster Architecture & Helm Charts', 'Eng. Siddharth Mehta', '60:00 min')" style="background: linear-gradient(135deg, #1e3a8a, #0f172a);">
+                <div class="video-play-badge">▶</div>
+                <span class="video-duration">1:00:00 hr</span>
+            </div>
+            <div class="video-info">
+                <div>
+                    <span class="badge badge-primary" style="font-size: 0.68rem; margin-bottom: 6px;">Cloud & DevOps</span>
+                    <h4 class="video-title">Kubernetes Cluster Architecture, Ingress & Helm Deployments</h4>
+                </div>
+                <div class="video-meta">
+                    <span>Eng. Siddharth Mehta (Industry Guest)</span>
+                    <span style="color: var(--secondary);">Workshop</span>
+                </div>
+            </div>
+        </div>
     </div>
 </div>
 
-<!-- Class Timetable & Digital Document Vault Grid -->
-<div class="grid-2" style="margin-bottom: 24px;">
-    <!-- Today's Schedule -->
-    <div class="glass-card">
-        <div class="card-header">
-            <h3 class="card-title">⏰ Today's Class & Lab Schedule</h3>
-            <a href="{{ url_for('student_schedule') }}" class="btn btn-secondary btn-sm">Full Timetable →</a>
-        </div>
+<!-- ======================================================== -->
+<!-- 3. TAB PANEL: CAMPUS GALLERY                             -->
+<!-- ======================================================== -->
+<div id="panel-gallery" class="content-tab-panel">
+    <div class="filter-chips-bar">
+        <span style="font-size: 0.82rem; color: var(--text-muted); font-weight: 600; margin-right: 6px;">Category:</span>
+        <button class="filter-chip active" onclick="filterGalleryItems('all', this)">All Photos</button>
+        <button class="filter-chip" onclick="filterGalleryItems('hackathon', this)">Tech Hackathon 2026</button>
+        <button class="filter-chip" onclick="filterGalleryItems('sports', this)">Annual Sports Meet</button>
+        <button class="filter-chip" onclick="filterGalleryItems('campus', this)">Campus Infrastructure</button>
+        <button class="filter-chip" onclick="filterGalleryItems('convocation', this)">Convocation Ceremony</button>
+    </div>
 
-        <div style="display: flex; flex-direction: column; gap: 10px;">
-            {% for c in today_classes %}
-            <div style="display: flex; justify-content: space-between; align-items: center; padding: 10px 14px; background: rgba(255,255,255,0.03); border: 1px solid var(--border-color); border-radius: var(--radius-md); border-left: 3px solid {% if c.session_type == 'LAB' %}#06b6d4{% else %}#6366f1{% endif %};">
-                <div>
-                    <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 2px;">
-                        <strong style="font-size: 0.9rem;">{{ c.subject_name }}</strong>
-                        <span class="badge {% if c.session_type == 'LAB' %}badge-secondary{% else %}badge-primary{% endif %}" style="font-size: 0.65rem; padding: 2px 6px;">{{ c.session_type }}</span>
-                    </div>
-                    <div style="font-size: 0.78rem; color: var(--text-muted);">
-                        Faculty: {{ c.faculty_name }} | Room: <strong>{{ c.room_no }}</strong>
-                    </div>
-                </div>
-                <div style="font-weight: 700; font-size: 0.85rem; color: var(--text-primary);">
-                    {{ c.start_time }} - {{ c.end_time }}
+    <div class="gallery-grid">
+        <!-- Photo 1 -->
+        <div class="gallery-card gallery-item" data-category="hackathon" onclick="openGalleryLightbox('National Hackathon 2026 Grand Finale', 'Tech Hackathon', 'https://images.unsplash.com/photo-1531482615713-2afd69097998?w=800&auto=format&fit=crop&q=80')">
+            <div class="gallery-thumb-box" style="background: url('https://images.unsplash.com/photo-1531482615713-2afd69097998?w=500&auto=format&fit=crop&q=80') center/cover;">
+                <div class="gallery-overlay-info">
+                    <span class="gallery-tag">Tech Hackathon</span>
+                    <h4 class="gallery-title">Smart India 36-Hr Coding Sprint</h4>
                 </div>
             </div>
-            {% else %}
-            <p style="color: var(--text-muted); font-size: 0.88rem;">No classes scheduled for today.</p>
+        </div>
+
+        <!-- Photo 2 -->
+        <div class="gallery-card gallery-item" data-category="sports" onclick="openGalleryLightbox('Inter-University Football Championship', 'Sports Meet', 'https://images.unsplash.com/photo-1574629810360-7efbbe195018?w=800&auto=format&fit=crop&q=80')">
+            <div class="gallery-thumb-box" style="background: url('https://images.unsplash.com/photo-1574629810360-7efbbe195018?w=500&auto=format&fit=crop&q=80') center/cover;">
+                <div class="gallery-overlay-info">
+                    <span class="gallery-tag">Sports Meet</span>
+                    <h4 class="gallery-title">Champions Trophy 2026</h4>
+                </div>
+            </div>
+        </div>
+
+        <!-- Photo 3 -->
+        <div class="gallery-card gallery-item" data-category="campus" onclick="openGalleryLightbox('State-of-the-art Supercomputing Lab', 'Campus Life', 'https://images.unsplash.com/photo-1581092160607-ee22621dd758?w=800&auto=format&fit=crop&q=80')">
+            <div class="gallery-thumb-box" style="background: url('https://images.unsplash.com/photo-1581092160607-ee22621dd758?w=500&auto=format&fit=crop&q=80') center/cover;">
+                <div class="gallery-overlay-info">
+                    <span class="gallery-tag">Campus Infrastructure</span>
+                    <h4 class="gallery-title">Quantum & AI Research Lab</h4>
+                </div>
+            </div>
+        </div>
+
+        <!-- Photo 4 -->
+        <div class="gallery-card gallery-item" data-category="convocation" onclick="openGalleryLightbox('Annual Convocation & Degree Distribution', 'Convocation', 'https://images.unsplash.com/photo-1523240795612-9a054b0db644?w=800&auto=format&fit=crop&q=80')">
+            <div class="gallery-thumb-box" style="background: url('https://images.unsplash.com/photo-1523240795612-9a054b0db644?w=500&auto=format&fit=crop&q=80') center/cover;">
+                <div class="gallery-overlay-info">
+                    <span class="gallery-tag">Convocation</span>
+                    <h4 class="gallery-title">Class of 2025 Honors Ceremony</h4>
+                </div>
+            </div>
+        </div>
+
+        <!-- Photo 5 -->
+        <div class="gallery-card gallery-item" data-category="campus" onclick="openGalleryLightbox('Central Academic Auditorium', 'Campus Life', 'https://images.unsplash.com/photo-1517245386807-bb43f82c33c4?w=800&auto=format&fit=crop&q=80')">
+            <div class="gallery-thumb-box" style="background: url('https://images.unsplash.com/photo-1517245386807-bb43f82c33c4?w=500&auto=format&fit=crop&q=80') center/cover;">
+                <div class="gallery-overlay-info">
+                    <span class="gallery-tag">Campus Infrastructure</span>
+                    <h4 class="gallery-title">Main Auditorium & Conference Hall</h4>
+                </div>
+            </div>
+        </div>
+
+        <!-- Photo 6 -->
+        <div class="gallery-card gallery-item" data-category="hackathon" onclick="openGalleryLightbox('AI Innovation Exhibition & Project Demos', 'Tech Hackathon', 'https://images.unsplash.com/photo-1522071820081-009f0129c71c?w=800&auto=format&fit=crop&q=80')">
+            <div class="gallery-thumb-box" style="background: url('https://images.unsplash.com/photo-1522071820081-009f0129c71c?w=500&auto=format&fit=crop&q=80') center/cover;">
+                <div class="gallery-overlay-info">
+                    <span class="gallery-tag">Tech Fest</span>
+                    <h4 class="gallery-title">Robotics & IoT Showcase</h4>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ======================================================== -->
+<!-- 4. TAB PANEL: CAMPUS EVENTS                              -->
+<!-- ======================================================== -->
+<div id="panel-events" class="content-tab-panel">
+    <div class="events-grid">
+        <!-- Event 1 -->
+        <div class="event-card" style="--event-gradient: linear-gradient(90deg, #6366f1, #8b5cf6);">
+            <div style="display: flex; gap: 16px; align-items: flex-start;">
+                <div class="event-date-badge">
+                    <span class="event-date-day">14</span>
+                    <span class="event-date-month">APR</span>
+                </div>
+                <div>
+                    <span class="badge badge-primary" style="font-size: 0.68rem; margin-bottom: 6px;">National Tech Fest</span>
+                    <h3 style="font-size: 1.1rem; font-weight: 700; color: #fff; margin-bottom: 4px;">InnoHack 2026: 36hr AI Hackathon</h3>
+                    <p style="font-size: 0.8rem; color: var(--text-muted); margin: 0;">Venue: Central Innovation Arena • Teams from 40+ Universities</p>
+                </div>
+            </div>
+            <div style="display: flex; justify-content: space-between; align-items: center; border-top: 1px solid var(--border-color); padding-top: 14px;">
+                <span style="font-size: 0.78rem; color: #34d399; font-weight: 600;">🟢 Registrations Open (Free)</span>
+                <button class="btn btn-primary btn-sm" onclick="alert('You have successfully registered for InnoHack 2026!')">
+                    <span>Register Now →</span>
+                </button>
+            </div>
+        </div>
+
+        <!-- Event 2 -->
+        <div class="event-card" style="--event-gradient: linear-gradient(90deg, #ec4899, #f59e0b);">
+            <div style="display: flex; gap: 16px; align-items: flex-start;">
+                <div class="event-date-badge" style="background: rgba(236, 72, 153, 0.15); color: #ec4899;">
+                    <span class="event-date-day">22</span>
+                    <span class="event-date-month">APR</span>
+                </div>
+                <div>
+                    <span class="badge badge-warning" style="font-size: 0.68rem; margin-bottom: 6px;">Cultural Fiesta</span>
+                    <h3 style="font-size: 1.1rem; font-weight: 700; color: #fff; margin-bottom: 4px;">AURA 2026: Annual Inter-College Fest</h3>
+                    <p style="font-size: 0.8rem; color: var(--text-muted); margin: 0;">Venue: University Amphitheatre • Music, Drama & Dance Nights</p>
+                </div>
+            </div>
+            <div style="display: flex; justify-content: space-between; align-items: center; border-top: 1px solid var(--border-color); padding-top: 14px;">
+                <span style="font-size: 0.78rem; color: #fbbf24; font-weight: 600;">⭐ Passes Available at Desk</span>
+                <button class="btn btn-secondary btn-sm" onclick="alert('Event added to your calendar!')">
+                    <span>+ Add to Calendar</span>
+                </button>
+            </div>
+        </div>
+
+        <!-- Event 3 -->
+        <div class="event-card" style="--event-gradient: linear-gradient(90deg, #06b6d4, #10b981);">
+            <div style="display: flex; gap: 16px; align-items: flex-start;">
+                <div class="event-date-badge" style="background: rgba(6, 182, 212, 0.15); color: #06b6d4;">
+                    <span class="event-date-day">05</span>
+                    <span class="event-date-month">MAY</span>
+                </div>
+                <div>
+                    <span class="badge badge-secondary" style="font-size: 0.68rem; margin-bottom: 6px;">Industry Workshop</span>
+                    <h3 style="font-size: 1.1rem; font-weight: 700; color: #fff; margin-bottom: 4px;">Google Cloud & Generative AI Workshop</h3>
+                    <p style="font-size: 0.8rem; color: var(--text-muted); margin: 0;">Venue: Seminar Hall 2 • Hands-on labs with free Google Cloud credits</p>
+                </div>
+            </div>
+            <div style="display: flex; justify-content: space-between; align-items: center; border-top: 1px solid var(--border-color); padding-top: 14px;">
+                <span style="font-size: 0.78rem; color: #38bdf8; font-weight: 600;">🎟️ Limited 120 Seats</span>
+                <button class="btn btn-primary btn-sm" onclick="alert('Reserved seat for Google Cloud Workshop!')">
+                    <span>Reserve Seat →</span>
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ======================================================== -->
+<!-- 5. TAB PANEL: NOTICES & CIRCULARS                        -->
+<!-- ======================================================== -->
+<div id="panel-notices" class="content-tab-panel">
+    <div class="glass-card">
+        <div class="card-header">
+            <h3 class="card-title">📰 Official University Circulars & Notices</h3>
+            <span class="badge badge-primary">Academic Year 2025-26</span>
+        </div>
+
+        <div style="display: flex; flex-direction: column; gap: 14px;">
+            {% for n in notices %}
+            <div style="padding: 16px; border-radius: var(--radius-md); background: rgba(255,255,255,0.02); border: 1px solid var(--border-color); border-left: 4px solid var(--primary);">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+                    <strong style="font-size: 1rem; color: #fff;">{{ n.title }}</strong>
+                    <span class="badge badge-secondary">{{ n.created_at.strftime('%d %b %Y') if n.created_at else 'Active' }}</span>
+                </div>
+                <p style="font-size: 0.85rem; color: var(--text-secondary); line-height: 1.5; margin: 0;">
+                    {{ n.content }}
+                </p>
+            </div>
             {% endfor %}
         </div>
     </div>
+</div>
 
-    <!-- Campus Notices -->
-    <div class="glass-card">
-        <div class="card-header">
-            <h3 class="card-title">📢 Campus Announcements & Notices</h3>
-            <span class="badge badge-primary">Official</span>
-        </div>
-
-        <div style="display: flex; flex-direction: column; gap: 10px;">
-            {% for n in notices %}
-            <div style="padding: 10px 12px; border-radius: var(--radius-md); background: rgba(255,255,255,0.03); border-left: 3px solid var(--primary);">
-                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2px;">
-                    <strong style="font-size: 0.88rem; color: #fff;">{{ n.title }}</strong>
-                    <span style="font-size: 0.72rem; color: var(--text-muted);">{{ n.created_at.strftime('%b %d') if n.created_at else 'Recent' }}</span>
-                </div>
-                <p style="font-size: 0.78rem; color: var(--text-muted); margin: 0; line-height: 1.4;">{{ n.content[:95] }}...</p>
+<!-- ======================================================== -->
+<!-- VIDEO PLAYER MODAL POPUP                                 -->
+<!-- ======================================================== -->
+<div id="videoPlayerModal" class="modal-overlay">
+    <div class="modal-box" style="max-width: 750px;">
+        <div class="modal-header">
+            <div>
+                <h3 id="videoModalTitle" style="font-size: 1.15rem; font-weight: 700; color: #fff; margin: 0;">Lecture Video</h3>
+                <span id="videoModalSpeaker" style="font-size: 0.78rem; color: var(--text-muted);">Recorded Academic Session</span>
             </div>
-            {% endfor %}
+            <button class="modal-close" onclick="closeModal('videoPlayerModal')">✕</button>
+        </div>
+        <div style="border-radius: var(--radius-md); overflow: hidden; background: #000; height: 350px; display: flex; align-items: center; justify-content: center; position: relative;">
+            <div style="text-align: center; color: #94a3b8;">
+                <div style="font-size: 3rem; margin-bottom: 8px;">🎬</div>
+                <p style="font-size: 0.9rem; color: #e2e8f0; margin-bottom: 6px;">Interactive HD Video Stream Ready</p>
+                <span style="font-size: 0.78rem; color: #38bdf8;">Encrypted DRM Campus Stream • 1080p 60fps</span>
+            </div>
+        </div>
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 18px;">
+            <span style="font-size: 0.82rem; color: var(--text-muted);">Download Lecture PDF Notes & Slides:</span>
+            <button class="btn btn-secondary btn-sm" onclick="alert('Lecture notes downloaded successfully!')">
+                <span>📥 Download Notes (.PDF)</span>
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- ======================================================== -->
+<!-- GALLERY LIGHTBOX MODAL POPUP                             -->
+<!-- ======================================================== -->
+<div id="galleryLightboxModal" class="modal-overlay">
+    <div class="modal-box" style="max-width: 700px; padding: 20px;">
+        <div class="modal-header" style="margin-bottom: 12px; padding-bottom: 8px;">
+            <div>
+                <span id="lightboxTag" class="badge badge-primary" style="font-size: 0.7rem; margin-bottom: 4px;">Campus Life</span>
+                <h3 id="lightboxTitle" style="font-size: 1.05rem; font-weight: 700; color: #fff; margin: 0;">Gallery Preview</h3>
+            </div>
+            <button class="modal-close" onclick="closeModal('galleryLightboxModal')">✕</button>
+        </div>
+        <div style="border-radius: var(--radius-md); overflow: hidden; max-height: 440px; display: flex; align-items: center; justify-content: center; background: #000;">
+            <img id="lightboxImg" src="" alt="Campus Preview" style="width: 100%; height: auto; object-fit: contain; max-height: 440px;">
         </div>
     </div>
 </div>
@@ -232,7 +556,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     backgroundColor: 'rgba(56, 189, 248, 0.75)',
                     borderColor: '#38bdf8',
                     borderWidth: 1,
-                    borderRadius: 4
+                    borderRadius: 6
                 }]
             },
             options: {
@@ -246,7 +570,7 @@ document.addEventListener('DOMContentLoaded', () => {
                         grid: { color: 'rgba(255,255,255,0.05)' }
                     },
                     x: {
-                        ticks: { color: '#94a3b8', font: { size: 10 }, maxRotation: 45, minRotation: 45 },
+                        ticks: { color: '#94a3b8', font: { size: 10 } },
                         grid: { display: false }
                     }
                 },

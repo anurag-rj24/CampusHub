@@ -685,7 +685,13 @@ def student_placements():
     user_id = session['user']['user_id']
     conn = get_db()
     cursor = conn.cursor(dictionary=True)
-    cursor.execute("SELECT student_id FROM student WHERE user_id = %s", (user_id,))
+    cursor.execute("""
+        SELECT s.*, d.department_name, u.first_name, u.last_name, u.email, u.phone
+        FROM student s
+        JOIN users u ON s.user_id = u.user_id
+        LEFT JOIN department d ON s.department_id = d.department_id
+        WHERE s.user_id = %s
+    """, (user_id,))
     student = cursor.fetchone()
 
     drives = []
@@ -694,7 +700,9 @@ def student_placements():
     if student:
         cursor.execute("""
             SELECT d.drive_id, d.drive_title AS job_title, d.role_description AS job_description,
-                   d.package_in_lpa AS package_lpa, d.job_location,
+                   d.package_in_lpa AS package_lpa, d.job_location, d.job_role,
+                   d.minimum_cgpa, d.minimum_10th_percentage, d.minimum_12th_percentage, d.maximum_backlogs,
+                   d.eligible_degree, d.eligible_branch,
                    CONCAT('Min CGPA: ', d.minimum_cgpa, ', Branch: ', d.eligible_branch) AS eligibility_criteria,
                    d.drive_date, d.application_deadline, d.drive_status AS status,
                    c.company_name, c.industry_type AS industry, c.website,
@@ -707,7 +715,7 @@ def student_placements():
 
         cursor.execute("""
             SELECT sa.application_id, sa.applied_at AS applied_date, sa.status, sa.remarks AS interview_feedback,
-                   d.drive_title AS job_title, d.package_in_lpa AS package_lpa, c.company_name
+                   d.drive_title AS job_title, d.package_in_lpa AS package_lpa, c.company_name, d.job_location
             FROM student_application sa
             JOIN drive d ON sa.drive_id = d.drive_id
             JOIN company c ON d.company_id = c.company_id
@@ -718,7 +726,7 @@ def student_placements():
 
     cursor.close()
     conn.close()
-    return render_template('student/placements.html', drives=drives, applications=applications)
+    return render_template('student/placements.html', drives=drives, applications=applications, student=student)
 
 
 @app.route('/student/apply-drive/<int:drive_id>', methods=['POST'])

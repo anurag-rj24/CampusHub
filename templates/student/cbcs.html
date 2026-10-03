@@ -1,32 +1,37 @@
 {% extends "base.html" %}
 
-{% block title %}CBCS Elective Application{% endblock %}
+{% block title %}CBCS Electives & Curriculum Hub | CampusHub{% endblock %}
 {% block page_title %}📑 CBCS Elective Application & Track Selector{% endblock %}
 
 {% block content %}
-<div class="content-header">
+<div class="content-header" style="display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: 16px; margin-bottom: 24px;">
     <div>
-        <h2 style="font-size: 1.5rem; font-weight: 700; color: #fff; margin-bottom: 4px;">Choice-Based Credit System (CBCS) Electives</h2>
-        <p style="color: var(--text-muted); font-size: 0.95rem;">
-            Select your specialized Professional Elective (PE) and inter-disciplinary Open Elective (OE) for Academic Year 2025-26 Semester 5.
+        <h2 style="font-size: 1.6rem; font-weight: 800; color: #fff; margin-bottom: 6px; letter-spacing: -0.02em; display: flex; align-items: center; gap: 10px;">
+            <span>📑</span> Choice-Based Credit System (CBCS) Elective Portal
+        </h2>
+        <p style="color: var(--text-muted); font-size: 0.95rem; max-width: 800px; line-height: 1.5;">
+            Explore and select your specialized Professional Elective (PE) and inter-disciplinary Open Elective (OE) tracks. Tap any course card to inspect the full syllabus breakdown, lecture units, prerequisites, and learning outcomes before choosing.
         </p>
     </div>
-    <div style="display: flex; gap: 12px;">
-        <span class="badge badge-success" style="font-size: 0.9rem; padding: 8px 16px;">
-            ✨ CBCS Window Active (Closes April 15, 2026)
+    <div style="display: flex; gap: 12px; align-items: center;">
+        <span class="badge badge-success" style="font-size: 0.88rem; padding: 10px 18px; border-radius: 12px; box-shadow: 0 4px 14px rgba(16, 185, 129, 0.25);">
+            ✨ CBCS Window Active (Sem 5)
         </span>
     </div>
 </div>
 
-<!-- Current Allocated Electives -->
-<div class="card" style="margin-bottom: 28px; border-left: 4px solid #10b981;">
-    <h3 style="font-size: 1.15rem; font-weight: 700; color: #fff; margin-bottom: 16px; display: flex; align-items: center; gap: 8px;">
-        <span>🎯</span> My Current CBCS Allocations
-    </h3>
+<!-- Current Allocated Electives Ledger -->
+<div class="glass-card" style="margin-bottom: 28px; border-left: 4px solid #10b981; padding: 22px 24px;">
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
+        <h3 style="font-size: 1.2rem; font-weight: 700; color: #fff; margin: 0; display: flex; align-items: center; gap: 8px;">
+            <span>🎯</span> My Registered CBCS Allocations
+        </h3>
+        <span style="font-size: 0.82rem; color: var(--text-muted);">Academic Year 2025-26</span>
+    </div>
 
     {% if current_choices %}
-    <div class="table-container">
-        <table class="table">
+    <div class="table-responsive">
+        <table class="data-table">
             <thead>
                 <tr>
                     <th>Elective Track</th>
@@ -34,20 +39,20 @@
                     <th>Course Title</th>
                     <th>Credits</th>
                     <th>Semester</th>
-                    <th>Status</th>
+                    <th>Allocation Status</th>
                 </tr>
             </thead>
             <tbody>
                 {% for c in current_choices %}
                 <tr>
                     <td>
-                        <strong style="color: {% if c.elective_type == 'PROFESSIONAL_ELECTIVE' %}#38bdf8{% else %}#a855f7{% endif %};">
+                        <strong style="color: {% if c.elective_type == 'PROFESSIONAL_ELECTIVE' %}#38bdf8{% else %}#c084fc{% endif %}; font-weight: 700;">
                             {{ c.elective_type.replace('_', ' ') }}
                         </strong>
                     </td>
-                    <td><span class="badge badge-info">{{ c.subject_code }}</span></td>
+                    <td><span class="badge badge-info" style="font-weight: 700;">{{ c.subject_code }}</span></td>
                     <td style="font-weight: 600; color: #f8fafc;">{{ c.subject_name }}</td>
-                    <td>{{ c.credits }} Credits</td>
+                    <td><span class="badge badge-secondary">{{ c.credits }} Credits</span></td>
                     <td>Sem {{ c.semester }} ({{ c.academic_year }})</td>
                     <td>
                         {% if c.status == 'ALLOCATED' or c.status == 'APPROVED' %}
@@ -62,32 +67,114 @@
         </table>
     </div>
     {% else %}
-    <p style="color: var(--text-muted); margin: 0;">No electives submitted yet. Please submit your preferences below.</p>
+    <div style="background: rgba(255,255,255,0.02); border: 1px dashed rgba(255,255,255,0.1); border-radius: 12px; padding: 20px; text-align: center;">
+        <p style="color: var(--text-muted); margin: 0; font-size: 0.92rem;">
+            No elective choices submitted yet for Semester 5. Tap any course below to inspect the syllabus and submit your preference.
+        </p>
+    </div>
     {% endif %}
 </div>
 
-<!-- Elective Selection Form -->
-<div class="card">
-    <h3 style="font-size: 1.15rem; font-weight: 700; color: #fff; margin-bottom: 16px; display: flex; align-items: center; gap: 8px;">
-        <span>📝</span> Elective Preference Submission (Semester 5)
-    </h3>
+<!-- Elective Course Catalog Header & Filters -->
+<div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 18px; flex-wrap: wrap; gap: 12px;">
+    <div>
+        <h3 style="font-size: 1.25rem; font-weight: 800; color: #fff; margin: 0;">📚 Available Elective Courses</h3>
+        <p style="color: var(--text-muted); font-size: 0.85rem; margin: 2px 0 0 0;">Tap any course card to open complete syllabus, modules & reference books</p>
+    </div>
+    <div style="display: flex; gap: 8px;">
+        <button class="btn btn-secondary btn-sm filter-pill active" onclick="filterCourses('ALL', this)" style="border-radius: 20px;">All Electives</button>
+        <button class="btn btn-secondary btn-sm filter-pill" onclick="filterCourses('PE', this)" style="border-radius: 20px; color: #38bdf8;">🔬 Professional Electives (PE)</button>
+        <button class="btn btn-secondary btn-sm filter-pill" onclick="filterCourses('OE', this)" style="border-radius: 20px; color: #c084fc;">🌐 Open Electives (OE)</button>
+    </div>
+</div>
+
+<!-- Dynamic Course Cards Grid -->
+<div id="courseCardsGrid" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(340px, 1fr)); gap: 20px; margin-bottom: 36px;">
+    {% for s in elective_subjects %}
+    {% set is_pe = s.subject_code.startswith('PE') %}
+    <div class="glass-card course-item-card" data-track="{% if is_pe %}PE{% else %}OE{% endif %}"
+         onclick="openCourseSyllabusModal('{{ s.subject_id }}', '{{ s.subject_code }}', '{{ s.subject_name|replace('\'', '\\\'') }}', '{{ s.credits }}', '{% if is_pe %}PROFESSIONAL_ELECTIVE{% else %}OPEN_ELECTIVE{% endif %}')"
+         style="cursor: pointer; transition: all 0.25s ease; border-top: 4px solid {% if is_pe %}#38bdf8{% else %}#a855f7{% endif %}; border-radius: 16px; padding: 22px; display: flex; flex-direction: column; justify-content: space-between; background: rgba(30, 41, 59, 0.45);"
+         onmouseover="this.style.transform='translateY(-4px)'; this.style.borderColor='rgba(99, 102, 241, 0.6)';"
+         onmouseout="this.style.transform='translateY(0)'; this.style.borderColor='var(--border-color)';">
+        
+        <div>
+            <!-- Badges -->
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+                <span class="badge" style="background: {% if is_pe %}rgba(56, 189, 248, 0.15){% else %}rgba(168, 85, 247, 0.15){% endif %}; color: {% if is_pe %}#38bdf8{% else %}#c084fc{% endif %}; font-weight: 700;">
+                    {{ s.subject_code }}
+                </span>
+                <span class="badge badge-secondary" style="font-size: 0.78rem;">
+                    {{ s.credits }} Credits (40h)
+                </span>
+            </div>
+
+            <!-- Course Title -->
+            <h4 style="font-size: 1.15rem; font-weight: 700; color: #fff; margin-bottom: 10px; line-height: 1.35;">
+                {{ s.subject_name }}
+            </h4>
+
+            <!-- Category Description -->
+            <p style="color: var(--text-muted); font-size: 0.85rem; line-height: 1.5; margin-bottom: 16px;">
+                {% if is_pe %}
+                    In-depth specialization tailored for advanced software engineering, cloud systems, algorithms, and applied machine intelligence.
+                {% else %}
+                    Interdisciplinary exploration crossing business analytics, robotics, bio-engineering, and modern quantitative methodologies.
+                {% endif %}
+            </p>
+
+            <!-- Metadata Box -->
+            <div style="background: rgba(15, 23, 42, 0.6); border: 1px solid rgba(255, 255, 255, 0.06); border-radius: 10px; padding: 10px 12px; margin-bottom: 14px; font-size: 0.8rem; display: flex; justify-content: space-between;">
+                <div>
+                    <span style="color: var(--text-muted);">Track:</span>
+                    <strong style="color: #f1f5f9; display: block;">{% if is_pe %}Professional (PE-I){% else %}Open Elective (OE-II){% endif %}</strong>
+                </div>
+                <div>
+                    <span style="color: var(--text-muted);">Evaluation:</span>
+                    <strong style="color: #10b981; display: block;">Theory + Project</strong>
+                </div>
+            </div>
+        </div>
+
+        <!-- Footer Action -->
+        <div style="border-top: 1px solid rgba(255, 255, 255, 0.08); padding-top: 12px; display: flex; justify-content: space-between; align-items: center;">
+            <span style="font-size: 0.78rem; color: #10b981; font-weight: 600;">● Seats Available</span>
+            <span style="font-size: 0.82rem; color: var(--primary); font-weight: 600; display: flex; align-items: center; gap: 4px;">
+                Tap for Syllabus & Select →
+            </span>
+        </div>
+    </div>
+    {% endfor %}
+</div>
+
+<!-- Elective Preference Submission Form Section -->
+<div class="glass-card" style="padding: 28px; border-radius: 18px; box-shadow: 0 10px 30px rgba(0,0,0,0.4);">
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; border-bottom: 1px solid var(--border-color); padding-bottom: 16px; flex-wrap: wrap; gap: 12px;">
+        <div>
+            <h3 style="font-size: 1.3rem; font-weight: 800; color: #fff; margin: 0; display: flex; align-items: center; gap: 8px;">
+                <span>📝</span> Semester 5 CBCS Preference Submission
+            </h3>
+            <p style="color: var(--text-muted); font-size: 0.88rem; margin: 4px 0 0 0;">Select one Professional Elective and one Open Elective to finalize your academic registration.</p>
+        </div>
+        <span class="badge badge-info" style="font-size: 0.8rem; padding: 6px 12px;">Auto-Saves to Transcript</span>
+    </div>
 
     <form method="POST" action="{{ url_for('student_cbcs') }}">
-        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 24px; margin-bottom: 24px;">
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 24px; margin-bottom: 26px;">
             
-            <!-- Professional Elective (PE) -->
-            <div style="background: rgba(15, 23, 42, 0.6); border: 1px solid var(--border-color); border-radius: 8px; padding: 20px;">
-                <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 12px;">
-                    <span style="font-size: 1.4rem;">🔬</span>
+            <!-- Professional Elective (PE) Select -->
+            <div style="background: rgba(15, 23, 42, 0.6); border: 1px solid rgba(56, 189, 248, 0.3); border-radius: 14px; padding: 22px;">
+                <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 14px;">
+                    <div style="font-size: 1.6rem; background: rgba(56, 189, 248, 0.15); width: 42px; height: 42px; border-radius: 10px; display: flex; align-items: center; justify-content: center;">🔬</div>
                     <div>
-                        <h4 style="color: #38bdf8; font-weight: 700; margin: 0;">Professional Elective - I (PE-I)</h4>
+                        <h4 style="color: #38bdf8; font-weight: 700; margin: 0; font-size: 1.1rem;">Professional Elective - I (PE-I)</h4>
                         <span style="font-size: 0.8rem; color: var(--text-muted);">Departmental Specialization (3 Credits)</span>
                     </div>
                 </div>
 
-                <div class="form-group" style="margin-bottom: 16px;">
-                    <label class="form-label">Select Course:</label>
-                    <select name="pe_subject_id" class="form-control" required>
+                <div class="form-group" style="margin-bottom: 12px;">
+                    <label class="form-label" style="font-size: 0.85rem; font-weight: 600;">Chosen Course:</label>
+                    <select name="pe_subject_id" id="peSelectDropdown" class="form-control" required style="background: rgba(15, 23, 42, 0.8); height: 46px; border-radius: 10px;">
                         <option value="">-- Choose Professional Elective --</option>
                         {% for s in elective_subjects %}
                             {% if s.subject_code.startswith('PE') %}
@@ -98,26 +185,24 @@
                         {% endfor %}
                     </select>
                 </div>
-
-                <ul style="font-size: 0.8rem; color: var(--text-muted); padding-left: 18px; margin: 0; line-height: 1.6;">
-                    <li>Deep Learning & Neural Networks</li>
-                    <li>Blockchain Architecture & Smart Contracts</li>
-                </ul>
+                <div style="font-size: 0.78rem; color: var(--text-muted);">
+                    💡 Tap any PE card above to preview course modules and auto-fill this selection.
+                </div>
             </div>
 
-            <!-- Open Elective (OE) -->
-            <div style="background: rgba(15, 23, 42, 0.6); border: 1px solid var(--border-color); border-radius: 8px; padding: 20px;">
-                <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 12px;">
-                    <span style="font-size: 1.4rem;">🌐</span>
+            <!-- Open Elective (OE) Select -->
+            <div style="background: rgba(15, 23, 42, 0.6); border: 1px solid rgba(168, 85, 247, 0.3); border-radius: 14px; padding: 22px;">
+                <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 14px;">
+                    <div style="font-size: 1.6rem; background: rgba(168, 85, 247, 0.15); width: 42px; height: 42px; border-radius: 10px; display: flex; align-items: center; justify-content: center;">🌐</div>
                     <div>
-                        <h4 style="color: #c084fc; font-weight: 700; margin: 0;">Open Elective - II (OE-II)</h4>
-                        <span style="font-size: 0.8rem; color: var(--text-muted);">Inter-Departmental Exploration (3 Credits)</span>
+                        <h4 style="color: #c084fc; font-weight: 700; margin: 0; font-size: 1.1rem;">Open Elective - II (OE-II)</h4>
+                        <span style="font-size: 0.8rem; color: var(--text-muted);">Inter-Disciplinary Course (3 Credits)</span>
                     </div>
                 </div>
 
-                <div class="form-group" style="margin-bottom: 16px;">
-                    <label class="form-label">Select Course:</label>
-                    <select name="oe_subject_id" class="form-control" required>
+                <div class="form-group" style="margin-bottom: 12px;">
+                    <label class="form-label" style="font-size: 0.85rem; font-weight: 600;">Chosen Course:</label>
+                    <select name="oe_subject_id" id="oeSelectDropdown" class="form-control" required style="background: rgba(15, 23, 42, 0.8); height: 46px; border-radius: 10px;">
                         <option value="">-- Choose Open Elective --</option>
                         {% for s in elective_subjects %}
                             {% if s.subject_code.startswith('OE') %}
@@ -128,19 +213,271 @@
                         {% endfor %}
                     </select>
                 </div>
-
-                <ul style="font-size: 0.8rem; color: var(--text-muted); padding-left: 18px; margin: 0; line-height: 1.6;">
-                    <li>Robotics & Autonomous Systems (Robotics Dept)</li>
-                    <li>Fintech & Quantitative Finance (Business School)</li>
-                </ul>
+                <div style="font-size: 0.78rem; color: var(--text-muted);">
+                    💡 Tap any OE card above to preview course modules and auto-fill this selection.
+                </div>
             </div>
         </div>
 
-        <div style="display: flex; justify-content: flex-end; gap: 12px; border-top: 1px solid var(--border-color); padding-top: 18px;">
-            <button type="submit" class="btn btn-primary" style="padding: 10px 24px;">
+        <div style="display: flex; justify-content: flex-end; gap: 14px; border-top: 1px solid var(--border-color); padding-top: 20px;">
+            <button type="submit" class="btn btn-primary" style="padding: 12px 28px; font-weight: 700; font-size: 0.95rem; border-radius: 10px; box-shadow: 0 4px 16px rgba(99, 102, 241, 0.4);">
                 <span>🚀 Confirm & Submit CBCS Choices</span>
             </button>
         </div>
     </form>
 </div>
+
+<!-- Detailed Course Syllabus & Content Section Modal -->
+<div id="syllabusModal" class="modal-overlay" style="display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.85); backdrop-filter: blur(10px); z-index: 9999; align-items: center; justify-content: center; padding: 20px;">
+    <div class="glass-card" style="max-width: 680px; width: 100%; max-height: 90vh; overflow-y: auto; border: 1px solid rgba(255, 255, 255, 0.15); border-radius: 20px; box-shadow: 0 25px 60px rgba(0,0,0,0.8); padding: 28px;">
+        
+        <!-- Modal Header -->
+        <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 20px; border-bottom: 1px solid var(--border-color); padding-bottom: 16px;">
+            <div>
+                <div style="display: flex; gap: 8px; margin-bottom: 8px;">
+                    <span id="modalCourseCodeBadge" class="badge badge-info" style="font-weight: 700;"></span>
+                    <span id="modalCourseCreditsBadge" class="badge badge-secondary"></span>
+                </div>
+                <h3 id="modalCourseTitle" style="color: #fff; font-size: 1.4rem; font-weight: 800; margin: 0; line-height: 1.3;"></h3>
+            </div>
+            <button onclick="closeCourseSyllabusModal()" style="background: rgba(255,255,255,0.06); border: 1px solid var(--border-color); border-radius: 50%; width: 36px; height: 36px; color: var(--text-muted); font-size: 1.2rem; cursor: pointer; display: flex; align-items: center; justify-content: center;">&times;</button>
+        </div>
+
+        <!-- Course Summary & Prerequisites -->
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 12px; margin-bottom: 20px;">
+            <div style="background: rgba(15, 23, 42, 0.6); padding: 12px 16px; border-radius: 10px; border: 1px solid rgba(255, 255, 255, 0.06);">
+                <div style="font-size: 0.75rem; color: var(--text-muted); text-transform: uppercase; font-weight: 600;">Faculty Mentor / Coordinator</div>
+                <div id="modalFaculty" style="color: #f1f5f9; font-weight: 700; margin-top: 2px;">Dr. Rajesh K. / Senior Academic Board</div>
+            </div>
+            <div style="background: rgba(15, 23, 42, 0.6); padding: 12px 16px; border-radius: 10px; border: 1px solid rgba(255, 255, 255, 0.06);">
+                <div style="font-size: 0.75rem; color: var(--text-muted); text-transform: uppercase; font-weight: 600;">Prerequisites</div>
+                <div id="modalPrereq" style="color: #38bdf8; font-weight: 600; margin-top: 2px;">Data Structures & Basic Computing</div>
+            </div>
+        </div>
+
+        <!-- Syllabus Breakdown Units -->
+        <div style="margin-bottom: 24px;">
+            <h4 style="font-size: 0.95rem; font-weight: 700; color: #818cf8; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 12px;">📑 Detailed Syllabus Curriculum & Modules</h4>
+            
+            <div id="syllabusUnitsContainer" style="display: flex; flex-direction: column; gap: 10px;">
+                <!-- Dynamically populated -->
+            </div>
+        </div>
+
+        <!-- Reference Materials & Textbooks -->
+        <div style="background: rgba(15, 23, 42, 0.6); border: 1px solid rgba(255, 255, 255, 0.06); border-radius: 12px; padding: 16px; margin-bottom: 24px;">
+            <div style="font-size: 0.8rem; color: var(--text-muted); font-weight: 700; text-transform: uppercase; margin-bottom: 6px;">📖 Standard Reference Textbooks</div>
+            <div id="modalBooks" style="color: #cbd5e1; font-size: 0.88rem; line-height: 1.5;">
+                • IEEE / ACM Standard Curriculum Guidelines & International Journal Publications
+            </div>
+        </div>
+
+        <!-- Action Buttons -->
+        <div style="display: flex; justify-content: space-between; align-items: center; border-top: 1px solid var(--border-color); padding-top: 18px;">
+            <button onclick="closeCourseSyllabusModal()" class="btn btn-secondary">Close Window</button>
+            <button id="selectCourseModalBtn" onclick="applyCourseSelection()" class="btn btn-primary" style="display: flex; align-items: center; gap: 8px;">
+                <span>✨ Select this Elective for Submission</span>
+            </button>
+        </div>
+    </div>
+</div>
+
+<script>
+let activeModalCourseId = null;
+let activeModalCourseType = null;
+
+const SYLLABUS_DATA = {
+    'PE501': {
+        prereq: 'Linear Algebra, Python Programming & Machine Learning Basics',
+        faculty: 'Prof. Ananya Sen (AI Lab Lead)',
+        books: '1. Deep Learning by Ian Goodfellow, Yoshua Bengio, Aaron Courville (MIT Press)<br>2. Hands-On Machine Learning with Scikit-Learn, Keras, and TensorFlow by Aurélien Géron',
+        units: [
+            { title: 'Unit 1: Neural Architecture Fundamentals', desc: 'Feedforward networks, activation functions, backpropagation calculus, cross-entropy loss functions, gradient descent variants (Adam, RMSprop).' },
+            { title: 'Unit 2: Convolutional Neural Networks (CNNs)', desc: 'Convolution layers, pooling mechanisms, ResNet, EfficientNet architectures, transfer learning, object detection and image segmentation.' },
+            { title: 'Unit 3: Sequence Modeling & Transformers', desc: 'Recurrent Neural Networks (RNNs), LSTM, GRU, Multi-Head Attention mechanisms, Transformer architecture, BERT and GPT foundation models.' },
+            { title: 'Unit 4: Generative Models & Deep RL', desc: 'Variational Autoencoders (VAEs), Generative Adversarial Networks (GANs), Diffusion Models, Policy Gradients and Q-Learning agents.' }
+        ]
+    },
+    'PE502': {
+        prereq: 'Distributed Systems, Applied Cryptography & Networking',
+        faculty: 'Dr. Vikram Malhotra (Blockchain Research Group)',
+        books: '1. Mastering Bitcoin by Andreas M. Antonopoulos<br>2. Building Ethereum DApps by Roberto Infante',
+        units: [
+            { title: 'Unit 1: Cryptographic Primitives & Consensus', desc: 'SHA-256 hash chains, Merkle trees, digital signatures (ECDSA), Proof of Work (PoW), Proof of Stake (PoS), Byzantine Fault Tolerance.' },
+            { title: 'Unit 2: Ethereum & Solidity Smart Contracts', desc: 'EVM architecture, gas optimization, smart contract security patterns, reentrancy defense, ERC-20 & ERC-721 token standards.' },
+            { title: 'Unit 3: Decentralized Applications (DApps)', desc: 'Web3.js, Ethers.js integration, IPFS decentralized storage, oracle networks (Chainlink), DeFi liquidity protocols and AMMs.' },
+            { title: 'Unit 4: Enterprise Blockchains & Layer-2', desc: 'Hyperledger Fabric permissioned networks, Zero-Knowledge Proofs (zk-SNARKs), Optimistic and ZK Rollups, cross-chain bridges.' }
+        ]
+    },
+    'PE503': {
+        prereq: 'Embedded Systems & Computer Networks',
+        faculty: 'Prof. R. Sundaram (IoT & Edge Systems)',
+        books: '1. Internet of Things: A Hands-On Approach by Arshdeep Bahga, Vijay Madisetti<br>2. Industrial IoT by Alasdair Gilchrist',
+        units: [
+            { title: 'Unit 1: CPS Architecture & Sensor Actuation', desc: 'Hardware sensor interfaces, analog-to-digital converters, MCU microcontrollers (ESP32, ARM Cortex), real-time operating systems (FreeRTOS).' },
+            { title: 'Unit 2: IoT Networking & Messaging Protocols', desc: 'MQTT, CoAP, WebSocket protocols, 6LoWPAN, BLE Mesh, LoRaWAN long-range communications, edge gateway architectures.' },
+            { title: 'Unit 3: Industrial SCADA & Security', desc: 'Modbus, OPC-UA protocols, telemetry pipelines, firmware OTA updates, hardware security modules (HSM) and device identity attestation.' },
+            { title: 'Unit 4: Edge Analytics & Digital Twins', desc: 'TinyML on embedded devices, predictive maintenance pipelines, physics-based simulations and enterprise cloud integration.' }
+        ]
+    },
+    'PE504': {
+        prereq: 'Linear Algebra, Complex Numbers & Quantum Mechanics',
+        faculty: 'Dr. Shweta Iyer (Quantum Computing Initiative)',
+        books: '1. Quantum Computation and Quantum Information by Nielsen & Chuang<br>2. Quantum Computing: An Applied Approach by Jack D. Hidary',
+        units: [
+            { title: 'Unit 1: Qubits & Quantum Superposition', desc: 'Bra-ket notation, Bloch sphere representation, Pauli gates, Hadamard gates, CNOT and entanglement, Bell state creation.' },
+            { title: 'Unit 2: Quantum Algorithms', desc: 'Deutsch-Jozsa algorithm, Simon algorithm, Quantum Fourier Transform, Shor factorization algorithm, Grover search algorithm.' },
+            { title: 'Unit 3: Quantum Programming with Qiskit', desc: 'Circuit composition, quantum simulators, noise models, error mitigation, IBM Quantum Experience cloud execution.' },
+            { title: 'Unit 4: Post-Quantum Cryptography (PQC)', desc: 'Lattice-based cryptography, Kyber key encapsulation, Dilithium digital signatures, quantum threat modeling for RSA/ECC.' }
+        ]
+    },
+    'PE505': {
+        prereq: 'Python Programming & Natural Language Processing',
+        faculty: 'Prof. Kabir Mehta (Generative Systems)',
+        books: '1. Generative Deep Learning by David Foster (O\'Reilly)<br>2. Natural Language Processing with Transformers by Lewis Tunstall',
+        units: [
+            { title: 'Unit 1: LLM Architecture & Prompt Engineering', desc: 'Decoder-only transformers, tokenization algorithms (BPE, SentencePiece), zero-shot and few-shot reasoning, chain-of-thought prompting.' },
+            { title: 'Unit 2: Parameter-Efficient Fine-Tuning (PEFT)', desc: 'LoRA, QLoRA, adapter layers, instruction tuning datasets, RLHF (Reinforcement Learning from Human Feedback), DPO alignment.' },
+            { title: 'Unit 3: Retrieval-Augmented Generation (RAG)', desc: 'Vector embeddings, chunking strategies, FAISS and Pinecone vector databases, hybrid BM25 + dense retrieval, re-ranking pipelines.' },
+            { title: 'Unit 4: Autonomous Agents & Tool Use', desc: 'LangChain and LlamaIndex orchestration, Function Calling, ReAct agent framework, memory architectures and latency benchmarking.' }
+        ]
+    },
+    'OE401': {
+        prereq: 'Engineering Mathematics & Basic Physics',
+        faculty: 'Dr. Arindam Bose (Robotics & Mechatronics)',
+        books: '1. Introduction to Robotics: Mechanics and Control by John J. Craig<br>2. Probabilistic Robotics by Sebastian Thrun',
+        units: [
+            { title: 'Unit 1: Robot Kinematics & Coordinate Frames', desc: 'Homogeneous transformations, Denavit-Hartenberg parameters, forward and inverse kinematics of robotic manipulators.' },
+            { title: 'Unit 2: Actuators, Sensors & Vision', desc: 'Servo motors, brushless actuators, LiDAR, Stereo Depth cameras, ultrasonic sensors, OpenCV robot visual perception.' },
+            { title: 'Unit 3: Robot Operating System (ROS2)', desc: 'ROS2 nodes, topics, publishers, subscribers, services, URDF robot descriptions, Gazebo simulation environments.' },
+            { title: 'Unit 4: Autonomous Navigation & SLAM', desc: 'Simultaneous Localization and Mapping (SLAM), A* and RRT path planning, obstacle avoidance, autonomous mobile robots (AMRs).' }
+        ]
+    },
+    'OE402': {
+        prereq: 'Basic Financial Accounting & Statistics',
+        faculty: 'Prof. Natasha Kapoor (Department of Management Studies)',
+        books: '1. Options, Futures, and Other Derivatives by John C. Hull<br>2. Quantitative Financial Risk Management by Michael Ong',
+        units: [
+            { title: 'Unit 1: Financial Markets & Digital Banking', desc: 'Equities, bonds, derivatives, automated clearing house (ACH), digital payment gateways (UPI, Stripe), open banking APIs.' },
+            { title: 'Unit 2: Algorithmic Trading & Quantitative Models', desc: 'Time series forecasting, moving average strategies, Bollinger bands, Black-Scholes options pricing model, backtesting pipelines.' },
+            { title: 'Unit 3: Credit Risk & AI in Lending', desc: 'Credit scoring models, fraud detection anomaly algorithms, alternative data credit underwriting, regulatory compliance (Basel III).' },
+            { title: 'Unit 4: RegTech & Decentralized Finance', desc: 'Anti-Money Laundering (AML) automation, Know-Your-Customer (KYC) identity verification, peer-to-peer micro-lending platforms.' }
+        ]
+    },
+    'OE403': {
+        prereq: 'Signals & Systems or Basic Biology',
+        faculty: 'Dr. Preeti Nair (Biomedical Engineering Wing)',
+        books: '1. Biomedical Signal Processing by Willis J. Tompkins<br>2. Medical Imaging Signals and Systems by Jerry L. Prince',
+        units: [
+            { title: 'Unit 1: Physiological Signal Acquisition', desc: 'ECG, EEG, EMG biomedical waveforms, bio-potential electrodes, noise filtering and amplification instrumentation.' },
+            { title: 'Unit 2: Biomedical Signal Processing', desc: 'Time-frequency wavelets, QRS complex detection in ECG, spectral analysis of brain rhythms in EEG, digital filter design.' },
+            { title: 'Unit 3: Medical Imaging Modalities', desc: 'X-Ray physics, Computed Tomography (CT) reconstruction, Magnetic Resonance Imaging (MRI), ultrasound imaging principles.' },
+            { title: 'Unit 4: AI in Clinical Diagnostics', desc: 'Deep learning for tumor classification in MRI, automated retinopathy detection, wearable vital monitoring algorithms.' }
+        ]
+    },
+    'OE404': {
+        prereq: 'General Awareness & Social Sciences',
+        faculty: 'Prof. Devendra Joshi (Sustainability Studies)',
+        books: '1. Environmental Economics by Charles D. Kolstad<br>2. Carbon Markets and Climate Finance by Axel Michaelowa',
+        units: [
+            { title: 'Unit 1: Principles of Environmental Economics', desc: 'Market failures, externalities, tragedy of the commons, Coase theorem, valuation of ecosystem services.' },
+            { title: 'Unit 2: Carbon Pricing & Emissions Trading', desc: 'Cap-and-trade systems, carbon taxes, European Union ETS, Clean Development Mechanism (CDM), voluntary carbon credits.' },
+            { title: 'Unit 3: Renewable Energy Transition & Finance', desc: 'Levelized cost of electricity (LCOE), green bonds, ESG investment metrics, grid parity economics of solar and wind.' },
+            { title: 'Unit 4: Sustainable Policy & Corporate Governance', desc: 'UN Sustainable Development Goals (SDGs), corporate carbon accounting, lifecycle analysis (LCA), climate resilience planning.' }
+        ]
+    },
+    'OE405': {
+        prereq: 'Creative Thinking & UI/UX Interest',
+        faculty: 'Prof. Tanvi Shah (Center for Product Design)',
+        books: '1. The Design of Everyday Things by Don Norman<br>2. Universal Principles of Design by William Lidwell',
+        units: [
+            { title: 'Unit 1: Human-Centered Design Thinking', desc: 'Empathize, Define, Ideate, Prototype, Test methodology, user personas, journey mapping, empathy interviews.' },
+            { title: 'Unit 2: Interaction Design & Information Architecture', desc: 'Affordances, signifiers, mental models, Fitts\' Law, Hick\'s Law, wireframing and responsive layout principles.' },
+            { title: 'Unit 3: Usability Testing & Accessibility (a11y)', desc: 'Heuristic evaluation, WCAG 2.1 accessibility guidelines, cognitive walkthroughs, A/B testing methodologies.' },
+            { title: 'Unit 4: Design Systems & Modern Design Tools', desc: 'Atomic design architecture, Figma component systems, micro-interactions, motion design and product storytelling.' }
+        ]
+    }
+};
+
+function openCourseSyllabusModal(id, code, title, credits, type) {
+    activeModalCourseId = id;
+    activeModalCourseType = type;
+    
+    document.getElementById('modalCourseCodeBadge').innerText = code;
+    document.getElementById('modalCourseCreditsBadge').innerText = credits + ' Academic Credits';
+    document.getElementById('modalCourseTitle').innerText = title;
+    
+    const info = SYLLABUS_DATA[code] || {
+        prereq: 'Standard Departmental Prerequisites',
+        faculty: 'Senior Academic Board',
+        books: 'Standard ACM/IEEE University Curriculum Textbooks',
+        units: [
+            { title: 'Unit 1: Core Fundamentals & Principles', desc: 'Introduction, theoretical frameworks, underlying axioms and practical foundations.' },
+            { title: 'Unit 2: Methods & Algorithmic Applications', desc: 'Core operational techniques, systematic design patterns and system implementation.' },
+            { title: 'Unit 3: Advanced Architectures & Systems', desc: 'Modern toolchains, scalable methodologies and industry case studies.' },
+            { title: 'Unit 4: Projects & Emerging Trends', desc: 'Capstone design projects, evaluation benchmarks and future research frontiers.' }
+        ]
+    };
+    
+    document.getElementById('modalFaculty').innerText = info.faculty;
+    document.getElementById('modalPrereq').innerText = info.prereq;
+    document.getElementById('modalBooks').innerHTML = info.books;
+    
+    const unitsContainer = document.getElementById('syllabusUnitsContainer');
+    unitsContainer.innerHTML = '';
+    
+    info.units.forEach((unit, idx) => {
+        const div = document.createElement('div');
+        div.style.background = 'rgba(15, 23, 42, 0.6)';
+        div.style.border = '1px solid rgba(255, 255, 255, 0.06)';
+        div.style.borderRadius = '10px';
+        div.style.padding = '12px 14px';
+        div.innerHTML = `
+            <div style="font-weight: 700; color: #f1f5f9; font-size: 0.9rem; margin-bottom: 4px;">${unit.title}</div>
+            <div style="color: var(--text-muted); font-size: 0.82rem; line-height: 1.45;">${unit.desc}</div>
+        `;
+        unitsContainer.appendChild(div);
+    });
+    
+    document.getElementById('syllabusModal').style.display = 'flex';
+}
+
+function closeCourseSyllabusModal() {
+    document.getElementById('syllabusModal').style.display = 'none';
+}
+
+function applyCourseSelection() {
+    if (!activeModalCourseId || !activeModalCourseType) return;
+    
+    if (activeModalCourseType === 'PROFESSIONAL_ELECTIVE') {
+        const peSelect = document.getElementById('peSelectDropdown');
+        if (peSelect) peSelect.value = activeModalCourseId;
+    } else {
+        const oeSelect = document.getElementById('oeSelectDropdown');
+        if (oeSelect) oeSelect.value = activeModalCourseId;
+    }
+    
+    closeCourseSyllabusModal();
+    
+    // Smooth scroll down to submission form
+    const formEl = document.querySelector('form[action*="student_cbcs"]');
+    if (formEl) {
+        formEl.scrollIntoView({ behavior: 'smooth' });
+    }
+}
+
+function filterCourses(type, btn) {
+    document.querySelectorAll('.filter-pill').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    
+    const cards = document.querySelectorAll('.course-item-card');
+    cards.forEach(card => {
+        if (type === 'ALL' || card.getAttribute('data-track') === type) {
+            card.style.display = 'flex';
+        } else {
+            card.style.display = 'none';
+        }
+    });
+}
+</script>
 {% endblock %}

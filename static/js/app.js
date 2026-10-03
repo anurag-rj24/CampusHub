@@ -109,37 +109,120 @@ function exportTableToCSV(tableId, filename = 'export.csv') {
     document.body.removeChild(downloadLink);
 }
 
-// AI Attendance & Bunk Safety Calculator
-function calculateAttendanceSafety(attended, total, minPercentage = 75) {
-    const currentPct = total === 0 ? 100 : (attended / total) * 100;
-    
-    if (currentPct >= minPercentage) {
-        // Can miss X classes
-        // (attended) / (total + X) >= minPercentage / 100
-        // attended >= (total + X) * P
-        // X <= (attended / P) - total
-        const p = minPercentage / 100;
-        const canMiss = Math.floor((attended / p) - total);
-        return {
-            status: 'SAFE',
-            percentage: currentPct.toFixed(1),
-            margin: canMiss,
-            message: canMiss > 0 
-                ? `You can safely skip up to ${canMiss} upcoming classes while maintaining ≥75%.`
-                : `You are on the boundary! Attend the next class to stay safe.`
-        };
-    } else {
-        // Must attend Y consecutive classes
-        // (attended + Y) / (total + Y) >= minPercentage / 100
-        // 100 * attended + 100 * Y >= P * total + P * Y
-        // Y * (100 - P) >= P * total - 100 * attended
-        const p = minPercentage;
-        const needed = Math.ceil((p * total - 100 * attended) / (100 - p));
-        return {
-            status: 'SHORTAGE',
-            percentage: currentPct.toFixed(1),
-            margin: needed,
-            message: `⚠️ Shortage Alert! You must attend ${needed} consecutive classes to reach 75%.`
-        };
+// Sidebar State & Toggle
+function initSidebar() {
+    const isCollapsed = localStorage.getItem('campushub_sidebar_collapsed') === 'true';
+    const appContainer = document.getElementById('appContainer');
+    if (appContainer && isCollapsed && window.innerWidth > 1024) {
+        appContainer.classList.add('sidebar-collapsed');
     }
 }
+
+function toggleSidebar() {
+    const appContainer = document.getElementById('appContainer');
+    const sidebar = document.getElementById('mainSidebar');
+    if (!appContainer) return;
+
+    if (window.innerWidth <= 1024) {
+        // Mobile Drawer Toggle
+        if (sidebar) {
+            sidebar.classList.toggle('mobile-open');
+        }
+        const backdrop = document.getElementById('sidebarBackdrop');
+        if (backdrop) {
+            backdrop.classList.toggle('active');
+        }
+    } else {
+        // Desktop Full Width Collapse
+        const isCollapsed = appContainer.classList.toggle('sidebar-collapsed');
+        localStorage.setItem('campushub_sidebar_collapsed', isCollapsed);
+    }
+
+    // Trigger chart resize if charts are present
+    setTimeout(() => {
+        window.dispatchEvent(new Event('resize'));
+    }, 350);
+}
+
+// Interactive Dashboard Content Tabs Switcher (News, Videos, Gallery, Events)
+function switchContentTab(tabName, btnElement) {
+    // Update active button
+    const container = btnElement.closest('.content-tab-bar') || btnElement.parentElement;
+    if (container) {
+        container.querySelectorAll('.tab-btn').forEach(b => {
+            b.classList.remove('btn-primary');
+            b.classList.add('btn-secondary');
+        });
+        btnElement.classList.remove('btn-secondary');
+        btnElement.classList.add('btn-primary');
+    }
+
+    // Hide all tab panels
+    document.querySelectorAll('.content-tab-panel').forEach(panel => {
+        panel.classList.remove('active');
+    });
+
+    // Show selected panel
+    const targetPanel = document.getElementById('panel-' + tabName);
+    if (targetPanel) {
+        targetPanel.classList.add('active');
+    }
+}
+
+// Category filter for gallery / videos / events
+function filterGalleryItems(category, btnElement) {
+    if (btnElement && btnElement.parentElement) {
+        btnElement.parentElement.querySelectorAll('.filter-chip').forEach(c => c.classList.remove('active'));
+        btnElement.classList.add('active');
+    }
+
+    document.querySelectorAll('.gallery-item').forEach(item => {
+        const itemCat = item.getAttribute('data-category');
+        if (category === 'all' || itemCat === category) {
+            item.style.display = '';
+        } else {
+            item.style.display = 'none';
+        }
+    });
+}
+
+function filterVideoItems(category, btnElement) {
+    if (btnElement && btnElement.parentElement) {
+        btnElement.parentElement.querySelectorAll('.filter-chip').forEach(c => c.classList.remove('active'));
+        btnElement.classList.add('active');
+    }
+
+    document.querySelectorAll('.video-card-item').forEach(item => {
+        const itemCat = item.getAttribute('data-category');
+        if (category === 'all' || itemCat === category) {
+            item.style.display = '';
+        } else {
+            item.style.display = 'none';
+        }
+    });
+}
+
+// Play Video Modal Demo
+function playLectureVideo(title, speaker, duration) {
+    const modalTitle = document.getElementById('videoModalTitle');
+    const modalSpeaker = document.getElementById('videoModalSpeaker');
+    if (modalTitle) modalTitle.textContent = title;
+    if (modalSpeaker) modalSpeaker.textContent = speaker + ' • Duration: ' + duration;
+    openModal('videoPlayerModal');
+}
+
+// Lightbox preview for gallery
+function openGalleryLightbox(title, tag, imgSrc) {
+    const lightboxTitle = document.getElementById('lightboxTitle');
+    const lightboxTag = document.getElementById('lightboxTag');
+    const lightboxImg = document.getElementById('lightboxImg');
+    if (lightboxTitle) lightboxTitle.textContent = title;
+    if (lightboxTag) lightboxTag.textContent = tag;
+    if (lightboxImg) lightboxImg.src = imgSrc;
+    openModal('galleryLightboxModal');
+}
+
+// Auto init sidebar on load
+document.addEventListener('DOMContentLoaded', () => {
+    initSidebar();
+});

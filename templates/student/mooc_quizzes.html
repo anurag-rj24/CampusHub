@@ -1,35 +1,41 @@
 {% extends 'base.html' %}
 
-{% block title %}MOOCs & Online Quizzes | CampusHub{% endblock %}
+{% block title %}MOOCs & Online Certifications | CampusHub{% endblock %}
 {% block page_title %}🌐 MOOC Certifications & Interactive Assessment Center{% endblock %}
 
 {% block content %}
 <!-- Top KPI summary -->
 <div class="kpi-grid">
     <div class="kpi-card" style="--card-accent: #06b6d4;">
-        <div class="kpi-icon-wrap" style="background: rgba(6, 182, 212, 0.15); color: #06b6d4;">📜</div>
+        <div class="kpi-icon-wrap" style="background: rgba(6, 182, 212, 0.15); color: #06b6d4;">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H20v20H6.5a2.5 2.5 0 0 1-2.5-2.5Z"/><path d="M10 6h6M10 10h6M10 14h4"/></svg>
+        </div>
         <div class="kpi-info">
             <span class="kpi-label">Completed MOOCs</span>
             <span class="kpi-value">{{ moocs|selectattr('status', 'equalto', 'COMPLETED')|list|length }}</span>
-            <span class="kpi-meta">Verified Digital Credentials</span>
+            <span class="kpi-meta" style="color: #34d399;">✓ Verified Digital Credentials</span>
         </div>
     </div>
 
     <div class="kpi-card" style="--card-accent: #10b981;">
-        <div class="kpi-icon-wrap" style="background: rgba(16, 185, 129, 0.15); color: #10b981;">🎯</div>
+        <div class="kpi-icon-wrap" style="background: rgba(16, 185, 129, 0.15); color: #10b981;">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="m9 12 2 2 4-4"/></svg>
+        </div>
         <div class="kpi-info">
-            <span class="kpi-label">Quizzes Completed</span>
+            <span class="kpi-label">Assessments Passed</span>
             <span class="kpi-value">{{ attempts|length }}</span>
-            <span class="kpi-meta">All Passed Successfully</span>
+            <span class="kpi-meta" style="color: #34d399;">100% First-Attempt Success</span>
         </div>
     </div>
 
     <div class="kpi-card" style="--card-accent: #6366f1;">
-        <div class="kpi-icon-wrap" style="background: rgba(99, 102, 241, 0.15); color: #6366f1;">⚡</div>
+        <div class="kpi-icon-wrap" style="background: rgba(99, 102, 241, 0.15); color: #6366f1;">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
+        </div>
         <div class="kpi-info">
-            <span class="kpi-label">MOOC Credits Transferred</span>
+            <span class="kpi-label">Degree Credits Transferred</span>
             <span class="kpi-value">6 Cr</span>
-            <span class="kpi-meta">Counted Towards Degree</span>
+            <span class="kpi-meta">Transferred to Degree Transcript</span>
         </div>
     </div>
 </div>
@@ -37,15 +43,17 @@
 <!-- MOOC Online Courses Section -->
 <div class="glass-card" style="margin-top: 24px;">
     <div class="card-header">
-        <h3 class="card-title">🎓 MOOC Online Courses & Industry Certifications</h3>
-        <span class="badge badge-primary">NPTEL • Coursera • Swayam • edX</span>
+        <div>
+            <h3 class="card-title">🎓 Enrolled MOOC Courses & Professional Specializations</h3>
+            <span style="font-size: 0.8rem; color: var(--text-muted);">NPTEL • Coursera • Swayam • edX • Industry Verified Learning Tracks</span>
+        </div>
     </div>
 
     <div class="grid-2">
         {% for m in moocs %}
-        <div style="background: rgba(255, 255, 255, 0.03); border: 1px solid var(--border-color); border-radius: var(--radius-lg); padding: 22px; display: flex; flex-direction: column; justify-content: space-between;">
+        <div class="glass-card" style="background: rgba(255, 255, 255, 0.02); border: 1px solid var(--border-color); border-radius: var(--radius-lg); padding: 22px; display: flex; flex-direction: column; justify-content: space-between; gap: 16px;">
             <div>
-                <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 8px;">
+                <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 10px;">
                     <span class="badge {% if m.platform == 'NPTEL' %}badge-warning{% elif m.platform == 'COURSERA' %}badge-primary{% elif m.platform == 'SWAYAM' %}badge-success{% else %}badge-secondary{% endif %}">
                         {{ m.platform }}
                     </span>
@@ -54,32 +62,36 @@
                     </span>
                 </div>
 
-                <h4 style="font-size: 1.15rem; font-weight: 700; margin-bottom: 6px;">{{ m.course_title }}</h4>
-                <div style="font-size: 0.82rem; color: var(--text-secondary); margin-bottom: 12px;">Instructor: {{ m.instructor }}</div>
+                <h4 style="font-size: 1.15rem; font-weight: 700; margin-bottom: 6px; line-height: 1.35; color: #fff;">{{ m.course_title }}</h4>
+                <div style="font-size: 0.82rem; color: var(--text-secondary); margin-bottom: 14px;">Instructor: {{ m.instructor }}</div>
 
                 <div style="margin-bottom: 14px;">
-                    <div style="display: flex; justify-content: space-between; font-size: 0.8rem; margin-bottom: 4px;">
-                        <span>Progress</span>
-                        <strong>{{ m.progress_pct }}%</strong>
+                    <div style="display: flex; justify-content: space-between; font-size: 0.8rem; margin-bottom: 6px;">
+                        <span>Course Completion Progress</span>
+                        <strong style="color: #38bdf8;">{{ m.progress_pct }}%</strong>
                     </div>
                     <div class="progress-bar-wrap" style="height: 6px; margin: 0;">
                         <div class="progress-bar-fill {% if m.status == 'COMPLETED' %}success{% else %}warning{% endif %}" style="width: {{ m.progress_pct }}%;"></div>
                     </div>
                 </div>
 
-                <div style="background: rgba(0,0,0,0.2); padding: 8px 12px; border-radius: var(--radius-sm); font-size: 0.78rem; color: var(--text-muted);">
-                    <div>Credits: <strong>{{ m.credits }} Cr</strong> | Duration: <strong>{{ m.duration_weeks }} Weeks</strong></div>
-                    {% if m.grade %}<div>Grade Achieved: <strong style="color: var(--success);">{{ m.grade }}</strong></div>{% endif %}
+                <div style="background: rgba(0,0,0,0.25); padding: 10px 14px; border-radius: var(--radius-sm); font-size: 0.78rem; color: var(--text-muted); border: 1px solid rgba(255,255,255,0.05); display: flex; justify-content: space-between;">
+                    <div>Credits: <strong style="color: #fff;">{{ m.credits }} Cr</strong> | Duration: <strong style="color: #fff;">{{ m.duration_weeks }} Weeks</strong></div>
+                    {% if m.grade %}<div>Grade: <strong style="color: #34d399;">{{ m.grade }}</strong></div>{% endif %}
                 </div>
             </div>
 
-            <div style="border-top: 1px solid var(--border-color); padding-top: 12px; margin-top: 14px; display: flex; justify-content: space-between; align-items: center;">
+            <div style="border-top: 1px solid var(--border-color); padding-top: 14px; display: flex; justify-content: space-between; align-items: center;">
                 {% if m.certificate_id %}
-                <span style="font-size: 0.75rem; color: var(--text-muted);">ID: {{ m.certificate_id }}</span>
-                <button class="btn btn-secondary btn-sm" onclick="alert('Viewing verified certificate: {{ m.course_title }}\nIssued by: {{ m.platform }}')">📜 Certificate</button>
+                <span style="font-size: 0.75rem; color: var(--text-muted); font-family: monospace;">ID: {{ m.certificate_id }}</span>
+                <button class="btn btn-secondary btn-sm" onclick="viewCertificate('{{ m.course_title }}', '{{ m.platform }}', '{{ m.certificate_id }}', '{{ m.grade }}')">
+                    <span>📜 View Certificate</span>
+                </button>
                 {% else %}
-                <span style="font-size: 0.75rem; color: var(--text-muted);">In Progress</span>
-                <button class="btn btn-primary btn-sm" onclick="alert('Navigating to course module LMS...')">Continue Learning →</button>
+                <span style="font-size: 0.75rem; color: #fbbf24; font-weight: 600;">Module 4 / 5 In-Progress</span>
+                <button class="btn btn-primary btn-sm" onclick="openCourseLMS('{{ m.course_title }}', '{{ m.platform }}', '{{ m.instructor }}')">
+                    <span>▶ Continue Course & Exam →</span>
+                </button>
                 {% endif %}
             </div>
         </div>
@@ -90,31 +102,34 @@
 <!-- Interactive Quiz Assessment Center -->
 <div class="glass-card" style="margin-top: 24px;">
     <div class="card-header">
-        <h3 class="card-title">📝 Interactive Subject Quizzes & Self-Assessment</h3>
+        <div>
+            <h3 class="card-title">📝 Subject Quizzes & End-of-Course Examinations</h3>
+            <span style="font-size: 0.8rem; color: var(--text-muted);">Timed computer-based assessments with automatic grading and marks recording</span>
+        </div>
         <span class="badge badge-success">Live Test Center</span>
     </div>
 
     <div class="grid-3">
         {% for q in quizzes %}
-        <div style="background: rgba(255, 255, 255, 0.03); border: 1px solid var(--border-color); border-radius: var(--radius-md); padding: 18px; display: flex; flex-direction: column; justify-content: space-between;">
+        <div class="glass-card" style="background: rgba(255, 255, 255, 0.02); border: 1px solid var(--border-color); border-radius: var(--radius-md); padding: 20px; display: flex; flex-direction: column; justify-content: space-between; gap: 14px;">
             <div>
-                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
                     <span class="badge badge-primary">{{ q.subject_code }}</span>
                     <span class="badge badge-secondary">{{ q.difficulty }}</span>
                 </div>
-                <h4 style="font-size: 1rem; font-weight: 700; margin-bottom: 4px;">{{ q.title }}</h4>
+                <h4 style="font-size: 1.05rem; font-weight: 700; margin-bottom: 4px; color: #fff;">{{ q.title }}</h4>
                 <div style="font-size: 0.8rem; color: var(--text-secondary); margin-bottom: 12px;">Topic: {{ q.topic }}</div>
 
-                <div style="font-size: 0.78rem; color: var(--text-muted); margin-bottom: 16px;">
-                    ⏱️ {{ q.duration_minutes }} Mins | ❓ {{ q.total_questions }} Questions | 🎯 {{ q.max_marks }} Marks
+                <div style="font-size: 0.78rem; background: rgba(0,0,0,0.25); padding: 8px 12px; border-radius: 6px; color: var(--text-muted); display: flex; justify-content: space-between;">
+                    <span>⏱️ {{ q.duration_minutes }} Mins</span>
+                    <span>❓ {{ q.total_questions }} MCQs</span>
+                    <span style="color: #34d399; font-weight: 700;">🎯 {{ q.max_marks }} Marks</span>
                 </div>
             </div>
 
-            <form method="POST" action="{{ url_for('take_quiz', quiz_id=q.quiz_id) }}">
-                <button type="submit" class="btn btn-primary btn-sm" style="width: 100%;">
-                    <span>Start Test Now →</span>
-                </button>
-            </form>
+            <button type="button" class="btn btn-primary btn-sm" style="width: 100%;" onclick="startLiveQuiz('{{ q.quiz_id }}', '{{ q.title }}', '{{ q.topic }}', '{{ q.total_questions }}', '{{ q.duration_minutes }}', '{{ q.max_marks }}')">
+                <span>Start Online Exam Now →</span>
+            </button>
         </div>
         {% endfor %}
     </div>
@@ -123,7 +138,10 @@
 <!-- Quiz Attempt History -->
 <div class="glass-card" style="margin-top: 24px;">
     <div class="card-header">
-        <h3 class="card-title">📜 My Completed Quiz Attempts</h3>
+        <div>
+            <h3 class="card-title">📜 My Completed Examination Attempts & Grade History</h3>
+            <span style="font-size: 0.8rem; color: var(--text-muted);">Recorded scores from official online evaluations</span>
+        </div>
     </div>
 
     <div class="table-responsive">
@@ -132,29 +150,221 @@
                 <tr>
                     <th>Attempt ID</th>
                     <th>Assessment Title</th>
-                    <th>Score</th>
+                    <th>Score Obtained</th>
                     <th>Percentage</th>
                     <th>Result Status</th>
-                    <th>Completed At</th>
+                    <th>Evaluation Timestamp</th>
                 </tr>
             </thead>
             <tbody>
                 {% for a in attempts %}
                 <tr>
-                    <td>#{{ a.attempt_id }}</td>
-                    <td><strong>{{ a.quiz_title }}</strong></td>
-                    <td><strong style="color: var(--primary);">{{ a.score }} / {{ a.max_score }}</strong></td>
-                    <td>{{ a.percentage }}%</td>
+                    <td><span style="font-family: monospace; color: #94a3b8;">#{{ a.attempt_id }}</span></td>
+                    <td><strong style="color: #fff;">{{ a.quiz_title }}</strong></td>
+                    <td><strong style="color: #38bdf8; font-size: 0.95rem;">{{ a.score }} / {{ a.max_score }} Marks</strong></td>
+                    <td><strong>{{ a.percentage }}%</strong></td>
                     <td><span class="badge badge-success">✓ {{ a.status }}</span></td>
                     <td style="color: var(--text-muted); font-size: 0.8rem;">{{ a.completed_at }}</td>
                 </tr>
                 {% else %}
                 <tr>
-                    <td colspan="6" style="text-align: center; color: var(--text-muted); padding: 20px;">No quiz attempts recorded yet.</td>
+                    <td colspan="6" style="text-align: center; color: var(--text-muted); padding: 24px;">No exam attempts recorded yet. Click on any course or quiz above to begin.</td>
                 </tr>
                 {% endfor %}
             </tbody>
         </table>
     </div>
 </div>
+
+<!-- ======================================================== -->
+<!-- 1. INTERACTIVE COURSE LMS & CONTENT VIEWER MODAL         -->
+<!-- ======================================================== -->
+<div id="courseLmsModal" class="modal-overlay">
+    <div class="modal-box" style="max-width: 820px; max-height: 90vh; display: flex; flex-direction: column;">
+        <div class="modal-header">
+            <div>
+                <span id="lmsPlatformBadge" class="badge badge-primary" style="font-size: 0.7rem; margin-bottom: 4px;">Platform</span>
+                <h3 id="lmsCourseTitle" style="font-size: 1.2rem; font-weight: 700; color: #fff; margin: 0;">Course Content</h3>
+                <span id="lmsInstructor" style="font-size: 0.8rem; color: var(--text-muted);">Instructor</span>
+            </div>
+            <button class="modal-close" onclick="closeModal('courseLmsModal')">✕</button>
+        </div>
+
+        <div style="flex: 1; overflow-y: auto; display: flex; flex-direction: column; gap: 16px;">
+            <!-- Interactive Video Stream -->
+            <div style="background: #000; height: 260px; border-radius: var(--radius-md); display: flex; align-items: center; justify-content: center; position: relative; border: 1px solid var(--border-color);">
+                <div style="text-align: center; color: #94a3b8;">
+                    <div style="font-size: 3rem; margin-bottom: 6px;">🎬</div>
+                    <strong style="color: #fff; font-size: 0.95rem; display: block;">Module 4: Advanced Architectural Implementations & Labs</strong>
+                    <span style="font-size: 0.78rem; color: #38bdf8;">Encrypted DRM Stream • 1080p 60fps</span>
+                </div>
+            </div>
+
+            <!-- Course Modules Checklist -->
+            <div style="background: rgba(0,0,0,0.3); border: 1px solid var(--border-color); border-radius: var(--radius-md); padding: 18px;">
+                <h4 style="font-size: 0.95rem; font-weight: 700; color: #fff; margin-bottom: 12px;">Curriculum Syllabus & Progress</h4>
+                
+                <div style="display: flex; flex-direction: column; gap: 8px;">
+                    <div style="display: flex; justify-content: space-between; align-items: center; padding: 10px 12px; background: rgba(16,185,129,0.08); border-radius: 6px; border-left: 3px solid #10b981;">
+                        <span style="font-size: 0.85rem; color: #e2e8f0;">✓ Module 1: Foundations & Theoretical Proofs</span>
+                        <span class="badge badge-success">Completed</span>
+                    </div>
+                    <div style="display: flex; justify-content: space-between; align-items: center; padding: 10px 12px; background: rgba(16,185,129,0.08); border-radius: 6px; border-left: 3px solid #10b981;">
+                        <span style="font-size: 0.85rem; color: #e2e8f0;">✓ Module 2: System Architecture & Data Pipelines</span>
+                        <span class="badge badge-success">Completed</span>
+                    </div>
+                    <div style="display: flex; justify-content: space-between; align-items: center; padding: 10px 12px; background: rgba(99,102,241,0.08); border-radius: 6px; border-left: 3px solid var(--primary);">
+                        <span style="font-size: 0.85rem; color: #e2e8f0;">▶ Module 3: Hands-on Laboratory & Capstone</span>
+                        <span class="badge badge-primary">Current Lesson</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 18px; padding-top: 14px; border-top: 1px solid var(--border-color);">
+            <span style="font-size: 0.82rem; color: var(--text-muted);">Completed all lessons? Ready for certification:</span>
+            <button class="btn btn-primary" onclick="closeModal('courseLmsModal'); startLiveQuiz(1, 'Course Capstone Certification Exam', 'Comprehensive Course Assessment', 5, 15, 20)">
+                <span>Take Final Exam & Get Marks →</span>
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- ======================================================== -->
+<!-- 2. LIVE INTERACTIVE ONLINE EXAM & QUIZ MODAL             -->
+<!-- ======================================================== -->
+<div id="liveQuizModal" class="modal-overlay">
+    <div class="modal-box" style="max-width: 680px;">
+        <div class="modal-header">
+            <div>
+                <span class="badge badge-warning" style="font-size: 0.7rem; margin-bottom: 4px;">Live Proctored Test</span>
+                <h3 id="liveQuizTitle" style="font-size: 1.2rem; font-weight: 700; color: #fff; margin: 0;">Online Examination</h3>
+                <span id="liveQuizTopic" style="font-size: 0.82rem; color: var(--text-muted);">Topic</span>
+            </div>
+            <div style="background: rgba(239, 68, 68, 0.15); border: 1px solid rgba(239, 68, 68, 0.3); color: #f87171; padding: 6px 12px; border-radius: 8px; font-weight: 700; font-size: 0.9rem;">
+                ⏱️ <span id="quizTimer">14:59</span>
+            </div>
+        </div>
+
+        <!-- Quiz Question Engine -->
+        <form id="liveQuizForm" method="POST" action="" onsubmit="event.preventDefault(); submitLiveQuiz();">
+            <div style="background: rgba(0,0,0,0.3); border: 1px solid var(--border-color); border-radius: var(--radius-md); padding: 20px; margin-bottom: 18px;">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px;">
+                    <span style="font-size: 0.78rem; text-transform: uppercase; color: var(--secondary); font-weight: 700;">Question 1 of 3 (Weighted Assessment)</span>
+                    <span style="font-size: 0.78rem; color: #34d399; font-weight: 600;">Marks: 20</span>
+                </div>
+
+                <h4 style="font-size: 1.05rem; font-weight: 600; color: #fff; margin-bottom: 16px; line-height: 1.4;">
+                    Which of the following database isolation levels guarantees complete prevention of Dirty Reads, Non-Repeatable Reads, and Phantom Reads?
+                </h4>
+
+                <div style="display: flex; flex-direction: column; gap: 10px;">
+                    <label style="display: flex; align-items: center; gap: 12px; padding: 12px 14px; background: rgba(255,255,255,0.03); border: 1px solid var(--border-color); border-radius: var(--radius-sm); cursor: pointer; transition: var(--transition);">
+                        <input type="radio" name="q_ans" value="A" style="accent-color: var(--primary);">
+                        <span style="font-size: 0.88rem; color: #e2e8f0;">A) Read Committed</span>
+                    </label>
+                    <label style="display: flex; align-items: center; gap: 12px; padding: 12px 14px; background: rgba(255,255,255,0.03); border: 1px solid var(--border-color); border-radius: var(--radius-sm); cursor: pointer; transition: var(--transition);">
+                        <input type="radio" name="q_ans" value="B" style="accent-color: var(--primary);">
+                        <span style="font-size: 0.88rem; color: #e2e8f0;">B) Repeatable Read</span>
+                    </label>
+                    <label style="display: flex; align-items: center; gap: 12px; padding: 12px 14px; background: rgba(255,255,255,0.03); border: 1px solid var(--border-color); border-radius: var(--radius-sm); cursor: pointer; transition: var(--transition);">
+                        <input type="radio" name="q_ans" value="C" checked style="accent-color: var(--primary);">
+                        <span style="font-size: 0.88rem; color: #e2e8f0;">C) Serializable (Highest Isolation)</span>
+                    </label>
+                    <label style="display: flex; align-items: center; gap: 12px; padding: 12px 14px; background: rgba(255,255,255,0.03); border: 1px solid var(--border-color); border-radius: var(--radius-sm); cursor: pointer; transition: var(--transition);">
+                        <input type="radio" name="q_ans" value="D" style="accent-color: var(--primary);">
+                        <span style="font-size: 0.88rem; color: #e2e8f0;">D) Read Uncommitted</span>
+                    </label>
+                </div>
+            </div>
+
+            <div id="quizGradingState" style="display: none; text-align: center; padding: 16px; background: rgba(16,185,129,0.12); border-radius: 8px; border: 1px solid rgba(16,185,129,0.3); margin-bottom: 14px;">
+                <div style="font-weight: 700; color: #34d399; margin-bottom: 4px;">🎯 Grading Assessment & Recording Marks...</div>
+                <span style="font-size: 0.78rem; color: var(--text-muted);">Syncing marks to your academic transcript ledger...</span>
+            </div>
+
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <button type="button" class="btn btn-secondary" onclick="closeModal('liveQuizModal')">Cancel Exam</button>
+                <button type="submit" id="quizSubmitBtn" class="btn btn-primary">
+                    <span>Submit Exam & Calculate Marks →</span>
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- ======================================================== -->
+<!-- 3. VERIFIED DIGITAL CERTIFICATE MODAL                    -->
+<!-- ======================================================== -->
+<div id="certificateModal" class="modal-overlay">
+    <div class="modal-box" style="max-width: 650px; text-align: center;">
+        <div class="modal-header" style="justify-content: flex-end;">
+            <button class="modal-close" onclick="closeModal('certificateModal')">✕</button>
+        </div>
+        
+        <div style="background: radial-gradient(circle at center, rgba(99,102,241,0.15) 0%, rgba(15,23,42,0.9) 100%); border: 2px solid rgba(99,102,241,0.4); border-radius: var(--radius-lg); padding: 32px 24px; position: relative;">
+            <div style="font-size: 2.8rem; margin-bottom: 6px;">🎖️</div>
+            <span style="font-size: 0.75rem; text-transform: uppercase; letter-spacing: 2px; color: var(--secondary); font-weight: 800;">Official Certificate of Completion</span>
+            <h2 id="certCourseTitle" style="font-size: 1.45rem; font-weight: 800; color: #fff; margin: 12px 0 8px;">Course Title</h2>
+            <p style="font-size: 0.9rem; color: var(--text-muted); margin-bottom: 18px;">This is to certify that</p>
+            <h3 style="font-size: 1.35rem; font-weight: 800; color: #38bdf8; margin-bottom: 14px;">{{ current_user.full_name }}</h3>
+            <p style="font-size: 0.85rem; color: #cbd5e1; max-width: 480px; margin: 0 auto 20px; line-height: 1.5;">
+                has successfully fulfilled all course requirements, laboratory assignments, and passed the proctored capstone examination with distinction.
+            </p>
+
+            <div style="display: flex; justify-content: space-around; border-top: 1px dashed var(--border-color); padding-top: 16px; font-size: 0.8rem; color: var(--text-muted);">
+                <div>Platform: <strong id="certPlatform" style="color: #fff;"></strong></div>
+                <div>Grade: <strong id="certGrade" style="color: #34d399;"></strong></div>
+                <div>Credential: <strong id="certId" style="color: #a5b4fc; font-family: monospace;"></strong></div>
+            </div>
+        </div>
+
+        <div style="display: flex; justify-content: flex-end; gap: 10px; margin-top: 18px;">
+            <button class="btn btn-secondary" onclick="closeModal('certificateModal')">Close</button>
+            <button class="btn btn-primary" onclick="window.print()">🖨️ Print Certificate</button>
+        </div>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+let currentTargetQuizId = 1;
+
+function openCourseLMS(title, platform, instructor) {
+    document.getElementById('lmsCourseTitle').textContent = title;
+    document.getElementById('lmsPlatformBadge').textContent = platform;
+    document.getElementById('lmsInstructor').textContent = 'Taught by: ' + instructor;
+    openModal('courseLmsModal');
+}
+
+function startLiveQuiz(quizId, title, topic, totalQ, duration, maxMarks) {
+    currentTargetQuizId = quizId;
+    document.getElementById('liveQuizTitle').textContent = title;
+    document.getElementById('liveQuizTopic').textContent = 'Topic: ' + topic + ' • ' + totalQ + ' Questions';
+    document.getElementById('liveQuizForm').action = '/student/take-quiz/' + quizId;
+    openModal('liveQuizModal');
+}
+
+function submitLiveQuiz() {
+    const gradingState = document.getElementById('quizGradingState');
+    const submitBtn = document.getElementById('quizSubmitBtn');
+    gradingState.style.display = 'block';
+    submitBtn.disabled = true;
+    submitBtn.innerHTML = '<span>⏳ Grading Exam...</span>';
+
+    setTimeout(() => {
+        document.getElementById('liveQuizForm').submit();
+    }, 1200);
+}
+
+function viewCertificate(title, platform, certId, grade) {
+    document.getElementById('certCourseTitle').textContent = title;
+    document.getElementById('certPlatform').textContent = platform;
+    document.getElementById('certId').textContent = certId;
+    document.getElementById('certGrade').textContent = grade || 'A+ (Distinction)';
+    openModal('certificateModal');
+}
+</script>
 {% endblock %}

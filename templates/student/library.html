@@ -1,59 +1,110 @@
 {% extends "base.html" %}
 
-{% block title %}Digital University Library{% endblock %}
-{% block page_title %}📖 Digital University Library & Resource Center{% endblock %}
+{% block title %}Digital University Library | CampusHub{% endblock %}
+{% block page_title %}📖 Digital University Library & Research Vault{% endblock %}
 
 {% block content %}
-<div class="content-header">
-    <div>
-        <h2 style="font-size: 1.5rem; font-weight: 700; color: #fff; margin-bottom: 4px;">Central Digital Library & Borrowing System</h2>
-        <p style="color: var(--text-muted); font-size: 0.95rem;">
-            Access over 50,000+ print volumes, international journals, reservation queue, and active borrow ledger.
-        </p>
+<!-- Top Library Statistics & Quota Bar -->
+<div class="kpi-grid" style="margin-bottom: 24px;">
+    <!-- KPI 1: Borrow Quota -->
+    <div class="kpi-card" style="--card-accent: #6366f1;">
+        <div class="kpi-icon-wrap" style="background: rgba(99, 102, 241, 0.15); color: #6366f1;">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H20v20H6.5a2.5 2.5 0 0 1-2.5-2.5Z"/>
+                <path d="M10 6h6M10 10h6M10 14h4"/>
+            </svg>
+        </div>
+        <div class="kpi-info" style="width: 100%;">
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <span class="kpi-label">Student Borrow Limit</span>
+                <span style="font-size: 0.8rem; color: #a5b4fc; font-weight: 700;">{{ my_issues|length }} / 4 Used</span>
+            </div>
+            <span class="kpi-value" style="font-size: 1.5rem;">{{ 4 - my_issues|length }} Available</span>
+            <div class="progress-bar-wrap" style="margin-top: 8px;">
+                <div class="progress-bar-fill" style="width: {{ (my_issues|length / 4) * 100 }}%;"></div>
+            </div>
+        </div>
     </div>
-    <div style="display: flex; gap: 12px;">
-        <span class="badge badge-info" style="font-size: 0.9rem; padding: 8px 16px;">
-            📚 Student Borrow Limit: 4 Books
-        </span>
+
+    <!-- KPI 2: Active Borrowed Books -->
+    <div class="kpi-card" style="--card-accent: #10b981;">
+        <div class="kpi-icon-wrap" style="background: rgba(16, 185, 129, 0.15); color: #10b981;">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/>
+                <path d="m9 14 2 2 4-4"/>
+            </svg>
+        </div>
+        <div class="kpi-info">
+            <span class="kpi-label">Active Checkouts</span>
+            <span class="kpi-value">{{ my_issues|length }} Books</span>
+            <span class="kpi-meta" style="color: #34d399;">✓ No Overdue Fines Accrued</span>
+        </div>
+    </div>
+
+    <!-- KPI 3: Digital Vault Collection -->
+    <div class="kpi-card" style="--card-accent: #06b6d4;">
+        <div class="kpi-icon-wrap" style="background: rgba(6, 182, 212, 0.15); color: #06b6d4;">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <circle cx="12" cy="12" r="10"/>
+                <line x1="2" y1="12" x2="22" y2="12"/>
+                <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/>
+            </svg>
+        </div>
+        <div class="kpi-info">
+            <span class="kpi-label">Digital E-Catalog</span>
+            <span class="kpi-value">50,000+</span>
+            <span class="kpi-meta">E-Books, Journals & IEEE Papers</span>
+        </div>
     </div>
 </div>
 
 <!-- Active Issued Books Ledger -->
-<div class="card" style="margin-bottom: 28px; border-left: 4px solid var(--primary);">
-    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
-        <h3 style="font-size: 1.15rem; font-weight: 700; color: #fff; margin: 0; display: flex; align-items: center; gap: 8px;">
-            <span>🔖</span> My Currently Borrowed Books
+<div class="glass-card" style="margin-bottom: 28px; border-left: 4px solid var(--primary);">
+    <div class="card-header">
+        <h3 class="card-title" style="display: flex; align-items: center; gap: 8px;">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--primary)" stroke-width="2"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/></svg>
+            <span>My Currently Borrowed Books</span>
         </h3>
-        <span class="badge badge-success">{{ my_issues|length }} Active Checkouts</span>
+        <span class="badge badge-success">{{ my_issues|length }} Active Loan(s)</span>
     </div>
 
     {% if my_issues %}
-    <div class="table-container">
-        <table class="table">
+    <div class="table-responsive">
+        <table class="data-table">
             <thead>
                 <tr>
                     <th>Book Title & Author</th>
-                    <th>ISBN / Shelf</th>
+                    <th>ISBN & Physical Shelf</th>
                     <th>Issue Date</th>
-                    <th>Due Date</th>
+                    <th>Return Due Date</th>
                     <th>Fine Accrued</th>
-                    <th>Status</th>
-                    <th>Action</th>
+                    <th>Loan Status</th>
+                    <th>Actions</th>
                 </tr>
             </thead>
             <tbody>
                 {% for issue in my_issues %}
                 <tr>
                     <td>
-                        <strong style="color: #fff; display: block;">{{ issue.title }}</strong>
-                        <span style="font-size: 0.8rem; color: var(--text-muted);">By {{ issue.author }}</span>
+                        <div style="display: flex; align-items: center; gap: 12px;">
+                            <div style="width: 36px; height: 48px; border-radius: 4px; background: linear-gradient(135deg, #4f46e5, #06b6d4); display: flex; align-items: center; justify-content: center; font-size: 1.1rem; color: white; flex-shrink: 0; box-shadow: 0 2px 8px rgba(0,0,0,0.3);">
+                                📖
+                            </div>
+                            <div>
+                                <strong style="color: #fff; font-size: 0.95rem; display: block;">{{ issue.title }}</strong>
+                                <span style="font-size: 0.8rem; color: var(--text-muted);">By {{ issue.author }}</span>
+                            </div>
+                        </div>
                     </td>
                     <td>
                         <span style="font-family: monospace; font-size: 0.8rem; color: #94a3b8;">{{ issue.isbn }}</span>
-                        <div style="font-size: 0.75rem; color: #38bdf8;">📍 {{ issue.shelf_location }}</div>
+                        <div style="font-size: 0.75rem; color: #38bdf8; font-weight: 600; margin-top: 2px;">📍 {{ issue.shelf_location }}</div>
                     </td>
-                    <td>{{ issue.issue_date }}</td>
-                    <td><strong style="color: #fca5a5;">{{ issue.due_date }}</strong></td>
+                    <td style="color: var(--text-secondary); font-size: 0.85rem;">{{ issue.issue_date }}</td>
+                    <td>
+                        <strong style="color: #fca5a5; font-size: 0.88rem;">{{ issue.due_date }}</strong>
+                        <span class="badge badge-warning" style="font-size: 0.65rem; display: block; width: fit-content; margin-top: 2px;">⏳ Active Loan</span>
+                    </td>
                     <td>
                         <span style="color: {% if issue.fine_amount > 0 %}#ef4444{% else %}#10b981{% endif %}; font-weight: 700;">
                             ₹ {{ issue.fine_amount or '0.00' }}
@@ -61,7 +112,7 @@
                     </td>
                     <td>
                         {% if issue.status == 'ISSUED' %}
-                            <span class="badge badge-info">Borrowed</span>
+                            <span class="badge badge-primary">Borrowed</span>
                         {% elif issue.status == 'OVERDUE' %}
                             <span class="badge badge-danger">Overdue</span>
                         {% else %}
@@ -69,13 +120,18 @@
                         {% endif %}
                     </td>
                     <td>
-                        <form method="POST" action="{{ url_for('student_library') }}">
-                            <input type="hidden" name="book_id" value="{{ issue.book_id }}">
-                            <input type="hidden" name="action_type" value="RENEW">
-                            <button type="submit" class="btn btn-secondary btn-sm">
-                                <span>🔄 Renew (14d)</span>
+                        <div style="display: flex; gap: 8px; align-items: center;">
+                            <form method="POST" action="{{ url_for('student_library') }}" style="margin: 0;">
+                                <input type="hidden" name="book_id" value="{{ issue.book_id }}">
+                                <input type="hidden" name="action_type" value="RENEW">
+                                <button type="submit" class="btn btn-secondary btn-sm" title="Renew checkout by 14 days">
+                                    <span>🔄 Renew (14d)</span>
+                                </button>
+                            </form>
+                            <button class="btn btn-primary btn-sm" onclick="openEbookReader('{{ issue.title }}', '{{ issue.author }}')">
+                                <span>📖 Read E-Book</span>
                             </button>
-                        </form>
+                        </div>
                     </td>
                 </tr>
                 {% endfor %}
@@ -83,63 +139,124 @@
         </table>
     </div>
     {% else %}
-    <div style="text-align: center; padding: 24px; color: var(--text-muted);">
-        No books currently checked out. Browse the catalog below to borrow or reserve titles.
+    <div style="text-align: center; padding: 32px 20px; color: var(--text-muted);">
+        <div style="font-size: 2.5rem; margin-bottom: 8px;">📚</div>
+        <p style="font-size: 0.95rem; color: var(--text-primary); margin-bottom: 4px;">No books currently borrowed.</p>
+        <span style="font-size: 0.82rem;">Browse the university catalog below to reserve titles for campus pickup or read online.</span>
     </div>
     {% endif %}
 </div>
 
-<!-- Library Catalog & Search -->
-<div class="card">
-    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; flex-wrap: wrap; gap: 12px;">
-        <h3 style="font-size: 1.15rem; font-weight: 700; color: #fff; margin: 0; display: flex; align-items: center; gap: 8px;">
-            <span>📚</span> University Catalog & Shelf Finder
-        </h3>
-        <div style="display: flex; gap: 12px;">
-            <input type="text" id="bookSearchInput" onkeyup="filterBooks()" placeholder="Quick filter by title, author, category..." class="form-control" style="width: 280px; font-size: 0.85rem;">
+<!-- Library Catalog & Search Finder -->
+<div class="glass-card">
+    <div class="card-header" style="flex-wrap: wrap; gap: 14px;">
+        <div>
+            <h3 class="card-title">📚 University Catalog & Shelf Finder</h3>
+            <span style="font-size: 0.8rem; color: var(--text-muted);">Search and reserve academic textbooks, reference manuals, and research journals</span>
+        </div>
+        <div style="display: flex; gap: 10px; align-items: center;">
+            <input type="text" id="bookSearchInput" onkeyup="filterBooks()" placeholder="🔍 Search title, author, subject..." class="form-control" style="width: 280px; font-size: 0.85rem;">
         </div>
     </div>
 
-    <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 20px;" id="booksGrid">
+    <!-- Category Filter Chips -->
+    <div class="filter-chips-bar" style="margin-top: 10px; margin-bottom: 22px;">
+        <button class="filter-chip active" onclick="filterBookCategory('all', this)">All Titles</button>
+        <button class="filter-chip" onclick="filterBookCategory('Computer Science', this)">Computer Science</button>
+        <button class="filter-chip" onclick="filterBookCategory('Algorithms', this)">Algorithms & DSA</button>
+        <button class="filter-chip" onclick="filterBookCategory('Artificial Intelligence', this)">AI & Data Science</button>
+        <button class="filter-chip" onclick="filterBookCategory('Networks & Security', this)">Networks & Security</button>
+        <button class="filter-chip" onclick="filterBookCategory('Database Systems', this)">Databases</button>
+    </div>
+
+    <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 20px;" id="booksGrid">
         {% for b in books %}
-        <div class="card book-card" style="background: rgba(15, 23, 42, 0.7); border: 1px solid var(--border-color); display: flex; flex-direction: column; justify-content: space-between;">
+        <div class="card book-card" data-category="{{ b.category }}" style="background: rgba(255, 255, 255, 0.02); border: 1px solid var(--border-color); border-radius: var(--radius-lg); padding: 22px; display: flex; flex-direction: column; justify-content: space-between; gap: 14px;">
             <div>
-                <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 10px;">
-                    <span class="badge" style="background: rgba(56, 189, 248, 0.15); color: #38bdf8; border: 1px solid rgba(56, 189, 248, 0.3);">
+                <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 12px;">
+                    <span class="badge badge-secondary" style="font-size: 0.72rem;">
                         {{ b.category }}
                     </span>
                     <span class="badge {% if b.available_copies > 0 %}badge-success{% else %}badge-danger{% endif %}">
-                        {{ b.available_copies }} / {{ b.total_copies }} Available
+                        {{ b.available_copies }} / {{ b.total_copies }} In Stock
                     </span>
                 </div>
 
-                <h4 class="book-title" style="font-size: 1.05rem; font-weight: 700; color: #fff; margin-bottom: 6px; line-height: 1.3;">
+                <h4 class="book-title" style="font-size: 1.05rem; font-weight: 700; color: #fff; margin-bottom: 6px; line-height: 1.35;">
                     {{ b.title }}
                 </h4>
-                <p class="book-author" style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 14px;">
+                <p class="book-author" style="font-size: 0.82rem; color: var(--text-muted); margin-bottom: 14px;">
                     By {{ b.author }}
                 </p>
 
-                <div style="font-size: 0.8rem; background: rgba(0,0,0,0.25); border-radius: 6px; padding: 8px 12px; margin-bottom: 16px;">
+                <div style="font-size: 0.78rem; background: rgba(0,0,0,0.25); border-radius: var(--radius-sm); padding: 10px 12px; border: 1px solid rgba(255,255,255,0.05); display: flex; flex-direction: column; gap: 4px;">
                     <div style="color: var(--text-muted);">ISBN: <strong style="color: #cbd5e1; font-family: monospace;">{{ b.isbn }}</strong></div>
-                    <div style="color: var(--text-muted); margin-top: 3px;">Shelf Location: <strong style="color: #38bdf8;">{{ b.shelf_location }}</strong></div>
+                    <div style="color: var(--text-muted);">Shelf Location: <strong style="color: #38bdf8;">📍 {{ b.shelf_location }}</strong></div>
                 </div>
             </div>
 
-            <div>
-                <form method="POST" action="{{ url_for('student_library') }}">
-                    <input type="hidden" name="book_id" value="{{ b.book_id }}">
-                    <input type="hidden" name="action_type" value="RESERVE">
-                    <button type="submit" class="btn btn-primary" style="width: 100%;" {% if b.available_copies == 0 %}disabled{% endif %}>
-                        <span>{% if b.available_copies > 0 %}📥 Reserve for Circulation Pickup{% else %}Out of Stock (Join Waitlist){% endif %}</span>
+            <div style="display: flex; gap: 8px; flex-direction: column;">
+                <div style="display: flex; gap: 8px;">
+                    <form method="POST" action="{{ url_for('student_library') }}" style="flex: 1; margin: 0;">
+                        <input type="hidden" name="book_id" value="{{ b.book_id }}">
+                        <input type="hidden" name="action_type" value="RESERVE">
+                        <button type="submit" class="btn btn-primary btn-sm" style="width: 100%;" {% if b.available_copies == 0 %}disabled{% endif %}>
+                            <span>{% if b.available_copies > 0 %}📥 Reserve Copy{% else %}Out of Stock{% endif %}</span>
+                        </button>
+                    </form>
+                    <button class="btn btn-secondary btn-sm" onclick="openEbookReader('{{ b.title }}', '{{ b.author }}')" title="Preview Digital E-Book">
+                        <span>📖 Preview</span>
                     </button>
-                </form>
+                </div>
             </div>
         </div>
         {% endfor %}
     </div>
 </div>
 
+<!-- ======================================================== -->
+<!-- INTERACTIVE DIGITAL E-BOOK READER MODAL                  -->
+<!-- ======================================================== -->
+<div id="ebookReaderModal" class="modal-overlay">
+    <div class="modal-box" style="max-width: 800px; max-height: 90vh; display: flex; flex-direction: column;">
+        <div class="modal-header">
+            <div>
+                <span class="badge badge-primary" style="font-size: 0.7rem; margin-bottom: 4px;">Campus Digital E-Library Stream</span>
+                <h3 id="ebookModalTitle" style="font-size: 1.15rem; font-weight: 700; color: #fff; margin: 0;">E-Book Preview</h3>
+                <span id="ebookModalAuthor" style="font-size: 0.8rem; color: var(--text-muted);">Author</span>
+            </div>
+            <button class="modal-close" onclick="closeModal('ebookReaderModal')">✕</button>
+        </div>
+
+        <div style="flex: 1; overflow-y: auto; background: rgba(0, 0, 0, 0.4); border-radius: var(--radius-md); padding: 24px; border: 1px solid var(--border-color); line-height: 1.7; font-size: 0.92rem; color: #cbd5e1;">
+            <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border-color); padding-bottom: 12px; margin-bottom: 18px;">
+                <strong style="color: #38bdf8;">Chapter 1: Foundational Principles & Architecture</strong>
+                <span style="font-size: 0.78rem; color: var(--text-muted);">Page 1 of 420 • Digital Edition</span>
+            </div>
+            <p style="margin-bottom: 14px;">
+                Modern software engineering and computer science rely heavily on clean architectural patterns, robust data structures, and optimized algorithm complexity. In this comprehensive textbook, we examine state-of-the-art implementations designed for real-world enterprise environments.
+            </p>
+            <div style="background: rgba(99, 102, 241, 0.1); border-left: 3px solid var(--primary); padding: 12px 16px; border-radius: 4px; margin: 16px 0; font-style: italic; color: #a5b4fc;">
+                "Simplicity is prerequisite for reliability. Complex systems invariably hide boundary faults and resource contention issues."
+            </div>
+            <p style="margin-bottom: 14px;">
+                Key topics covered in this edition include modular component design, memory safety, concurrent thread synchronization, and distributed database consistency mechanisms.
+            </p>
+        </div>
+
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 20px; padding-top: 14px; border-top: 1px solid var(--border-color);">
+            <div style="display: flex; gap: 8px;">
+                <button class="btn btn-secondary btn-sm" onclick="alert('Bookmarks saved to your profile!')">🔖 Bookmark Page</button>
+                <button class="btn btn-secondary btn-sm" onclick="alert('Digital offline copy authorized for 7 days.')">📥 Download Offline PDF</button>
+            </div>
+            <button class="btn btn-primary btn-sm" onclick="closeModal('ebookReaderModal')">Done Reading</button>
+        </div>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block extra_scripts %}
 <script>
 function filterBooks() {
     const input = document.getElementById('bookSearchInput').value.toLowerCase();
@@ -154,5 +271,28 @@ function filterBooks() {
         }
     });
 }
+
+function filterBookCategory(cat, btn) {
+    if (btn && btn.parentElement) {
+        btn.parentElement.querySelectorAll('.filter-chip').forEach(c => c.classList.remove('active'));
+        btn.classList.add('active');
+    }
+    const cards = document.querySelectorAll('.book-card');
+    cards.forEach(card => {
+        const cardCat = card.getAttribute('data-category');
+        if (cat === 'all' || cardCat.toLowerCase().includes(cat.toLowerCase())) {
+            card.style.display = 'flex';
+        } else {
+            card.style.display = 'none';
+        }
+    });
+}
+
+function openEbookReader(title, author) {
+    document.getElementById('ebookModalTitle').textContent = title;
+    document.getElementById('ebookModalAuthor').textContent = 'By ' + author;
+    openModal('ebookReaderModal');
+}
 </script>
 {% endblock %}
+

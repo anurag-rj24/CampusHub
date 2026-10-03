@@ -1,91 +1,102 @@
 {% extends 'base.html' %}
 
-{% block title %}{% if selected_role %}{{ selected_role.replace('_', ' ') }} Sign-In{% else %}Sign-In{% endif %} | CampusHub ERP{% endblock %}
+{% block title %}{% if selected_role %}{{ selected_role.replace('_', ' ') | title }} Sign-In{% else %}Sign-In{% endif %} | CampusHub ERP{% endblock %}
 
 {% block content %}
-<div style="min-height: 80vh; display: flex; align-items: center; justify-content: center; width: 100%;">
-    <div style="width: 100%; max-width: 900px; display: grid; grid-template-columns: 1fr 1.1fr; gap: 28px; align-items: center;">
+<div class="auth-wrapper">
+    <div class="auth-container">
         
-        <!-- Left Hero / Brand Card -->
-        <div class="glass-card" style="padding: 36px 32px; background: linear-gradient(135deg, rgba(17, 24, 39, 0.85), rgba(9, 13, 22, 0.95)); border: 1px solid rgba(255,255,255,0.1);">
-            <div style="display: flex; align-items: center; gap: 14px; margin-bottom: 20px;">
-                <div class="brand-icon">🎓</div>
-                <div>
-                    <h1 style="font-size: 1.6rem; font-weight: 800; letter-spacing: -0.5px;">CampusHub</h1>
-                    <span style="color: var(--secondary); font-weight: 700; font-size: 0.75rem; letter-spacing: 1.5px; text-transform: uppercase;">Enterprise ERP</span>
-                </div>
+        <!-- CampusHub Branding on Top of Sign-In -->
+        <div class="auth-brand-header">
+            <div class="brand-icon">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M22 10v6M2 10l10-5 10 5-10 5z"/>
+                    <path d="M6 12v5c3 3 9 3 12 0v-5"/>
+                </svg>
             </div>
-
-            <p style="color: var(--text-secondary); line-height: 1.6; margin-bottom: 24px; font-size: 0.92rem;">
-                Secure role-based university portal engineered for real-time academic records, attendance automation, and governance.
-            </p>
-
-            <div style="display: flex; flex-direction: column; gap: 12px; margin-bottom: 28px;">
-                <div style="display: flex; align-items: center; gap: 10px; font-size: 0.88rem; color: var(--text-primary);">
-                    <span style="color: var(--success); font-weight: 700;">✓</span>
-                    <span>Role-Based Protected Access</span>
-                </div>
-                <div style="display: flex; align-items: center; gap: 10px; font-size: 0.88rem; color: var(--text-primary);">
-                    <span style="color: var(--success); font-weight: 700;">✓</span>
-                    <span>Encrypted Cryptographic Authentication</span>
-                </div>
-                <div style="display: flex; align-items: center; gap: 10px; font-size: 0.88rem; color: var(--text-primary);">
-                    <span style="color: var(--success); font-weight: 700;">✓</span>
-                    <span>Immutable Audit Activity Tracking</span>
-                </div>
-            </div>
-
-            <div style="border-top: 1px solid var(--border-color); padding-top: 18px;">
-                <a href="{{ url_for('select_role') }}" class="btn btn-secondary btn-sm" style="width: 100%;">
-                    <span>← Switch Role (Back to Home)</span>
-                </a>
+            <div class="brand-title-wrap">
+                <h1 class="brand-name">Campus<span class="gradient-text">Hub</span></h1>
             </div>
         </div>
 
-        <!-- Right Login Form Card -->
-        <div class="glass-card" style="padding: 36px 32px; box-shadow: var(--shadow-glow);">
-            <div style="margin-bottom: 24px;">
-                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
-                    <a href="{{ url_for('select_role') }}" style="font-size: 0.82rem; color: var(--text-muted); text-decoration: none;">
-                        ← Choose Role
-                    </a>
-                    {% if selected_role %}
-                    <span class="badge badge-primary">{{ selected_role.replace('_', ' ') }}</span>
+        <!-- Sleek Modern Glassmorphism Login Card -->
+        <div class="glass-card auth-card {% if selected_role %}role-theme-{{ selected_role.lower().replace('_', '') }}{% endif %}">
+            
+            <div class="auth-card-header">
+                {% if selected_role %}
+                <div class="role-pill">
+                    {% if selected_role == 'STUDENT' %}
+                        <svg class="pill-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 10v6M2 10l10-5 10 5-10 5z"/><path d="M6 12v5c3 3 9 3 12 0v-5"/></svg>
+                        <span>Student Portal</span>
+                    {% elif selected_role == 'FACULTY' %}
+                        <svg class="pill-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H20v20H6.5a2.5 2.5 0 0 1-2.5-2.5Z"/><path d="M10 6h6M10 10h6M10 14h4"/></svg>
+                        <span>Faculty Portal</span>
+                    {% elif selected_role == 'ADMIN' %}
+                        <svg class="pill-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><path d="m9 12 2 2 4-4"/></svg>
+                        <span>Administrator Portal</span>
+                    {% elif selected_role == 'SUPER_HEAD' %}
+                        <svg class="pill-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m2 4 3 12h14l3-12-6 7-4-7-4 7-6-7zm3 16h14"/></svg>
+                        <span>Super Head Portal</span>
                     {% endif %}
                 </div>
-                <h2 style="font-size: 1.45rem; font-weight: 700; margin-bottom: 4px;">
-                    {% if selected_role == 'STUDENT' %}🎓 Student Sign In
-                    {% elif selected_role == 'FACULTY' %}👨‍🏫 Faculty Sign In
-                    {% elif selected_role == 'ADMIN' %}🛡️ Administrator Sign In
-                    {% elif selected_role == 'SUPER_HEAD' %}👑 Super Head Sign In
-                    {% else %}Sign In to Portal{% endif %}
+                {% endif %}
+
+                <h2 class="auth-title">
+                    Sign In
                 </h2>
-                <p style="color: var(--text-muted); font-size: 0.85rem;">Enter your institutional credentials to continue</p>
+                <p class="auth-desc">Enter your institutional credentials to access your portal</p>
             </div>
 
-            <form method="POST" action="{{ url_for('login') }}">
+            <form method="POST" action="{{ url_for('login') }}" class="auth-form">
                 <input type="hidden" name="role" value="{{ selected_role or '' }}">
 
                 <div class="form-group">
                     <label class="form-label" for="email">Institutional Email</label>
-                    <input type="email" id="email" name="email" class="form-control" placeholder="Enter your email address" required autocomplete="email">
+                    <div class="input-icon-wrap">
+                        <svg class="input-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <rect width="20" height="16" x="2" y="4" rx="2"/>
+                            <path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/>
+                        </svg>
+                        <input type="email" id="email" name="email" class="form-control with-icon" placeholder="Enter your email address" required autocomplete="email">
+                    </div>
                 </div>
 
                 <div class="form-group">
                     <label class="form-label" for="password">Password</label>
-                    <input type="password" id="password" name="password" class="form-control" placeholder="Enter your password" required autocomplete="current-password">
+                    <div class="input-icon-wrap">
+                        <svg class="input-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <rect width="18" height="11" x="3" y="11" rx="2" ry="2"/>
+                            <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+                        </svg>
+                        <input type="password" id="password" name="password" class="form-control with-icon" placeholder="Enter your password" required autocomplete="current-password">
+                    </div>
                 </div>
 
-                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 22px; font-size: 0.82rem;">
-                    <label style="display: flex; align-items: center; gap: 6px; cursor: pointer; color: var(--text-secondary);">
-                        <input type="checkbox" checked style="accent-color: var(--primary);"> Remember session
+                <div class="auth-options">
+                    <label class="checkbox-wrap">
+                        <input type="checkbox" checked>
+                        <span>Remember session</span>
                     </label>
                 </div>
 
-                <button type="submit" class="btn btn-primary" style="width: 100%; padding: 12px; font-size: 0.95rem;">
-                    <span>Sign In Securely →</span>
+                <button type="submit" class="btn btn-primary auth-submit-btn">
+                    <span>Sign In Securely</span>
+                    <svg class="arrow-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M5 12h14M12 5l7 7-7 7"/>
+                    </svg>
                 </button>
             </form>
+
+            <!-- Switch Back Option Below Sign In -->
+            <div class="auth-switch-role">
+                <a href="{{ url_for('select_role') }}" class="switch-role-link">
+                    <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M19 12H5M12 19l-7-7 7-7"/>
+                    </svg>
+                    <span>Switch Role / Back to Home</span>
+                </a>
+            </div>
+
         </div>
 
     </div>
