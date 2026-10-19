@@ -181,3 +181,5 @@ Secure handling of authentication
 Clean OOP design and modular structure
 Logical menu navigation
 Extendability to future interfaces
+
+<!-- CampusHub College Management System -->
